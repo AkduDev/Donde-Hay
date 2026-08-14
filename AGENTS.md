@@ -119,6 +119,21 @@ Skill principal para desarrollo React Native con Expo en el proyecto Dónde Hay.
 - **Uso**: Se activa automáticamente para tareas de desarrollo en el proyecto
 - **Contenido**: Stack tecnológico, arquitectura, convenciones, patrones, testing, performance
 
+### Otras Skills Disponibles
+
+| Skill | Para qué |
+|-------|----------|
+| **react-native-expert** | React Native / Expo - Desarrollo móvil multiplataforma |
+| **nextjs-expert** | Next.js - Web + API con App Router |
+| **typescript-expert** | TypeScript - Tipado estricto y buenas prácticas |
+| **prisma-expert** | Prisma ORM - Modelo de datos y queries |
+| **postgresql-expert** | PostgreSQL - Diseño y optimización de BD |
+| **tailwind-nativewind-expert** | Tailwind / NativeWind - Design System |
+| **ui-ux-expert** | UI/UX - Diseño de interfaces |
+| **testing-expert** | Testing - Jest, RTL, Cypress, Playwright |
+| **git-github-expert** | Git / GitHub - Control de versiones |
+| **web-scraping-expert** | Web scraping - Recolección de productos |
+
 ## Plan de Desarrollo
 
 Ver `IMPLEMENTATION_PLAN.md` para el plan completo de 10 fases.
