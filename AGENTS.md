@@ -111,6 +111,14 @@ npx eslint src/            # Lint
 - **ESLint 10.x**: Configuración en parent `eslint.config.mjs` causa conflictos, ignorado
 - **Typed routes**: Requiere regenerar `.expo/types/router.d.ts` al agregar nuevas rutas
 
+## Skills Disponibles
+
+### desarrallador-rn-fullstack
+Skill principal para desarrollo React Native con Expo en el proyecto Dónde Hay.
+- **Ubicación**: `/home/Akdulay/.config/opencode/skills/desarrallador-rn-fullstack/SKILL.md`
+- **Uso**: Se activa automáticamente para tareas de desarrollo en el proyecto
+- **Contenido**: Stack tecnológico, arquitectura, convenciones, patrones, testing, performance
+
 ## Plan de Desarrollo
 
 Ver `IMPLEMENTATION_PLAN.md` para el plan completo de 10 fases.
