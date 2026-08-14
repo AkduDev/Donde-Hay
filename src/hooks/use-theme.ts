@@ -1,14 +1,18 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * Dónde Hay - useTheme Hook
+ * Returns the current theme colors based on color scheme
  */
 
-import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { getColors, type ColorPalette } from '@/theme/colors';
 
-export function useTheme() {
+export function useTheme(): ColorPalette {
   const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
+  const mode = scheme === 'dark' ? 'dark' : 'light';
+  return getColors(mode);
+}
 
-  return Colors[theme];
+export function useThemeMode(): 'light' | 'dark' {
+  const scheme = useColorScheme();
+  return scheme === 'dark' ? 'dark' : 'light';
 }
