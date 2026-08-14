@@ -1,5 +1,9 @@
 # Dónde Hay - Agente de Desarrollo
 
+## Repositorio
+- **GitHub**: https://github.com/AkduDev/Donde-Hay
+- **Rama principal**: `master`
+
 ## Contexto del Proyecto
 
 **Dónde Hay** es una aplicación móvil de agregación de productos para Cuba que permite a los usuarios buscar, comparar precios y encontrar productos en múltiples fuentes: Revolico, Facebook Marketplace, Instagram, Telegram, 1Cuba, CholesLibres y fuentes comunitarias.
