@@ -18,26 +18,25 @@ El usuario puede **filtrar por fuente**, ver de **qué sitio viene cada oferta**
 
 ---
 
-## Estado Actual (v0.1.0)
+## Estado Actual (v0.2.0)
 
 | Capa | Estado |
 |------|--------|
-| Design System (theme, 12 UI components) | ✅ Completo |
-| Navegación (5 tabs) | ✅ Completo |
+| Design System (theme, 12 UI components) | ✅ Completo (0 TS errors) |
+| Navegación (5 tabs + auth + alerts) | ✅ Completo |
 | API Client + TanStack Query | ✅ Completo |
-| Zustand Stores (auth, theme) | ✅ Completo |
+| Zustand Stores (auth, theme, location) | ✅ Completo |
 | TypeScript Types (322 líneas) | ✅ Completo |
 | Search Components (SearchBar, FilterSheet, SortSelector) | ✅ Completo |
 | ProductCard | ✅ Completo |
-| Todas las pantallas | ⚠️ Solo UI mock, datos hardcodeados |
-| Services / API layer | ❌ No existe |
-| Feature modules | ❌ No existe |
-| Utils | ❌ No existe |
-| Auth screens | ❌ No existe |
-| Product Detail screen | ❌ No existe |
-| Geolocation | ❌ No existe |
-| Alerts | ❌ No existe |
-| Push notifications | ❌ No existe |
+| Supabase Backend | ✅ Configurado (schema.sql, .env.development) |
+| Services Layer | ✅ Completo (auth, products, favorites, alerts, locations, categories, profile, sellers) |
+| Auth screens (login, register) | ✅ Completo |
+| Product Detail screen | ✅ Completo |
+| Geolocation (Phase 6) | 🔄 En progreso |
+| Alerts + Push (Phase 7) | 🔄 En progreso |
+| Saved (Phase 4) | ✅ Completo |
+| Profile (Phase 5) | ✅ Completo |
 | Tests | ❌ No existe |
 
 ---

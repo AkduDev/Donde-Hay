@@ -253,7 +253,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 ## Convenciones de Código
 
 ### Diseño
-- **Tokens de spacing**: Usar strings (`"xxxs"`, `"xxs"`, `"xs"`, `"sm"`, `"md"`, `"lg"`, `"xl"`, `"xxl"`)
+- **Tokens de spacing**: Usar strings (`"xxxs"`, `"xxs"`, `"xs"`, `"sm"`, `"md"`, `"lg"`, `"xl"`, `"2xl"`)
 - **Colores**: `colors.primary`, `colors.text`, `colors.background`, `colors.surface`
 - **Componentes**: `Box`, `Text`, `Button`, `Input`, `Card`, `Badge`, `Avatar`, `Divider`, `Spinner`, `Modal`, `Sheet`, `Tooltip`
 - **NO usar** `TextInput` directo — usar componente `Input`
