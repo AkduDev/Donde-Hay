@@ -30,7 +30,7 @@ export const FontFamilies = {
 
 export const FontWeights = {
   thin: '100',
-  extraLight: '200',
+  ultralight: '200',
   light: '300',
   regular: '400',
   medium: '500',

@@ -8,13 +8,8 @@ import { Pressable, ViewStyle, StyleProp } from 'react-native';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Modal } from '@/components/ui/Modal';
-import { Spacing } from '@/theme/spacing';
 import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
-
-// ============================================
-// TIPOS
-// ============================================
 
 export type SortOption =
   | 'relevance'
@@ -31,10 +26,6 @@ export interface SortSelectorProps {
   testID?: string;
 }
 
-// ============================================
-// CONSTANTES
-// ============================================
-
 const SORT_OPTIONS: { id: SortOption; label: string; icon: string }[] = [
   { id: 'relevance', label: 'Más relevantes', icon: '🎯' },
   { id: 'recent', label: 'Más recientes', icon: '🕐' },
@@ -42,10 +33,6 @@ const SORT_OPTIONS: { id: SortOption; label: string; icon: string }[] = [
   { id: 'price-desc', label: 'Precio: mayor a menor', icon: '📉' },
   { id: 'distance', label: 'Más cerca de ti', icon: '📍' },
 ];
-
-// ============================================
-// COMPONENTE
-// ============================================
 
 const SortSelector = ({
   value,
@@ -67,9 +54,9 @@ const SortSelector = ({
   const triggerStyle: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[2],
-    paddingHorizontal: Spacing[3],
-    paddingVertical: Spacing[2],
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 9999,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -109,7 +96,7 @@ const SortSelector = ({
         mode={resolvedMode}
         testID={`${testID}-modal`}
       >
-        <Box gap={1} p={2}>
+        <Box gap="xxs" p="xs">
           {SORT_OPTIONS.map((option) => {
             const isActive = option.id === value;
             return (
@@ -122,9 +109,9 @@ const SortSelector = ({
                 style={({ pressed }) => ({
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: Spacing[3],
-                  paddingHorizontal: Spacing[4],
-                  paddingVertical: Spacing[3],
+                  gap: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
                   borderRadius: 12,
                   backgroundColor: pressed
                     ? colors.surfaceVariant
@@ -136,15 +123,15 @@ const SortSelector = ({
                 <Text variant="bodyLarge" mode={resolvedMode}>
                   {option.icon}
                 </Text>
-                <Text
-                  variant="bodyMedium"
-                  color={isActive ? 'primary' : 'text'}
-                  flex={1}
-                  mode={resolvedMode}
-                  fontWeight={isActive ? 'semiBold' : 'regular'}
-                >
-                  {option.label}
-                </Text>
+                <Box flex={1}>
+                  <Text
+                    variant="bodyMedium"
+                    color={isActive ? 'primary' : 'text'}
+                    fontWeight={isActive ? '600' : '400'}
+                  >
+                    {option.label}
+                  </Text>
+                </Box>
                 {isActive && (
                   <Text variant="bodyLarge" color="primary" mode={resolvedMode}>
                     ✓
@@ -162,4 +149,3 @@ const SortSelector = ({
 SortSelector.displayName = 'SortSelector';
 
 export { SortSelector };
-export type { SortSelectorProps, SortOption };

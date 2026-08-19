@@ -6,22 +6,23 @@
 import React, { forwardRef, useEffect, useRef } from 'react';
 import {
   Modal as RNModal,
-  ModalProps,
+  View,
   ViewStyle,
   StyleProp,
   Pressable,
   Keyboard,
+  Platform,
 } from 'react-native';
 import { Box } from './Box';
-import { Spacing } from '@/theme/spacing';
 import { BorderRadius } from '@/theme/radius';
 import { Shadows, getShadow } from '@/theme/shadows';
-import { ColorPalette, getColors } from '@/theme/colors';
+import { getColors } from '@/theme/colors';
+import { Text } from './Text';
 
 export type ModalSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
 export type ModalPosition = 'center' | 'bottom' | 'top';
 
-export interface ModalProps extends Omit<ModalProps, 'visible' | 'animationType' | 'transparent'> {
+export interface ModalBaseProps {
   visible: boolean;
   onClose: () => void;
   title?: string;
@@ -38,20 +39,21 @@ export interface ModalProps extends Omit<ModalProps, 'visible' | 'animationType'
   footerStyle?: StyleProp<ViewStyle>;
   mode?: 'light' | 'dark';
   testID?: string;
+  presentationStyle?: 'fullScreen' | 'pageSheet' | 'formSheet';
 }
 
 const sizeConfig: Record<ModalSize, {
   width: string | number;
   maxHeight: string | number;
-  padding: keyof typeof Spacing;
+  padding: keyof typeof import('@/theme/spacing').Spacing;
   borderRadius: keyof typeof BorderRadius;
 }> = {
-  xs: { width: 280, maxHeight: '80%', padding: '4', borderRadius: 'lg' },
-  sm: { width: 360, maxHeight: '80%', padding: '4', borderRadius: 'lg' },
-  md: { width: 420, maxHeight: '85%', padding: '5', borderRadius: 'xl' },
-  lg: { width: 520, maxHeight: '90%', padding: '5', borderRadius: 'xl' },
-  xl: { width: 640, maxHeight: '90%', padding: '6', borderRadius: '2xl' },
-  full: { width: '100%', maxHeight: '100%', padding: '0', borderRadius: 'none' },
+  xs: { width: 280, maxHeight: '80%', padding: 'md', borderRadius: 'lg' },
+  sm: { width: 360, maxHeight: '80%', padding: 'md', borderRadius: 'lg' },
+  md: { width: 420, maxHeight: '85%', padding: 'lg', borderRadius: 'xl' },
+  lg: { width: 520, maxHeight: '90%', padding: 'lg', borderRadius: 'xl' },
+  xl: { width: 640, maxHeight: '90%', padding: 'xl', borderRadius: '2xl' },
+  full: { width: '100%', maxHeight: '100%', padding: 'none', borderRadius: 'none' },
 };
 
 const positionStyles: Record<ModalPosition, ViewStyle> = {
@@ -60,7 +62,7 @@ const positionStyles: Record<ModalPosition, ViewStyle> = {
   top: { justifyContent: 'flex-start', alignItems: 'stretch' },
 };
 
-const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalProps>(
+const Modal = forwardRef<View, ModalBaseProps>(
   (
     {
       visible,
@@ -80,44 +82,31 @@ const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalPr
       mode = 'light',
       testID,
       presentationStyle = 'pageSheet',
-      ...rest
-    }: ModalProps,
+    }: ModalBaseProps,
     ref
   ) => {
     const colors = getColors(mode);
     const sConfig = sizeConfig[size];
-    const overlayRef = useRef<Pressable>(null);
     const modalRef = useRef<RNModal>(null);
 
-    // Cerrar con Escape (web) o hardware back (Android)
     useEffect(() => {
-      if (!visible) return;
+      if (!visible || !closeOnEscape || Platform.OS !== 'web') return;
 
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Escape' && closeOnEscape) {
+      const handleKeyDown = (event: any) => {
+        if (event?.key === 'Escape') {
           onClose();
         }
       };
 
-      if (typeof window !== 'undefined') {
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+      const win = globalThis as any;
+      if (win?.addEventListener) {
+        win.addEventListener('keydown', handleKeyDown);
+        return () => win.removeEventListener('keydown', handleKeyDown);
       }
 
-      // Android back handler
-      const backHandler = () => {
-        if (closeOnEscape) {
-          onClose();
-          return true;
-        }
-        return false;
-      };
-
-      // Note: BackHandler would need to be imported from react-native
       return () => {};
     }, [visible, closeOnEscape, onClose]);
 
-    // Focus trap y auto-focus
     useEffect(() => {
       if (visible) {
         Keyboard.dismiss();
@@ -127,9 +116,9 @@ const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalPr
     if (!visible) return null;
 
     const modalStyle: ViewStyle = {
-      width: sConfig.width,
-      maxHeight: sConfig.maxHeight,
-      borderRadius: BorderRadius[sConfig.borderRadius],
+      width: sConfig.width as number,
+      maxHeight: sConfig.maxHeight as number,
+      borderRadius: BorderRadius[sConfig.borderRadius] as number,
       backgroundColor: colors.surface,
       ...getShadow('xl', mode),
       elevation: 16,
@@ -140,7 +129,7 @@ const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalPr
       flex: 1,
       backgroundColor: colors.overlay,
       ...positionStyles[position],
-      padding: Spacing[4],
+      padding: 16,
     };
 
     const handleOverlayPress = () => {
@@ -156,16 +145,14 @@ const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalPr
         presentationStyle={presentationStyle}
         onRequestClose={onClose}
         testID={testID}
-        {...rest}
       >
         <Pressable
-          ref={overlayRef}
           onPress={handleOverlayPress}
           style={overlayStyle}
           testID={`${testID}-overlay`}
-          accessibilityLiveRegion="polite"
         >
           <Box
+            ref={ref}
             style={[modalStyle, style]}
             testID={`${testID}-content`}
             mode={mode}
@@ -176,20 +163,18 @@ const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalPr
                 justifyContent="space-between"
                 alignItems="flex-start"
                 p={sConfig.padding}
-                borderBottomWidth={1}
-                borderColor={colors.divider}
-                style={headerStyle}
-                testID={`${testID}-header`}
                 mode={mode}
+                style={[{ borderBottomWidth: 1, borderBottomColor: colors.divider }, headerStyle]}
+                testID={`${testID}-header`}
               >
                 <Box flex={1} mode={mode}>
                   {title && (
-                    <Text variant="titleLarge" color="text" mode={mode} testID={`${testID}-title`}>
+                    <Text variant="titleLarge" color="text" testID={`${testID}-title`}>
                       {title}
                     </Text>
                   )}
                   {subtitle && (
-                    <Text variant="bodyMedium" color="textSecondary" mode={mode} mt={1} testID={`${testID}-subtitle`}>
+                    <Text variant="bodyMedium" color="textSecondary" testID={`${testID}-subtitle`}>
                       {subtitle}
                     </Text>
                   )}
@@ -201,8 +186,8 @@ const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalPr
                     accessibilityLabel="Cerrar"
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Box p={2} mode={mode}>
-                      <CloseIcon size={24} color={colors.textSecondary} />
+                    <Box p="xs" mode={mode}>
+                      <Text variant="bodyLarge" color="textSecondary">✕</Text>
                     </Box>
                   </Pressable>
                 )}
@@ -210,7 +195,7 @@ const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalPr
             )}
 
             <Box
-              p={size === 'full' ? 0 : sConfig.padding}
+              p={size === 'full' ? 'none' : sConfig.padding}
               style={contentStyle}
               testID={`${testID}-body`}
               mode={mode}
@@ -227,15 +212,3 @@ const Modal = forwardRef<React.ComponentPropsWithoutRef<typeof RNModal>, ModalPr
 Modal.displayName = 'Modal';
 
 export { Modal };
-export type { ModalProps, ModalSize, ModalPosition };
-
-// Icono de cierre simple
-const CloseIcon = ({ size = 24, color = '#000' }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-// Import Text
-import { Text } from './Text';

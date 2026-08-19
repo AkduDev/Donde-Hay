@@ -1,12 +1,12 @@
 /**
  * Dónde Hay - Profile Screen
  * Perfil del usuario: datos, preferencias, historial, alertas
- * Nota: implementación completa con API en tarea posterior
  */
 
 import React from 'react';
-import { ScrollView, Pressable } from 'react-native';
+import { ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Card } from '@/components/ui/Card';
@@ -16,6 +16,7 @@ import { Divider } from '@/components/ui/Divider';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import { getColors } from '@/theme/colors';
+import { useFavorites, useSavedSearches } from '@/hooks/use-favorites';
 
 type MenuItem = {
   id: string;
@@ -23,46 +24,132 @@ type MenuItem = {
   label: string;
   description?: string;
   badge?: string;
+  onPress?: () => void;
 };
 
-const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
-  {
-    title: 'Actividad',
-    items: [
-      { id: 'history', icon: '🕐', label: 'Historial de búsquedas', description: 'Tus búsquedas recientes' },
-      { id: 'alerts', icon: '🔔', label: 'Mis alertas', description: 'Gestiona tus alertas de precio', badge: '2' },
-      { id: 'favorites', icon: '❤️', label: 'Guardados', description: 'Productos y búsquedas guardadas' },
-    ],
-  },
-  {
-    title: 'Preferencias',
-    items: [
-      { id: 'theme', icon: '🎨', label: 'Apariencia', description: 'Modo claro, oscuro o sistema' },
-      { id: 'currency', icon: '💱', label: 'Moneda preferida', description: 'USD, CUP o MLC' },
-      { id: 'location', icon: '📍', label: 'Ubicación por defecto', description: 'Tu provincia' },
-      { id: 'notifications', icon: '📢', label: 'Notificaciones', description: 'Push, email, alertas' },
-    ],
-  },
-  {
-    title: 'Cuenta',
-    items: [
-      { id: 'edit-profile', icon: '✏️', label: 'Editar perfil', description: 'Nombre, teléfono, avatar' },
-      { id: 'help', icon: '❓', label: 'Ayuda y soporte', description: 'Preguntas frecuentes, contacto' },
-      { id: 'about', icon: 'ℹ️', label: 'Acerca de Dónde Hay', description: 'Versión 1.0.0 · by DevParadise' },
-    ],
-  },
-];
-
 export default function ProfileScreen() {
+  const router = useRouter();
   const { resolvedMode } = useThemeStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, clearAuth } = useAuthStore();
   const colors = getColors(resolvedMode);
+
+  // Get real data
+  const { data: favorites } = useFavorites();
+  const { data: savedSearches } = useSavedSearches();
 
   const displayName = user?.name ?? 'Usuario invitado';
   const displayEmail = user?.email ?? 'Inicia sesión para sincronizar';
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Estás seguro que quieres cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearAuth();
+              router.replace('/(auth)/login' as any);
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const menuSections: { title: string; items: MenuItem[] }[] = [
+    {
+      title: 'Actividad',
+      items: [
+        { 
+          id: 'history', 
+          icon: '🕐', 
+          label: 'Historial de búsquedas', 
+          description: 'Tus búsquedas recientes',
+          onPress: () => router.push('/(tabs)/search' as any)
+        },
+        { 
+          id: 'alerts', 
+          icon: '🔔', 
+          label: 'Mis alertas', 
+          description: 'Gestiona tus alertas de precio',
+          onPress: () => router.push('/(tabs)/alerts' as any)
+        },
+        { 
+          id: 'favorites', 
+          icon: '❤️', 
+          label: 'Guardados', 
+          description: 'Productos y búsquedas guardadas',
+          onPress: () => router.push('/(tabs)/saved' as any)
+        },
+      ],
+    },
+    {
+      title: 'Preferencias',
+      items: [
+        { 
+          id: 'theme', 
+          icon: '🎨', 
+          label: 'Apariencia', 
+          description: 'Modo claro, oscuro o sistema',
+          onPress: () => router.push('/profile/preferences' as any)
+        },
+        { 
+          id: 'currency', 
+          icon: '💱', 
+          label: 'Moneda preferida', 
+          description: 'USD, CUP o MLC',
+          onPress: () => router.push('/profile/preferences' as any)
+        },
+        { 
+          id: 'location', 
+          icon: '📍', 
+          label: 'Ubicación por defecto', 
+          description: 'Tu provincia',
+          onPress: () => router.push('/profile/preferences' as any)
+        },
+        { 
+          id: 'notifications', 
+          icon: '📢', 
+          label: 'Notificaciones', 
+          description: 'Push, email, alertas',
+          onPress: () => router.push('/profile/preferences' as any)
+        },
+      ],
+    },
+    {
+      title: 'Cuenta',
+      items: [
+        { 
+          id: 'edit-profile', 
+          icon: '✏️', 
+          label: 'Editar perfil', 
+          description: 'Nombre, teléfono, avatar',
+          onPress: () => router.push('/profile/edit' as any)
+        },
+        { 
+          id: 'help', 
+          icon: '❓', 
+          label: 'Ayuda y soporte', 
+          description: 'Preguntas frecuentes, contacto',
+        },
+        { 
+          id: 'about', 
+          icon: 'ℹ️', 
+          label: 'Acerca de Dónde Hay', 
+          description: 'Versión 1.0.0 · by DevParadise',
+        },
+      ],
+    },
+  ];
+
   return (
-    <Box flex={1} bg="background" mode={resolvedMode} testID="profile-screen">
+    <Box flex={1} bg="background" mode={resolvedMode}>
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <ScrollView
           contentContainerStyle={{ paddingBottom: 32 }}
@@ -70,64 +157,69 @@ export default function ProfileScreen() {
         >
           {/* Header del perfil */}
           <Box
-            px={4}
-            py={6}
+            px="md"
+            py="lg"
             alignItems="center"
             bg="surface"
             mode={resolvedMode}
             style={{ borderBottomWidth: 1, borderBottomColor: colors.divider }}
           >
-            <Box position="relative" mb={3} mode={resolvedMode}>
+            <Box position="relative" mb="md" mode={resolvedMode}>
               <Avatar
                 size="2xl"
                 name={displayName}
                 source={user?.avatarUrl ? { uri: user.avatarUrl } : undefined}
                 mode={resolvedMode}
               />
-              <Pressable
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                }}
-                testID="profile-edit-avatar"
-                accessibilityLabel="Editar foto de perfil"
-              >
-                <Box
-                  width={32}
-                  height={32}
-                  borderRadius="full"
-                  bg="primary"
-                  alignItems="center"
-                  justifyContent="center"
-                  borderWidth={2}
-                  borderColor="surface"
-                  mode={resolvedMode}
+              {isAuthenticated && (
+                <Pressable
+                  onPress={() => router.push('/profile/edit' as any)}
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                  }}
                 >
-                  <Text variant="bodySmall" color="onPrimary" mode={resolvedMode}>
-                    ✏️
-                  </Text>
-                </Box>
-              </Pressable>
+                  <Box
+                    width={32}
+                    height={32}
+                    borderRadius="full"
+                    bg="primary"
+                    alignItems="center"
+                    justifyContent="center"
+                    borderWidth={2}
+                    borderColor="surface"
+                    mode={resolvedMode}
+                  >
+                    <Text variant="bodySmall" color="onPrimary">
+                      ✏️
+                    </Text>
+                  </Box>
+                </Pressable>
+              )}
             </Box>
 
-            <Text variant="headlineSmall" color="text" mode={resolvedMode} textAlign="center">
+            <Text variant="headlineSmall" color="text" textAlign="center">
               {displayName}
             </Text>
-            <Text variant="bodySmall" color="textSecondary" mode={resolvedMode} mt={1}>
-              {displayEmail}
-            </Text>
+            <Box mt="xs">
+              <Text variant="bodySmall" color="textSecondary">
+                {displayEmail}
+              </Text>
+            </Box>
 
             {!isAuthenticated && (
-              <Box mt={3} mode={resolvedMode}>
-                <Badge variant="primary" size="md">
-                  Iniciar sesión
-                </Badge>
+              <Box mt="md">
+                <Pressable onPress={() => router.push('/(auth)/login' as any)}>
+                  <Badge variant="primary" size="md">
+                    Iniciar sesión
+                  </Badge>
+                </Pressable>
               </Box>
             )}
 
             {isAuthenticated && user?.role === 'seller' && (
-              <Box mt={3} mode={resolvedMode}>
+              <Box mt="md">
                 <Badge variant="success" size="md">
                   ✓ Vendedor verificado
                 </Badge>
@@ -138,30 +230,28 @@ export default function ProfileScreen() {
           {/* Stats rápidos */}
           <Box
             flexDirection="row"
-            px={4}
-            py={4}
+            px="md"
+            py="md"
             bg="surface"
-            borderBottomWidth={1}
-            borderBottomColor="divider"
             mode={resolvedMode}
+            style={{ borderBottomWidth: 1, borderBottomColor: colors.divider }}
           >
             {[
-              { label: 'Guardados', value: '3' },
-              { label: 'Alertas', value: '2' },
-              { label: 'Búsquedas', value: '47' },
+              { label: 'Guardados', value: favorites?.length?.toString() || '0' },
+              { label: 'Búsquedas', value: savedSearches?.length?.toString() || '0' },
+              { label: 'Alertas', value: '0' },
             ].map((stat, index) => (
               <Box
                 key={stat.label}
                 flex={1}
                 alignItems="center"
-                borderLeftWidth={index > 0 ? 1 : 0}
-                borderLeftColor="divider"
                 mode={resolvedMode}
+                style={index > 0 ? { borderLeftWidth: 1, borderLeftColor: colors.divider } : undefined}
               >
-                <Text variant="headlineSmall" color="primary" fontWeight="bold" mode={resolvedMode}>
+                <Text variant="headlineSmall" color="primary" fontWeight="bold">
                   {stat.value}
                 </Text>
-                <Text variant="labelSmall" color="textSecondary" mode={resolvedMode}>
+                <Text variant="labelSmall" color="textSecondary">
                   {stat.label}
                 </Text>
               </Box>
@@ -169,30 +259,24 @@ export default function ProfileScreen() {
           </Box>
 
           {/* Menú por secciones */}
-          {MENU_SECTIONS.map((section) => (
-            <Box key={section.title} px={4} mt={6} mode={resolvedMode}>
-              <Text
-                variant="labelMedium"
-                color="textTertiary"
-                fontWeight="semiBold"
-                mb={2}
-                mode={resolvedMode}
-              >
-                {section.title.toUpperCase()}
-              </Text>
+          {menuSections.map((section) => (
+            <Box key={section.title} px="md" mt="lg" mode={resolvedMode}>
+              <Box mb="xs">
+                <Text
+                  variant="labelMedium"
+                  color="textTertiary"
+                  fontWeight="600"
+                >
+                  {section.title.toUpperCase()}
+                </Text>
+              </Box>
 
-              <Card variant="elevated" padding="0" mode={resolvedMode}>
+              <Card variant="elevated" padding="none" mode={resolvedMode}>
                 {section.items.map((item, index) => (
                   <React.Fragment key={item.id}>
                     {index > 0 && <Divider mode={resolvedMode} />}
                     <Pressable
-                      onPress={() => {
-                        // TODO: navegar a la pantalla correspondiente
-                        console.log('Menu item:', item.id);
-                      }}
-                      testID={`profile-menu-${item.id}`}
-                      accessibilityRole="button"
-                      accessibilityLabel={item.label}
+                      onPress={item.onPress || (() => console.log('Menu item:', item.id))}
                       style={({ pressed }) => ({
                         opacity: pressed ? 0.7 : 1,
                       })}
@@ -200,9 +284,9 @@ export default function ProfileScreen() {
                       <Box
                         flexDirection="row"
                         alignItems="center"
-                        gap={3}
-                        px={4}
-                        py={4}
+                        gap="md"
+                        px="md"
+                        py="md"
                         mode={resolvedMode}
                       >
                         <Box
@@ -214,16 +298,16 @@ export default function ProfileScreen() {
                           justifyContent="center"
                           mode={resolvedMode}
                         >
-                          <Text variant="bodyLarge" mode={resolvedMode}>
+                          <Text variant="bodyLarge">
                             {item.icon}
                           </Text>
                         </Box>
                         <Box flex={1} mode={resolvedMode}>
-                          <Text variant="bodyMedium" color="text" fontWeight="medium" mode={resolvedMode}>
+                          <Text variant="bodyMedium" color="text" fontWeight="medium">
                             {item.label}
                           </Text>
                           {item.description && (
-                            <Text variant="labelSmall" color="textTertiary" mode={resolvedMode}>
+                            <Text variant="labelSmall" color="textTertiary">
                               {item.description}
                             </Text>
                           )}
@@ -238,12 +322,12 @@ export default function ProfileScreen() {
                             justifyContent="center"
                             mode={resolvedMode}
                           >
-                            <Text variant="labelSmall" color="onError" mode={resolvedMode}>
+                            <Text variant="labelSmall" color="onError">
                               {item.badge}
                             </Text>
                           </Box>
                         )}
-                        <Text variant="bodyMedium" color="textTertiary" mode={resolvedMode}>
+                        <Text variant="bodyMedium" color="textTertiary">
                           ›
                         </Text>
                       </Box>
@@ -256,19 +340,11 @@ export default function ProfileScreen() {
 
           {/* Botón logout si está autenticado */}
           {isAuthenticated && (
-            <Box px={4} mt={6} mode={resolvedMode}>
-              <Pressable
-                onPress={() => {
-                  // TODO: implementar logout
-                  console.log('Logout');
-                }}
-                testID="profile-logout"
-                accessibilityRole="button"
-                accessibilityLabel="Cerrar sesión"
-              >
-                <Card variant="outlined" padding="4" mode={resolvedMode}>
+            <Box px="md" mt="lg" mode={resolvedMode}>
+              <Pressable onPress={handleLogout}>
+                <Card variant="outlined" padding="md" mode={resolvedMode}>
                   <Box alignItems="center" mode={resolvedMode}>
-                    <Text variant="bodyMedium" color="error" fontWeight="medium" mode={resolvedMode}>
+                    <Text variant="bodyMedium" color="error" fontWeight="medium">
                       Cerrar sesión
                     </Text>
                   </Box>
@@ -278,11 +354,11 @@ export default function ProfileScreen() {
           )}
 
           {/* Footer branding */}
-          <Box alignItems="center" mt={8} mode={resolvedMode}>
-            <Text variant="labelSmall" color="textTertiary" mode={resolvedMode}>
+          <Box alignItems="center" mt="xl" mode={resolvedMode}>
+            <Text variant="labelSmall" color="textTertiary">
               Dónde Hay · Encuentra lo que buscas.
             </Text>
-            <Text variant="labelSmall" color="textTertiary" mode={resolvedMode}>
+            <Text variant="labelSmall" color="textTertiary">
               by DevParadise
             </Text>
           </Box>

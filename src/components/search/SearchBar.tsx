@@ -124,9 +124,9 @@ const SearchBar = forwardRef<TextInput, SearchBarProps>(
       borderRadius: BorderRadius.xl,
       borderWidth: 1.5,
       borderColor: isFocused ? colors.inputBorderFocus : colors.inputBorder,
-      paddingHorizontal: Spacing[4],
-      paddingVertical: Spacing[2],
-      gap: Spacing[2],
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      gap: Spacing.xs,
       height: 48,
     };
 
@@ -153,18 +153,20 @@ const SearchBar = forwardRef<TextInput, SearchBarProps>(
           style={({ pressed }) => ({
             flexDirection: 'row',
             alignItems: 'center',
-            gap: Spacing[3],
-            paddingHorizontal: Spacing[4],
-            paddingVertical: Spacing[3],
+            gap: Spacing.sm,
+            paddingHorizontal: Spacing.md,
+            paddingVertical: Spacing.sm,
             backgroundColor: pressed ? colors.surfaceVariant : 'transparent',
           })}
         >
           <Text variant="bodyMedium" mode={resolvedMode}>
             {item.icon || icons[item.type]}
           </Text>
-          <Text variant="bodyMedium" color="text" mode={resolvedMode} flex={1}>
-            {item.text}
-          </Text>
+          <Box flex={1}>
+            <Text variant="bodyMedium" color="text">
+              {item.text}
+            </Text>
+          </Box>
           {item.type === 'history' && (
             <Pressable
               onPress={(e) => {
@@ -269,11 +271,10 @@ const SearchBar = forwardRef<TextInput, SearchBarProps>(
             borderWidth={1}
             borderColor="border"
             shadow="lg"
-            elevation={8}
-            maxHeight={300}
             overflow="hidden"
             mode={resolvedMode}
             testID={`${testID}-suggestions`}
+            style={{ maxHeight: 300, elevation: 8 }}
           >
             <FlatList
               data={filteredSuggestions}
@@ -294,4 +295,3 @@ const SearchBar = forwardRef<TextInput, SearchBarProps>(
 SearchBar.displayName = 'SearchBar';
 
 export { SearchBar };
-export type { SearchBarProps, SearchSuggestion };

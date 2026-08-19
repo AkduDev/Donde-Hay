@@ -4,7 +4,8 @@
  */
 
 import { httpClient } from '@/lib/api-client';
-import type { User, UserPreferences, SearchHistoryItem, PaginatedResponse } from '@/types';
+import type { User, UserPreferences, SearchHistoryItem } from '@/types';
+import type { PaginatedResponse } from '@/lib/api-client';
 
 // ============================================
 // TYPES

@@ -78,6 +78,9 @@ export const Colors = {
     // Disabled
     disabled: '#94A3B8',
     disabledBackground: '#F1F5F9',
+
+    // Transparent
+    transparent: 'transparent',
   },
 
   // ===== DARK MODE =====
@@ -154,6 +157,9 @@ export const Colors = {
     // Disabled
     disabled: '#475569',
     disabledBackground: '#1E293B',
+
+    // Transparent
+    transparent: 'transparent',
   },
 } as const;
 
@@ -162,7 +168,7 @@ export type ColorPalette = typeof Colors.light;
 
 // Helper para obtener colores según modo
 export function getColors(mode: ColorMode): ColorPalette {
-  return Colors[mode];
+  return Colors[mode] as ColorPalette;
 }
 
 // Tokens semánticos para uso directo en componentes

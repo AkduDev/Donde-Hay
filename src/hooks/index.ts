@@ -9,6 +9,8 @@ export { useCategories, useCategory, useCategoryProducts } from './use-categorie
 export { useFavorites, useFavoriteProducts, useFavoriteSellers, useSavedSearches, useIsFavorite, useAddFavorite, useRemoveFavorite, useToggleFavorite, useSaveSearch, useDeleteSavedSearch, useToggleSearchNotification } from './use-favorites';
 export { useAlerts, useAlertMatches, useCreateAlert, useUpdateAlert, useDeleteAlert, useToggleAlert } from './use-alerts';
 export { useProvinces, useMunicipalities, useLocation, useReverseGeocode } from './use-locations';
+export { useDeviceLocation } from './use-device-location';
+export { useNotifications } from './use-notifications';
 export { useProfile, useProfileStats, useSearchHistory, useUpdateProfile, useUpdatePreferences, useClearHistory, useDeleteHistoryItem, useUploadAvatar, useDeleteAccount } from './use-profile';
 export { useSeller, useSellerProducts, useSellerReviews } from './use-sellers';
 export { useDebounce, useDebouncedCallback } from './use-debounce';

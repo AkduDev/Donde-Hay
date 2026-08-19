@@ -7,6 +7,7 @@ import React, { forwardRef, useId, useState } from 'react';
 import {
   TextInput,
   TextInputProps,
+  Pressable,
   ViewStyle,
   TextStyle,
   StyleProp,
@@ -20,48 +21,32 @@ import { ColorPalette, getColors } from '@/theme/colors';
 export type InputSize = 'sm' | 'md' | 'lg';
 
 export interface InputProps extends Omit<TextInputProps, 'style' | 'onChangeText' | 'value' | 'defaultValue'> {
-  // Label & Helper
   label?: string;
   placeholder?: string;
   helperText?: string;
   errorText?: string;
-
-  // Value control
   value?: string;
   defaultValue?: string;
   onChangeText?: (text: string) => void;
   onBlur?: () => void;
   onFocus?: () => void;
-
-  // State
   disabled?: boolean;
   required?: boolean;
   readOnly?: boolean;
-
-  // Size
   size?: InputSize;
-
-  // Icons
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   rightIconOnPress?: () => void;
-
-  // Visual
   mode?: 'light' | 'dark';
   testID?: string;
-
-  // Style overrides
   style?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
   labelStyle?: StyleProp<TextStyle>;
   helperStyle?: StyleProp<TextStyle>;
   errorStyle?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
-
-  // Input specific
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   autoCorrect?: boolean;
-  autoCompleteType?: TextInputProps['autoCompleteType'];
   keyboardType?: TextInputProps['keyboardType'];
   textContentType?: TextInputProps['textContentType'];
   secureTextEntry?: boolean;
@@ -80,24 +65,24 @@ const sizeConfig: Record<InputSize, {
 }> = {
   sm: {
     height: 40,
-    paddingX: '3',
-    paddingY: '1',
+    paddingX: 'sm',
+    paddingY: 'xxxs',
     fontSize: 13,
     borderRadius: 'sm',
     iconSize: 18,
   },
   md: {
     height: 48,
-    paddingX: '4',
-    paddingY: '1',
+    paddingX: 'md',
+    paddingY: 'xxxs',
     fontSize: 14,
     borderRadius: 'md',
     iconSize: 20,
   },
   lg: {
     height: 56,
-    paddingX: '5',
-    paddingY: '2',
+    paddingX: 'lg',
+    paddingY: 'xs',
     fontSize: 16,
     borderRadius: 'lg',
     iconSize: 22,
@@ -133,7 +118,6 @@ const Input = forwardRef<TextInput, InputProps>(
       containerStyle,
       autoCapitalize = 'sentences',
       autoCorrect = false,
-      autoCompleteType,
       keyboardType,
       textContentType,
       secureTextEntry = false,
@@ -196,13 +180,13 @@ const Input = forwardRef<TextInput, InputProps>(
       alignItems: 'center',
       height: multiline ? undefined : sConfig.height,
       minHeight: sConfig.height,
-      paddingHorizontal: Spacing[sConfig.paddingX],
-      paddingVertical: Spacing[sConfig.paddingY],
-      borderRadius: BorderRadius[sConfig.borderRadius],
+      paddingHorizontal: Spacing[sConfig.paddingX] as number,
+      paddingVertical: Spacing[sConfig.paddingY] as number,
+      borderRadius: BorderRadius[sConfig.borderRadius] as number,
       backgroundColor: getBackgroundColor(),
       borderWidth: 1.5,
       borderColor: getBorderColor(),
-      gap: Spacing[2],
+      gap: Spacing.xs,
       flex: 1,
     };
 
@@ -210,7 +194,6 @@ const Input = forwardRef<TextInput, InputProps>(
       flex: 1,
       fontSize: sConfig.fontSize,
       color: disabled ? colors.textSecondary : colors.text,
-      placeholderTextColor: colors.inputPlaceholder,
       paddingVertical: 0,
       paddingHorizontal: 0,
       minHeight: multiline ? sConfig.height * (numberOfLines || 3) : undefined,
@@ -220,7 +203,7 @@ const Input = forwardRef<TextInput, InputProps>(
       <Box
         testID={testID ? `${testID}-container` : undefined}
         style={containerStyle}
-        gap={Spacing[2]}
+        gap="xs"
         mode={mode}
       >
         {label && (
@@ -245,12 +228,7 @@ const Input = forwardRef<TextInput, InputProps>(
               testID={testID ? `${testID}-left-icon` : undefined}
               mode={mode}
             >
-              {React.isValidElement(leftIcon)
-                ? React.cloneElement(leftIcon as React.ReactElement, {
-                    color: focused ? colors.primary : colors.textSecondary,
-                    size: sConfig.iconSize,
-                  })
-                : leftIcon}
+              {leftIcon}
             </Box>
           )}
 
@@ -263,12 +241,11 @@ const Input = forwardRef<TextInput, InputProps>(
             onFocus={handleFocus}
             placeholder={placeholder}
             placeholderTextColor={colors.inputPlaceholder}
-            disabled={disabled}
+            editable={!disabled}
             readOnly={readOnly}
             secureTextEntry={secureTextEntry && !showPassword}
             autoCapitalize={autoCapitalize}
             autoCorrect={autoCorrect}
-            autoCompleteType={autoCompleteType}
             keyboardType={keyboardType}
             textContentType={textContentType}
             maxLength={maxLength}
@@ -281,8 +258,7 @@ const Input = forwardRef<TextInput, InputProps>(
             testID={testID ? `${testID}-input` : undefined}
             accessibilityLabel={label}
             accessibilityHint={helperText}
-            accessibilityInvalid={hasError}
-            accessibilityRequired={required}
+            accessibilityState={{ disabled }}
             {...rest}
           />
 
@@ -290,15 +266,9 @@ const Input = forwardRef<TextInput, InputProps>(
             <Pressable
               onPress={handleRightIconPress}
               testID={testID ? `${testID}-right-icon` : undefined}
-              accessibilityLabel={secureTextEntry ? (showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña') : undefined}
             >
               <Box mode={mode}>
-                {React.isValidElement(rightIcon)
-                  ? React.cloneElement(rightIcon as React.ReactElement, {
-                      color: focused ? colors.primary : colors.textSecondary,
-                      size: sConfig.iconSize,
-                    })
-                  : rightIcon}
+                {rightIcon}
               </Box>
             </Pressable>
           )}
@@ -323,7 +293,3 @@ const Input = forwardRef<TextInput, InputProps>(
 Input.displayName = 'Input';
 
 export { Input };
-export type { InputProps, InputSize };
-
-// Import Pressable
-import { Pressable } from 'react-native';

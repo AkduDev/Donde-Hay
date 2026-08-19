@@ -7,7 +7,7 @@ import React, { forwardRef } from 'react';
 import {
   Pressable,
   PressableProps,
-  Text,
+  View,
   TextStyle,
   ViewStyle,
   StyleProp,
@@ -32,41 +32,25 @@ export type ButtonVariant =
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
-  // Variant & Size
   variant?: ButtonVariant;
   size?: ButtonSize;
-
-  // State
   disabled?: boolean;
   loading?: boolean;
   loadingText?: string;
-
-  // Layout
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   iconSpacing?: keyof typeof Spacing;
-
-  // Content
   children: React.ReactNode;
-
-  // Custom styling
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
-
-  // Theme
   mode?: 'light' | 'dark';
-
-  // Test ID
   testID?: string;
-
-  // Accessibility
   accessibilityLabel?: string;
   accessibilityHint?: string;
 }
 
-// Configuración de variants
 const variantConfig: Record<ButtonVariant, {
   bg: keyof ColorPalette;
   bgHover: keyof ColorPalette;
@@ -141,70 +125,69 @@ const variantConfig: Record<ButtonVariant, {
   },
 };
 
-// Configuración de tamaños
 const sizeConfig: Record<ButtonSize, {
   height: number;
   paddingX: keyof typeof Spacing;
   paddingY: keyof typeof Spacing;
   gap: keyof typeof Spacing;
   fontSize: number;
-  fontWeight: keyof typeof import('@/theme/typography').FontWeights;
+  fontWeight: TextStyle['fontWeight'];
   borderRadius: keyof typeof BorderRadius;
   iconSize: number;
 }> = {
   xs: {
     height: 28,
-    paddingX: '2',
-    paddingY: '0',
-    gap: '1',
+    paddingX: 'xxs',
+    paddingY: 'none',
+    gap: 'xxxs',
     fontSize: 11,
-    fontWeight: 'medium',
+    fontWeight: '500',
     borderRadius: 'sm',
     iconSize: 14,
   },
   sm: {
     height: 36,
-    paddingX: '3',
-    paddingY: '0',
-    gap: '2',
+    paddingX: 'xs',
+    paddingY: 'none',
+    gap: 'xxs',
     fontSize: 12,
-    fontWeight: 'medium',
+    fontWeight: '500',
     borderRadius: 'sm',
     iconSize: 16,
   },
   md: {
     height: 44,
-    paddingX: '4',
-    paddingY: '1',
-    gap: '2',
+    paddingX: 'sm',
+    paddingY: 'xxxs',
+    gap: 'xxs',
     fontSize: 14,
-    fontWeight: 'semiBold',
+    fontWeight: '600',
     borderRadius: 'md',
     iconSize: 18,
   },
   lg: {
     height: 52,
-    paddingX: '5',
-    paddingY: '1',
-    gap: '3',
+    paddingX: 'md',
+    paddingY: 'xxxs',
+    gap: 'xs',
     fontSize: 16,
-    fontWeight: 'semiBold',
+    fontWeight: '600',
     borderRadius: 'md',
     iconSize: 20,
   },
   xl: {
     height: 60,
-    paddingX: '6',
-    paddingY: '2',
-    gap: '3',
+    paddingX: 'lg',
+    paddingY: 'xxs',
+    gap: 'xs',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
     borderRadius: 'lg',
     iconSize: 22,
   },
 };
 
-const Button = forwardRef<Pressable, ButtonProps>(
+const Button = forwardRef<View, ButtonProps>(
   (
     {
       variant = 'primary',
@@ -215,7 +198,7 @@ const Button = forwardRef<Pressable, ButtonProps>(
       fullWidth = false,
       leftIcon,
       rightIcon,
-      iconSpacing = '2',
+      iconSpacing = 'xxs',
       children,
       style,
       textStyle,
@@ -237,24 +220,22 @@ const Button = forwardRef<Pressable, ButtonProps>(
     const sConfig = sizeConfig[size];
     const isDisabled = disabled || loading;
 
-    // Estado de pressed para feedback visual
     const [pressed, setPressed] = React.useState(false);
 
-    const handlePressIn = (event: React.SyntheticEvent) => {
+    const handlePressIn = (event: any) => {
       if (!isDisabled) setPressed(true);
-      onPressIn?.(event);
+      onPressIn?.(event as any);
     };
 
-    const handlePressOut = (event: React.SyntheticEvent) => {
+    const handlePressOut = (event: any) => {
       setPressed(false);
-      onPressOut?.(event);
+      onPressOut?.(event as any);
     };
 
-    const handlePress = (event: React.SyntheticEvent) => {
-      if (!isDisabled) onPress?.(event);
+    const handlePress = (event: any) => {
+      if (!isDisabled) onPress?.(event as any);
     };
 
-    // Colores dinámicos según estado
     const getBackgroundColor = () => {
       if (isDisabled) return colors[vConfig.bgDisabled];
       if (pressed) return colors[vConfig.bgPressed];
@@ -273,27 +254,26 @@ const Button = forwardRef<Pressable, ButtonProps>(
 
     const buttonStyle: ViewStyle = {
       height: sConfig.height,
-      paddingHorizontal: Spacing[sConfig.paddingX],
-      paddingVertical: Spacing[sConfig.paddingY],
-      borderRadius: BorderRadius[sConfig.borderRadius],
+      paddingHorizontal: Spacing[sConfig.paddingX] as number,
+      paddingVertical: Spacing[sConfig.paddingY] as number,
+      borderRadius: BorderRadius[sConfig.borderRadius] as number,
       backgroundColor: getBackgroundColor(),
       borderWidth: variant === 'outline' || variant === 'ghost' ? 1.5 : 0,
       borderColor: getBorderColor(),
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: Spacing[iconSpacing],
+      gap: Spacing[iconSpacing] as number,
       width: fullWidth ? '100%' : undefined,
       opacity: isDisabled ? 0.6 : 1,
-      // Shadow para variants elevados
-      ...(variant === 'primary' || variant === 'danger' || variant === 'success' || variant === 'accent') && {
+      ...((variant === 'primary' || variant === 'danger' || variant === 'success' || variant === 'accent') && {
         ...getShadow('sm', mode),
         elevation: 2,
-      },
-      ...(pressed && (variant === 'primary' || variant === 'danger' || variant === 'success' || variant === 'accent')) && {
+      }),
+      ...(pressed && (variant === 'primary' || variant === 'danger' || variant === 'success' || variant === 'accent') && {
         ...getShadow('xs', mode),
         elevation: 1,
-      },
+      }),
     };
 
     const textStyleComputed: TextStyle = {
@@ -301,7 +281,7 @@ const Button = forwardRef<Pressable, ButtonProps>(
       fontWeight: sConfig.fontWeight,
       color: getTextColor(),
       textAlign: 'center',
-      lineHeight: sConfig.height - Spacing[sConfig.paddingY] * 2,
+      lineHeight: sConfig.height - (Spacing[sConfig.paddingY] as number) * 2,
     };
 
     const content = loading ? (
@@ -311,7 +291,7 @@ const Button = forwardRef<Pressable, ButtonProps>(
           color={getTextColor()}
           testID={`${testID}-loader`}
         />
-        <TextComponent variant="labelMedium" color={vConfig.textDisabled as keyof ColorPalette} mode={mode}>
+        <TextComponent variant="labelMedium" color={vConfig.textDisabled} mode={mode}>
           {loadingText}
         </TextComponent>
       </>
@@ -331,13 +311,13 @@ const Button = forwardRef<Pressable, ButtonProps>(
 
     return (
       <Pressable
-        ref={ref}
+        ref={ref as any}
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onLongPress={onLongPress}
         disabled={isDisabled}
-        style={({ pressed: pressablePressed }) => [
+        style={() => [
           buttonStyle,
           containerStyle,
           style,
@@ -358,4 +338,3 @@ const Button = forwardRef<Pressable, ButtonProps>(
 Button.displayName = 'Button';
 
 export { Button };
-export type { ButtonProps, ButtonVariant, ButtonSize };

@@ -4,7 +4,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Image, ImageSourcePropType, ViewStyle, StyleProp } from 'react-native';
+import { Image, ImageSourcePropType, Pressable, View, ViewStyle, StyleProp } from 'react-native';
 import { Box } from './Box';
 import { Text as TextComponent } from './Text';
 import { Badge } from './Badge';
@@ -16,7 +16,7 @@ export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 export interface AvatarProps {
   source?: ImageSourcePropType;
-  name?: string; // Para generar iniciales
+  name?: string;
   size?: AvatarSize;
   shape?: 'circle' | 'square';
   status?: 'online' | 'offline' | 'busy' | 'away' | null;
@@ -42,7 +42,7 @@ const sizeConfig: Record<AvatarSize, {
   '2xl': { width: 96, height: 96, fontSize: 28, statusSize: 20, statusBorder: 3 },
 };
 
-const Avatar = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, AvatarProps>(
+const Avatar = forwardRef<View, AvatarProps>(
   (
     {
       source,
@@ -62,7 +62,6 @@ const Avatar = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, AvatarProp
     const sConfig = sizeConfig[size];
     const borderRadius = shape === 'circle' ? BorderRadius.full : BorderRadius.md;
 
-    // Generar iniciales del nombre
     const getInitials = (fullName: string) => {
       return fullName
         .split(' ')
@@ -72,7 +71,6 @@ const Avatar = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, AvatarProp
         .slice(0, 2);
     };
 
-    // Color de fondo basado en el nombre (consistente)
     const getBackgroundColor = (fullName: string) => {
       const hues = [
         '#2563EB', '#00C896', '#F59E0B', '#EF4444',
@@ -113,15 +111,8 @@ const Avatar = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, AvatarProp
       return positions[statusPosition];
     };
 
-    return (
-      <Box
-        ref={ref}
-        position="relative"
-        style={[{ ...avatarStyle }, style]}
-        testID={testID}
-        mode={mode}
-        onPress={onPress}
-      >
+    const content = (
+      <>
         {source ? (
           <Image
             source={source}
@@ -165,6 +156,32 @@ const Avatar = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, AvatarProp
             mode={mode}
           />
         )}
+      </>
+    );
+
+    if (onPress) {
+      return (
+        <Pressable onPress={onPress} testID={testID}>
+          <Box
+            position="relative"
+            style={[{ ...avatarStyle }, style]}
+            mode={mode}
+          >
+            {content}
+          </Box>
+        </Pressable>
+      );
+    }
+
+    return (
+      <Box
+        ref={ref}
+        position="relative"
+        style={[{ ...avatarStyle }, style]}
+        testID={testID}
+        mode={mode}
+      >
+        {content}
       </Box>
     );
   }
@@ -173,4 +190,3 @@ const Avatar = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, AvatarProp
 Avatar.displayName = 'Avatar';
 
 export { Avatar };
-export type { AvatarProps, AvatarSize };

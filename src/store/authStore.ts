@@ -1,41 +1,17 @@
 /**
  * Dónde Hay - Auth Store
- * Estado global de autenticación con Zustand
+ * Estado global de autenticación con Supabase Auth
  */
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
-import { httpClient, getStoredTokens, storeTokens, clearTokens, AUTH_STORAGE_KEYS } from '@/lib/api-client';
+import { supabase } from '@/lib/supabase';
+import type { User, UserPreferences } from '@/types';
 
 // ============================================
 // TIPOS
 // ============================================
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatarUrl?: string;
-  phone?: string;
-  role: 'user' | 'seller' | 'admin';
-  createdAt: string;
-  updatedAt: string;
-  preferences?: UserPreferences;
-}
-
-export interface UserPreferences {
-  currency: 'USD' | 'CUP' | 'MLC';
-  theme: 'light' | 'dark' | 'system';
-  notifications: {
-    push: boolean;
-    email: boolean;
-    alerts: boolean;
-    promotions: boolean;
-  };
-  searchRadius: number; // km
-  defaultLocation?: string;
-}
 
 export interface AuthState {
   user: User | null;
@@ -47,17 +23,12 @@ export interface AuthState {
 }
 
 export interface AuthActions {
-  // Core auth
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   clearAuth: () => void;
   updateUser: (user: Partial<User>) => void;
   updatePreferences: (prefs: Partial<UserPreferences>) => void;
-
-  // Token management
   refreshAccessToken: () => Promise<boolean>;
   getAccessToken: () => string | null;
-
-  // Hydration
   hydrate: () => Promise<void>;
   setHydrated: (hydrated: boolean) => void;
 }
@@ -117,12 +88,9 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: true,
           isLoading: false,
         });
-        // Update httpClient token getter
-        storeTokens(accessToken, refreshToken);
       },
 
-      clearAuth: async () => {
-        await clearTokens();
+      clearAuth: () => {
         set({
           user: null,
           accessToken: null,
@@ -140,31 +108,27 @@ export const useAuthStore = create<AuthStore>()(
       updatePreferences: (prefs) =>
         set((state) => ({
           user: state.user
-            ? { ...state.user, preferences: { ...state.user.preferences, ...prefs } }
+            ? { ...state.user, preferences: { ...(state.user.preferences || {}), ...prefs } as UserPreferences }
             : null,
         })),
 
       refreshAccessToken: async () => {
-        const { refreshToken } = get();
-        if (!refreshToken) return false;
-
         try {
           set({ isLoading: true });
-          const response = await httpClient.post<{ accessToken: string; refreshToken: string }>(
-            '/auth/refresh',
-            { refreshToken },
-            { skipAuth: true }
-          );
+          const { data, error } = await supabase.auth.refreshSession();
 
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response;
-          await storeTokens(newAccessToken, newRefreshToken);
+          if (error) throw error;
 
-          set({
-            accessToken: newAccessToken,
-            refreshToken: newRefreshToken,
-            isLoading: false,
-          });
-          return true;
+          if (data.session) {
+            set({
+              accessToken: data.session.access_token,
+              refreshToken: data.session.refresh_token,
+              isLoading: false,
+            });
+            return true;
+          }
+
+          return false;
         } catch {
           get().clearAuth();
           return false;
@@ -178,24 +142,40 @@ export const useAuthStore = create<AuthStore>()(
       hydrate: async () => {
         set({ isLoading: true });
         try {
-          const { accessToken, refreshToken } = await getStoredTokens();
-          if (accessToken && refreshToken) {
-            // Verificar token con el backend
-            const user = await httpClient.get<User>('/auth/me');
-            set({
-              user,
-              accessToken,
-              refreshToken,
-              isAuthenticated: true,
-              isLoading: false,
-              isHydrated: true,
-            });
-          } else {
-            set({ isLoading: false, isHydrated: true });
+          const { data: { session }, error } = await supabase.auth.getSession();
+
+          if (error) throw error;
+
+          if (session) {
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError) throw userError;
+
+            if (user) {
+              set({
+                user: {
+                  id: user.id,
+                  email: user.email || '',
+                  name: user.user_metadata?.['name'] || '',
+                  avatarUrl: user.user_metadata?.['avatar_url'],
+                  phone: user.phone || undefined,
+                  role: 'user',
+                  createdAt: user.created_at,
+                  updatedAt: user.updated_at || user.created_at,
+                },
+                accessToken: session.access_token,
+                refreshToken: session.refresh_token,
+                isAuthenticated: true,
+                isLoading: false,
+                isHydrated: true,
+              });
+              return;
+            }
           }
+
+          set({ isLoading: false, isHydrated: true });
         } catch {
-          // Token inválido o expirado
-          await clearTokens();
+          await supabase.auth.signOut();
           set({ isLoading: false, isHydrated: true });
         }
       },
@@ -228,3 +208,41 @@ export const selectIsLoading = (state: AuthStore) => state.isLoading;
 export const selectIsHydrated = (state: AuthStore) => state.isHydrated;
 export const selectAccessToken = (state: AuthStore) => state.accessToken;
 export const selectRefreshToken = (state: AuthStore) => state.refreshToken;
+
+// ============================================
+// SUPABASE AUTH LISTENER
+// ============================================
+
+// Listen for auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  const store = useAuthStore.getState();
+
+  if (event === 'SIGNED_IN' && session) {
+    // User signed in
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        store.setAuth(
+          {
+            id: user.id,
+            email: user.email || '',
+            name: user.user_metadata?.['name'] || '',
+            avatarUrl: user.user_metadata?.['avatar_url'],
+            phone: user.phone || undefined,
+            role: 'user',
+            createdAt: user.created_at,
+            updatedAt: user.updated_at || user.created_at,
+          },
+          session.access_token,
+          session.refresh_token
+        );
+      }
+    });
+  } else if (event === 'SIGNED_OUT') {
+    store.clearAuth();
+  } else if (event === 'TOKEN_REFRESHED' && session) {
+    useAuthStore.setState({
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+    });
+  }
+});

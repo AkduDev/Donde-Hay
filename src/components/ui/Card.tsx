@@ -4,8 +4,9 @@
  */
 
 import React, { forwardRef } from 'react';
-import { ViewStyle, StyleProp, PressableProps } from 'react-native';
+import { View, ViewStyle, StyleProp, Pressable, PressableProps } from 'react-native';
 import { Box } from './Box';
+import { Text } from './Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
 import { Shadows, getShadow, ShadowLevel } from '@/theme/shadows';
@@ -45,11 +46,11 @@ const variantStyles: Record<CardVariant, (mode: 'light' | 'dark') => ViewStyle> 
   }),
 };
 
-const Card = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, CardProps>(
+const Card = forwardRef<View, CardProps>(
   (
     {
       variant = 'elevated',
-      padding = '4',
+      padding = 'md',
       children,
       style,
       mode = 'light',
@@ -61,31 +62,38 @@ const Card = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, CardProps>(
   ) => {
     const containerStyle: ViewStyle = {
       borderRadius: BorderRadius.lg,
-      padding: Spacing[padding],
+      padding: Spacing[padding] as number,
       ...variantStyles[variant](mode),
     };
 
-    const Component = onPress ? Pressable : Box;
+    if (onPress) {
+      return (
+        <Pressable
+          ref={ref as any}
+          onPress={onPress}
+          style={[containerStyle, style]}
+          testID={testID}
+          {...rest}
+        >
+          {children}
+        </Pressable>
+      );
+    }
 
     return (
-      <Component
-        ref={ref as any}
-        onPress={onPress}
+      <Box
+        ref={ref}
         style={[containerStyle, style]}
         testID={testID}
         mode={mode}
-        {...rest}
       >
         {children}
-      </Component>
+      </Box>
     );
   }
 );
 
 Card.displayName = 'Card';
-
-export { Card };
-export type { CardProps, CardVariant };
 
 // Sub-componentes de Card
 export interface CardHeaderProps {
@@ -96,26 +104,27 @@ export interface CardHeaderProps {
   testID?: string;
 }
 
-export const CardHeader = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, CardHeaderProps>(
-  ({ title, subtitle, action, mode = 'light', testID, ...props }, ref) => (
+const CardHeader = forwardRef<View, CardHeaderProps>(
+  ({ title, subtitle, action, mode = 'light', testID }, ref) => (
     <Box
       ref={ref}
       flexDirection="row"
       justifyContent="space-between"
       alignItems="flex-start"
-      gap={2}
+      gap="sm"
       mode={mode}
       testID={testID}
-      {...props}
     >
       <Box flex={1} mode={mode}>
         <Text variant="titleMedium" color="text" mode={mode} testID={`${testID}-title`}>
           {title}
         </Text>
         {subtitle && (
-          <Text variant="bodySmall" color="textSecondary" mode={mode} testID={`${testID}-subtitle`} mt={1}>
-            {subtitle}
-          </Text>
+          <Box mt="xs">
+            <Text variant="bodySmall" color="textSecondary" mode={mode} testID={`${testID}-subtitle`}>
+              {subtitle}
+            </Text>
+          </Box>
         )}
       </Box>
       {action && <Box mode={mode}>{action}</Box>}
@@ -131,9 +140,9 @@ export interface CardContentProps {
   testID?: string;
 }
 
-export const CardContent = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, CardContentProps>(
-  ({ children, mode = 'light', testID, ...props }, ref) => (
-    <Box ref={ref} mode={mode} testID={testID} {...props}>
+const CardContent = forwardRef<View, CardContentProps>(
+  ({ children, mode = 'light', testID }, ref) => (
+    <Box ref={ref} mode={mode} testID={testID}>
       {children}
     </Box>
   )
@@ -148,24 +157,22 @@ export interface CardFooterProps {
   testID?: string;
 }
 
-export const CardFooter = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, CardFooterProps>(
-  ({ children, divided = true, mode = 'light', testID, ...props }, ref) => (
+const CardFooter = forwardRef<View, CardFooterProps>(
+  ({ children, divided = true, mode = 'light', testID }, ref) => (
     <Box
       ref={ref}
       flexDirection="row"
       justifyContent="flex-end"
-      gap={2}
+      gap="sm"
       mode={mode}
       testID={testID}
-      {...props}
     >
       {divided && (
         <Box
-          borderTopWidth={1}
-          borderColor={getColors(mode).divider}
           width="100%"
-          py={2}
+          py="sm"
           mode={mode}
+          style={{ borderTopWidth: 1, borderColor: getColors(mode).divider }}
         />
       )}
       {children}
@@ -175,6 +182,4 @@ export const CardFooter = forwardRef<React.ComponentPropsWithoutRef<typeof Box>,
 
 CardFooter.displayName = 'CardFooter';
 
-// Re-export Text for internal use
-import { Text } from './Text';
-import { Pressable } from 'react-native';
+export { Card, CardHeader, CardContent, CardFooter };

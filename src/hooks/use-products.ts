@@ -30,8 +30,10 @@ export function useInfiniteProducts(params?: Omit<ProductListParams, 'page'>) {
     queryKey: queryKeys.products.list(params),
     queryFn: ({ pageParam = 1 }) =>
       productsService.list({ ...params, page: pageParam }),
-    getNextPageParam: (lastPage) =>
-      lastPage.hasNext ? lastPage.page + 1 : undefined,
+    getNextPageParam: (lastPage, allPages) => {
+      const totalLoaded = allPages.reduce((acc, p) => acc + p.data.length, 0);
+      return totalLoaded < lastPage.total ? allPages.length + 1 : undefined;
+    },
     initialPageParam: 1,
   });
 }

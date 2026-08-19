@@ -5,6 +5,7 @@
 
 import React, { forwardRef, useState, useRef, useEffect } from 'react';
 import {
+  View,
   ViewStyle,
   StyleProp,
   TextStyle,
@@ -47,7 +48,7 @@ export interface TooltipProps {
   arrow?: boolean;
 }
 
-const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, TooltipProps>(
+const Tooltip = forwardRef<View, TooltipProps>(
   (
     {
       content,
@@ -69,9 +70,8 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
     const [visible, setVisible] = useState(false);
     const [triggerLayout, setTriggerLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const [tooltipLayout, setTooltipLayout] = useState<{ width: number; height: number } | null>(null);
-    const showTimeout = useRef<NodeJS.Timeout | null>(null);
-    const hideTimeout = useRef<NodeJS.Timeout | null>(null);
-    const tooltipRef = useRef<Box>(null);
+    const showTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const show = () => {
       if (hideTimeout.current) {
@@ -103,7 +103,6 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
       setTooltipLayout({ width, height });
     };
 
-    // Cleanup
     useEffect(() => {
       return () => {
         if (showTimeout.current) clearTimeout(showTimeout.current);
@@ -114,7 +113,7 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
     if (!triggerLayout || !tooltipLayout) {
       return (
         <Pressable
-          ref={ref}
+          ref={ref as any}
           onPressIn={show}
           onPressOut={hide}
           onHoverIn={show}
@@ -122,7 +121,7 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
           onLongPress={show}
           testID={testID}
         >
-          {React.cloneElement(children as React.ReactElement, {
+          {React.cloneElement(children as React.ReactElement<any>, {
             onLayout: handleTriggerLayout,
           })}
         </Pressable>
@@ -132,7 +131,7 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
     const getTooltipPosition = () => {
       const { x, y, width: triggerWidth, height: triggerHeight } = triggerLayout;
       const { width: tooltipWidth, height: tooltipHeight } = tooltipLayout;
-      const isRTL = false; // TODO: detect RTL
+      const isRTL = false;
 
       let tooltipX = 0;
       let tooltipY = 0;
@@ -145,10 +144,10 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
           tooltipY = y - tooltipHeight - offset;
           if (placement === 'top-start' || (placement === 'top' && isRTL)) {
             tooltipX = x;
-            arrowPosition = { left: Spacing[3] };
+            arrowPosition = { left: Spacing.sm };
           } else if (placement === 'top-end' || (placement === 'top' && !isRTL)) {
             tooltipX = x + triggerWidth - tooltipWidth;
-            arrowPosition = { right: Spacing[3] };
+            arrowPosition = { right: Spacing.sm };
           } else {
             tooltipX = x + (triggerWidth - tooltipWidth) / 2;
             arrowPosition = { left: '50%', marginLeft: -6 };
@@ -161,10 +160,10 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
           tooltipY = y + triggerHeight + offset;
           if (placement === 'bottom-start' || (placement === 'bottom' && isRTL)) {
             tooltipX = x;
-            arrowPosition = { left: Spacing[3] };
+            arrowPosition = { left: Spacing.sm };
           } else if (placement === 'bottom-end' || (placement === 'bottom' && !isRTL)) {
             tooltipX = x + triggerWidth - tooltipWidth;
-            arrowPosition = { right: Spacing[3] };
+            arrowPosition = { right: Spacing.sm };
           } else {
             tooltipX = x + (triggerWidth - tooltipWidth) / 2;
             arrowPosition = { left: '50%', marginLeft: -6 };
@@ -177,10 +176,10 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
           tooltipX = x - tooltipWidth - offset;
           if (placement === 'left-start') {
             tooltipY = y;
-            arrowPosition = { top: Spacing[3] };
+            arrowPosition = { top: Spacing.sm };
           } else if (placement === 'left-end') {
             tooltipY = y + triggerHeight - tooltipHeight;
-            arrowPosition = { bottom: Spacing[3] };
+            arrowPosition = { bottom: Spacing.sm };
           } else {
             tooltipY = y + (triggerHeight - tooltipHeight) / 2;
             arrowPosition = { top: '50%', marginTop: -6 };
@@ -193,10 +192,10 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
           tooltipX = x + triggerWidth + offset;
           if (placement === 'right-start') {
             tooltipY = y;
-            arrowPosition = { top: Spacing[3] };
+            arrowPosition = { top: Spacing.sm };
           } else if (placement === 'right-end') {
             tooltipY = y + triggerHeight - tooltipHeight;
-            arrowPosition = { bottom: Spacing[3] };
+            arrowPosition = { bottom: Spacing.sm };
           } else {
             tooltipY = y + (triggerHeight - tooltipHeight) / 2;
             arrowPosition = { top: '50%', marginTop: -6 };
@@ -218,8 +217,8 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
     };
 
     const contentContainerStyle: ViewStyle = {
-      paddingHorizontal: Spacing[3],
-      paddingVertical: Spacing[2],
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
       borderRadius: BorderRadius.md,
       backgroundColor: colors.text,
       ...getShadow('md', mode),
@@ -256,7 +255,7 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
 
     return (
       <Pressable
-        ref={ref}
+        ref={ref as any}
         onPressIn={show}
         onPressOut={hide}
         onHoverIn={show}
@@ -265,13 +264,12 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
         testID={testID}
         style={style}
       >
-        {React.cloneElement(children as React.ReactElement, {
+        {React.cloneElement(children as React.ReactElement<any>, {
           onLayout: handleTriggerLayout,
         })}
 
         {visible && (
           <Box
-            ref={tooltipRef}
             style={[tooltipStyle, contentStyle]}
             testID={`${testID}-tooltip`}
             mode={mode}
@@ -299,4 +297,3 @@ const Tooltip = forwardRef<React.ComponentPropsWithoutRef<typeof Pressable>, Too
 Tooltip.displayName = 'Tooltip';
 
 export { Tooltip };
-export type { TooltipProps, TooltipPlacement };

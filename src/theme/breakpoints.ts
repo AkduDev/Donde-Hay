@@ -92,9 +92,9 @@ export function getResponsiveValue<T>(
   const currentIndex = breakpoints.indexOf(currentBreakpoint);
 
   for (let i = currentIndex; i >= 0; i--) {
-    const bp = breakpoints[i];
+    const bp = breakpoints[i] as Breakpoint;
     if (values[bp] !== undefined) {
-      return values[bp];
+      return values[bp] as T;
     }
   }
   return undefined;

@@ -4,21 +4,32 @@
  */
 
 import React, { useState } from 'react';
-import { StyleSheet, Dimensions, Image, Pressable } from 'react-native';
+import { ScrollView, Pressable, FlatList, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
-import { Input } from '@/components/ui/Input';
+import { ProductCard } from '@/components/product/ProductCard';
+import { SearchBar } from '@/components/search/SearchBar';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
-import { getColors } from '@/theme/colors';
-import { useQuery } from '@tanstack/react-query';
-import { getSourceIcon } from '@/utils/format';
+import { useProducts } from '@/hooks/use-products';
+import type { ProductWithOffers } from '@/types';
 
-const { width } = Dimensions.get('window');
+const CATEGORIES = [
+  { id: 'electronics', name: 'Tecnología', icon: '📱' },
+  { id: 'computing', name: 'Computación', icon: '💻' },
+  { id: 'vehicles', name: 'Vehículos', icon: '🚗' },
+  { id: 'home', name: 'Hogar', icon: '🏠' },
+  { id: 'fashion', name: 'Ropa', icon: '👕' },
+  { id: 'gaming', name: 'Videojuegos', icon: '🎮' },
+  { id: 'tools', name: 'Herramientas', icon: '🔧' },
+  { id: 'sports', name: 'Deportes', icon: '⚽' },
+];
 
 const TRENDING_SEARCHES = [
   'iPhone 13',
@@ -29,282 +40,309 @@ const TRENDING_SEARCHES = [
   'Nintendo Switch',
 ];
 
-const CATEGORIES = [
-  { id: '1', name: 'Tecnología', icon: '📱' },
-  { id: '2', name: 'Computación', icon: '💻' },
-  { id: '3', name: 'Vehículos', icon: '🚗' },
-  { id: '4', name: 'Hogar', icon: '🏠' },
-  { id: '5', name: 'Ropa', icon: '👕' },
-  { id: '6', name: 'Videojuegos', icon: '🎮' },
-  { id: '7', name: 'Herramientas', icon: '🔧' },
-  { id: '8', name: 'Más', icon: '➕' },
-];
-
 // TODO: Replace with real API call
-const MOCK_PRODUCTS = [
+const MOCK_PRODUCTS: ProductWithOffers[] = [
   {
     id: '1',
     canonicalName: 'iPhone 13',
     brand: 'Apple',
     model: '13',
-    categoryId: '1',
+    categoryId: 'electronics',
     imageUrls: ['https://example.com/iphone13.jpg'],
     offers: [
-      { id: 'o1', sourceId: 'revolico', price: 450, currency: 'USD' as const },
-      { id: 'o2', sourceId: 'instagram', price: 480, currency: 'USD' as const },
+      { id: 'o1', productId: '1', sellerId: 's1', sourceId: 'revolico', price: 450, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://revolico.com/1', locationId: 'habana', status: 'active' },
+      { id: 'o2', productId: '1', sellerId: 's2', sourceId: 'instagram', price: 480, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://instagram.com/1', locationId: 'santiago', status: 'active' },
     ],
+    offerCount: 2,
+    availability: { available: true, lastSeen: new Date().toISOString(), status: 'recent' },
+    isFavorite: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    canonicalName: 'Laptop HP',
+    brand: 'HP',
+    model: 'Pavilion',
+    categoryId: 'computing',
+    imageUrls: ['https://example.com/hp-laptop.jpg'],
+    offers: [
+      { id: 'o3', productId: '2', sellerId: 's3', sourceId: 'revolico', price: 350, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://revolico.com/2', locationId: 'habana', status: 'active' },
+    ],
+    offerCount: 1,
+    availability: { available: true, lastSeen: new Date().toISOString(), status: 'recent' },
+    isFavorite: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '3',
+    canonicalName: 'PS5',
+    brand: 'Sony',
+    model: 'PlayStation 5',
+    categoryId: 'gaming',
+    imageUrls: ['https://example.com/ps5.jpg'],
+    offers: [
+      { id: 'o4', productId: '3', sellerId: 's4', sourceId: '1cuba', price: 500, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://1cuba.cu/1', locationId: 'habana', status: 'active' },
+      { id: 'o5', productId: '3', sellerId: 's5', sourceId: 'choleslibres', price: 520, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://choleslibres.com/1', locationId: 'santiago', status: 'active' },
+    ],
+    offerCount: 2,
+    availability: { available: true, lastSeen: new Date().toISOString(), status: 'recent' },
+    isFavorite: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
 ];
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const { resolvedMode } = useThemeStore();
-  const colors = getColors(resolvedMode);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: featuredProducts, isLoading } = useQuery({
-    queryKey: ['products', 'featured'],
-    queryFn: () => Promise.resolve(MOCK_PRODUCTS),
-  });
+  const { data: productsResponse, isLoading, refetch } = useProducts({});
 
-  const handleSearchSubmit = () => {
-    if (searchQuery.trim()) {
-      // TODO: Navigate to search screen with query
-      console.log('Searching for:', searchQuery);
-      setSearchQuery('');
-    }
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
   };
 
-  return (
-    <Box flex={1} bg="background" mode={resolvedMode}>
-      <Box style={styles.content}>
-        {/* Header */}
-        <Box
-          flexDirection="row"
-          alignItems="center"
-          justifyContent="space-between"
-          mb="md"
-        >
-          <Box flexDirection="row" alignItems="center" gap="sm">
-            <Avatar
-              size="md"
-              name={user?.name || 'Usuario'}
-              source={user?.avatarUrl ? { uri: user.avatarUrl } : undefined}
-              mode={resolvedMode}
-            />
-            <Box>
-              <Text variant="titleMedium" color="text" mode={resolvedMode}>
-                Hola {user?.name?.split(' ')[0] || 'Usuario'} 👋
-              </Text>
-              <Text variant="bodySmall" color="textSecondary" mode={resolvedMode}>
-                ¿Qué estás buscando hoy?
-              </Text>
-            </Box>
-          </Box>
-        </Box>
+  const handleSearch = (query: string) => {
+    router.push({
+      pathname: '/search' as any,
+      params: { query },
+    });
+  };
 
-        {/* Search Bar */}
-        <Box
-          flexDirection="row"
-          alignItems="center"
-          bg="surfaceVariant"
-          p="xs"
-          borderRadius="md"
-          mb="md"
-        >
-          <Text variant="bodySmall" color="textSecondary" mode={resolvedMode}>
-            🔍
-          </Text>
-          <Box flex={1} ml="xxs">
-            <Input
-              placeholder="iPhone 13, laptop, TV..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmitEditing={handleSearchSubmit}
-              autoCapitalize="sentences"
-              returnKeyType="search"
-              size="sm"
-              mode={resolvedMode}
-            />
-          </Box>
-          {searchQuery.trim() !== '' && (
-            <Pressable onPress={() => setSearchQuery('')} style={styles.clearButton}>
-              <Text variant="bodySmall" color="textSecondary" mode={resolvedMode}>
-                ✕
-              </Text>
-            </Pressable>
-          )}
-        </Box>
+  const handleCategoryPress = (categoryId: string) => {
+    router.push({
+      pathname: '/search' as any,
+      params: { category: categoryId },
+    });
+  };
 
-        {/* Trending Searches */}
-        <Box mb="md">
-          <Box mb="xxs">
-            <Text variant="titleMedium" color="text" mode={resolvedMode}>
-              🔥 Tendencias
-            </Text>
-          </Box>
-          <Box flexDirection="row" flexWrap="wrap" gap="xxs">
-            {TRENDING_SEARCHES.map((search, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                onPress={() => {
-                  setSearchQuery(search);
-                  handleSearchSubmit();
-                }}
-                mode={resolvedMode}
-              >
-                {search}
-              </Button>
-            ))}
-          </Box>
-        </Box>
+  const handleProductPress = (product: ProductWithOffers) => {
+    router.push({
+      pathname: '/product/[id]' as any,
+      params: { id: product.id },
+    });
+  };
 
-        {/* Categories Grid */}
-        <Box mb="md">
-          <Box mb="xxs">
-            <Text variant="titleMedium" color="text" mode={resolvedMode}>
-              📂 Categorías
-            </Text>
-          </Box>
-          <Box flexDirection="row" flexWrap="wrap" gap="xxs">
-            {CATEGORIES.map((category) => (
-              <Box
-                key={category.id}
-                width={(width - 48) / 4}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Card
-                  variant="elevated"
-                  padding="xxs"
-                  mode={resolvedMode}
-                  onPress={() => {
-                    // TODO: Navigate to category screen
-                    console.log('Navigating to category:', category.name);
-                  }}
-                >
-                  <Box alignItems="center" justifyContent="center" gap="xxxs">
-                    <Text variant="titleMedium" mode={resolvedMode}>
-                      {category.icon}
-                    </Text>
-                    <Text variant="bodySmall" color="textSecondary" mode={resolvedMode}>
-                      {category.name}
-                    </Text>
-                  </Box>
-                </Card>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-
-        {/* Featured Products */}
-        {!isLoading && featuredProducts && (
-          <Box>
-            <Box mb="xxs">
-              <Text variant="titleMedium" color="text" mode={resolvedMode}>
-                📦 Productos Destacados
-              </Text>
-            </Box>
-            {featuredProducts.map((product) => (
-              <Box key={product.id} mb="sm">
-                <Card variant="elevated" padding="sm" mode={resolvedMode}>
-                  <Box flexDirection="row" gap="sm">
-                    {/* Product Image */}
-                    <Box
-                      width={80}
-                      height={80}
-                      borderRadius="md"
-                      overflow="hidden"
-                      bg="surfaceVariant"
-                    >
-                      {product.imageUrls?.[0] ? (
-                        <Image
-                          source={{ uri: product.imageUrls[0] }}
-                          style={{ width: '100%', height: '100%' }}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <Box flex={1} alignItems="center" justifyContent="center">
-                          <Text variant="bodySmall" color="textSecondary" mode={resolvedMode}>
-                            Imagen
-                          </Text>
-                        </Box>
-                      )}
-                    </Box>
-
-                    {/* Product Info */}
-                    <Box flex={1}>
-                      <Box mb="xxxs">
-                        <Text variant="titleSmall" color="text" mode={resolvedMode}>
-                          {product.canonicalName}
-                        </Text>
-                      </Box>
-                      <Box mb="xxxs">
-                        <Text variant="bodySmall" color="textSecondary" mode={resolvedMode}>
-                          {product.brand} {product.model}
-                        </Text>
-                      </Box>
-
-                      {/* Offers Summary */}
-                      {product.offers && product.offers.length > 0 && (
-                        <Box mb="xxxs">
-                          <Text variant="labelMedium" color="textSecondary" mode={resolvedMode}>
-                            {product.offers.length} ofertas desde
-                          </Text>
-                          <Text variant="titleMedium" color="success" mode={resolvedMode} fontWeight="semiBold">
-                            ${Math.min(...product.offers.map((o) => o.price))}
-                          </Text>
-                        </Box>
-                      )}
-
-                      {/* Source Icons */}
-                      <Box flexDirection="row" gap="xxxs" mb="xxxs">
-                        {product.offers?.map((offer) => (
-                          <Text key={offer.id} variant="labelSmall" color="textTertiary" mode={resolvedMode}>
-                            {getSourceIcon(offer.sourceId)}
-                          </Text>
-                        ))}
-                      </Box>
-
-                      {/* Action Button */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onPress={() => {
-                          // TODO: Navigate to product detail
-                          console.log('Navigating to product detail:', product.id);
-                        }}
-                        mode={resolvedMode}
-                      >
-                        Ver detalles
-                      </Button>
-                    </Box>
-                  </Box>
-                </Card>
-              </Box>
-            ))}
-          </Box>
-        )}
-
-        {isLoading && (
-          <Box alignItems="center" justifyContent="center" py="xl">
-            <Spinner size="lg" mode={resolvedMode} />
-          </Box>
-        )}
+  const renderSectionHeader = (title: string, icon: string, onSeeAll?: () => void) => (
+    <Box flexDirection="row" justifyContent="space-between" alignItems="center" mb="sm">
+      <Box flexDirection="row" alignItems="center" gap="xs">
+        <Text variant="titleMedium" color="text">
+          {icon} {title}
+        </Text>
       </Box>
+      {onSeeAll && (
+        <Pressable onPress={onSeeAll}>
+          <Text variant="bodySmall" color="primary">
+            Ver todo →
+          </Text>
+        </Pressable>
+      )}
     </Box>
   );
-}
 
-const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    flex: 1,
-  },
-  clearButton: {
-    padding: 8,
-  },
-});
+  const displayProducts = Array.isArray(productsResponse) ? productsResponse : MOCK_PRODUCTS;
+
+  return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <Box flex={1} bg="background" mode={resolvedMode}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {/* Header */}
+          <Box
+            flexDirection="row"
+            alignItems="center"
+            justifyContent="space-between"
+            px="md"
+            py="sm"
+            mode={resolvedMode}
+          >
+            <Box flexDirection="row" alignItems="center" gap="sm">
+              <Avatar
+                size="md"
+                name={user?.name || 'Usuario'}
+                source={user?.avatarUrl ? { uri: user.avatarUrl } : undefined}
+                mode={resolvedMode}
+              />
+              <Box>
+                <Text variant="titleMedium" color="text">
+                  Hola {user?.name?.split(' ')[0] || 'Usuario'} 👋
+                </Text>
+                <Text variant="bodySmall" color="textSecondary">
+                  ¿Qué estás buscando hoy?
+                </Text>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Search Bar */}
+          <Box px="md" mb="md" mode={resolvedMode}>
+            <SearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmit={handleSearch}
+              placeholder="iPhone 13, laptop, TV..."
+            />
+          </Box>
+
+          {/* Categories */}
+          <Box px="md" mb="lg" mode={resolvedMode}>
+            {renderSectionHeader('Categorías', '📂')}
+            <Box flexDirection="row" flexWrap="wrap" gap="sm">
+              {CATEGORIES.map((category) => (
+                <Pressable
+                  key={category.id}
+                  onPress={() => handleCategoryPress(category.id)}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                >
+                  <Box
+                    width="23%"
+                    alignItems="center"
+                    justifyContent="center"
+                    p="sm"
+                    bg="surfaceVariant"
+                    borderRadius="md"
+                    mode={resolvedMode}
+                  >
+                    <Text variant="headlineSmall">
+                      {category.icon}
+                    </Text>
+                    <Box mt="xxs" alignItems="center">
+                      <Text variant="bodySmall" color="textSecondary" textAlign="center">
+                        {category.name}
+                      </Text>
+                    </Box>
+                  </Box>
+                </Pressable>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Trending Searches */}
+          <Box px="md" mb="lg" mode={resolvedMode}>
+            {renderSectionHeader('Tendencias', '🔥')}
+            <Box flexDirection="row" flexWrap="wrap" gap="xs">
+              {TRENDING_SEARCHES.map((search, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onPress={() => handleSearch(search)}
+                  mode={resolvedMode}
+                >
+                  {search}
+                </Button>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Featured Products */}
+          <Box px="md" mb="lg" mode={resolvedMode}>
+            {renderSectionHeader(
+              'Productos Destacados',
+              '⭐',
+              () => handleSearch('')
+            )}
+            {isLoading ? (
+              <Box alignItems="center" py="lg">
+                <Spinner size="md" mode={resolvedMode} />
+              </Box>
+            ) : displayProducts.length > 0 ? (
+              <Box gap="sm">
+                {displayProducts.slice(0, 5).map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onPress={handleProductPress}
+                    layout="list"
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Card variant="outlined" padding="lg" mode={resolvedMode}>
+                <Box alignItems="center">
+                  <Text variant="headlineMedium">📦</Text>
+                  <Box mt="sm">
+                    <Text variant="bodyMedium" color="textSecondary">
+                      No hay productos destacados aún
+                    </Text>
+                  </Box>
+                </Box>
+              </Card>
+            )}
+          </Box>
+
+          {/* Tech Products */}
+          <Box px="md" mb="lg" mode={resolvedMode}>
+            {renderSectionHeader(
+              'Tecnología',
+              '📱',
+              () => handleCategoryPress('electronics')
+            )}
+            {isLoading ? (
+              <Box alignItems="center" py="lg">
+                <Spinner size="md" mode={resolvedMode} />
+              </Box>
+            ) : (
+              <FlatList
+                data={displayProducts.filter((p: ProductWithOffers) => p.categoryId === 'electronics').slice(0, 6)}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item: ProductWithOffers) => item.id}
+                renderItem={({ item }: { item: ProductWithOffers }) => (
+                  <Box width={160} mr="sm">
+                    <ProductCard
+                      product={item}
+                      onPress={handleProductPress}
+                      layout="grid"
+                    />
+                  </Box>
+                )}
+              />
+            )}
+          </Box>
+
+          {/* Vehicle Products */}
+          <Box px="md" mb="xl" mode={resolvedMode}>
+            {renderSectionHeader(
+              'Vehículos',
+              '🚗',
+              () => handleCategoryPress('vehicles')
+            )}
+            {isLoading ? (
+              <Box alignItems="center" py="lg">
+                <Spinner size="md" mode={resolvedMode} />
+              </Box>
+            ) : (
+              <FlatList
+                data={displayProducts.filter((p: ProductWithOffers) => p.categoryId === 'vehicles').slice(0, 6)}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item: ProductWithOffers) => item.id}
+                renderItem={({ item }: { item: ProductWithOffers }) => (
+                  <Box width={160} mr="sm">
+                    <ProductCard
+                      product={item}
+                      onPress={handleProductPress}
+                      layout="grid"
+                    />
+                  </Box>
+                )}
+              />
+            )}
+          </Box>
+        </ScrollView>
+      </Box>
+    </SafeAreaView>
+  );
+}

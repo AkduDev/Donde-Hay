@@ -220,7 +220,7 @@ export default function RegisterScreen() {
                 </Text>
                 <Link href="/(auth)/login" asChild>
                   <Pressable>
-                    <Text variant="bodyMedium" color="primary" fontWeight="semiBold" mode={resolvedMode}>
+                    <Text variant="bodyMedium" color="primary" fontWeight="600" mode={resolvedMode}>
                       Inicia sesión
                     </Text>
                   </Pressable>

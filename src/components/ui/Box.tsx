@@ -7,11 +7,10 @@ import React, { forwardRef } from 'react';
 import { View, ViewStyle } from 'react-native';
 import { Spacing } from '@/theme/spacing';
 import { BorderRadius } from '@/theme/radius';
-import { Shadows, getShadow, ZIndex } from '@/theme/shadows';
+import { Shadows, getShadow } from '@/theme/shadows';
 import { ColorPalette, getColors } from '@/theme/colors';
 
 export interface BoxProps extends React.ComponentPropsWithoutRef<typeof View> {
-  // Layout
   flex?: number;
   flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
   justifyContent?: ViewStyle['justifyContent'];
@@ -22,7 +21,6 @@ export interface BoxProps extends React.ComponentPropsWithoutRef<typeof View> {
   rowGap?: keyof typeof Spacing;
   columnGap?: keyof typeof Spacing;
 
-  // Spacing
   p?: keyof typeof Spacing;
   px?: keyof typeof Spacing;
   py?: keyof typeof Spacing;
@@ -38,7 +36,6 @@ export interface BoxProps extends React.ComponentPropsWithoutRef<typeof View> {
   mb?: keyof typeof Spacing;
   ml?: keyof typeof Spacing;
 
-  // Sizing
   w?: string | number;
   h?: string | number;
   minW?: string | number;
@@ -48,7 +45,6 @@ export interface BoxProps extends React.ComponentPropsWithoutRef<typeof View> {
   width?: string | number;
   height?: string | number;
 
-  // Visual
   bg?: keyof ColorPalette;
   bgColor?: string;
   borderRadius?: keyof typeof BorderRadius;
@@ -56,31 +52,24 @@ export interface BoxProps extends React.ComponentPropsWithoutRef<typeof View> {
   borderColor?: string;
   shadow?: keyof typeof Shadows.light;
   elevation?: number;
-  zIndex?: keyof typeof ZIndex;
+  zIndex?: number;
   opacity?: number;
   overflow?: 'visible' | 'hidden' | 'scroll';
 
-  // Position
   position?: 'absolute' | 'relative';
   top?: number;
   right?: number;
   bottom?: number;
   left?: number;
 
-  // Theme
   mode?: 'light' | 'dark';
-
-  // Children
   children?: React.ReactNode;
-
-  // Test ID
   testID?: string;
 }
 
 const Box = forwardRef<View, BoxProps>(
   (
     {
-      // Layout
       flex,
       flexDirection,
       justifyContent,
@@ -90,8 +79,6 @@ const Box = forwardRef<View, BoxProps>(
       gap,
       rowGap,
       columnGap,
-
-      // Spacing
       p,
       px,
       py,
@@ -106,8 +93,6 @@ const Box = forwardRef<View, BoxProps>(
       mr,
       mb,
       ml,
-
-      // Sizing
       w,
       h,
       minW,
@@ -116,8 +101,6 @@ const Box = forwardRef<View, BoxProps>(
       maxH,
       width,
       height,
-
-      // Visual
       bg,
       bgColor,
       borderRadius,
@@ -128,26 +111,15 @@ const Box = forwardRef<View, BoxProps>(
       zIndex,
       opacity,
       overflow,
-
-      // Position
       position,
       top,
       right,
       bottom,
       left,
-
-      // Theme
       mode = 'light',
-
-      // Children
       children,
-
-      // Style prop
       style,
-
-      // Test ID
       testID,
-
       ...rest
     }: BoxProps,
     ref
@@ -155,66 +127,51 @@ const Box = forwardRef<View, BoxProps>(
     const colors = getColors(mode);
 
     const computedStyle: ViewStyle = {
-      // Layout
       flex,
       flexDirection,
       justifyContent,
       alignItems,
       alignSelf,
       flexWrap,
-
-      // Gap
-      gap: gap ? Spacing[gap] : undefined,
-      rowGap: rowGap ? Spacing[rowGap] : undefined,
-      columnGap: columnGap ? Spacing[columnGap] : undefined,
-
-      // Spacing
-      padding: p ? Spacing[p] : undefined,
-      paddingHorizontal: px ? Spacing[px] : undefined,
-      paddingVertical: py ? Spacing[py] : undefined,
-      paddingTop: pt ? Spacing[pt] : undefined,
-      paddingRight: pr ? Spacing[pr] : undefined,
-      paddingBottom: pb ? Spacing[pb] : undefined,
-      paddingLeft: pl ? Spacing[pl] : undefined,
-
-      margin: m ? Spacing[m] : undefined,
-      marginHorizontal: mx ? Spacing[mx] : undefined,
-      marginVertical: my ? Spacing[my] : undefined,
-      marginTop: mt ? Spacing[mt] : undefined,
-      marginRight: mr ? Spacing[mr] : undefined,
-      marginBottom: mb ? Spacing[mb] : undefined,
-      marginLeft: ml ? Spacing[ml] : undefined,
-
-      // Sizing
-      width: w ?? width,
-      height: h ?? height,
-      minWidth: minW,
-      minHeight: minH,
-      maxWidth: maxW,
-      maxHeight: maxH,
-
-      // Visual
+      gap: gap ? (Spacing[gap] as number) : undefined,
+      rowGap: rowGap ? (Spacing[rowGap] as number) : undefined,
+      columnGap: columnGap ? (Spacing[columnGap] as number) : undefined,
+      padding: p ? (Spacing[p] as number) : undefined,
+      paddingHorizontal: px ? (Spacing[px] as number) : undefined,
+      paddingVertical: py ? (Spacing[py] as number) : undefined,
+      paddingTop: pt ? (Spacing[pt] as number) : undefined,
+      paddingRight: pr ? (Spacing[pr] as number) : undefined,
+      paddingBottom: pb ? (Spacing[pb] as number) : undefined,
+      paddingLeft: pl ? (Spacing[pl] as number) : undefined,
+      margin: m ? (Spacing[m] as number) : undefined,
+      marginHorizontal: mx ? (Spacing[mx] as number) : undefined,
+      marginVertical: my ? (Spacing[my] as number) : undefined,
+      marginTop: mt ? (Spacing[mt] as number) : undefined,
+      marginRight: mr ? (Spacing[mr] as number) : undefined,
+      marginBottom: mb ? (Spacing[mb] as number) : undefined,
+      marginLeft: ml ? (Spacing[ml] as number) : undefined,
+      width: (w ?? width) as ViewStyle['width'],
+      height: (h ?? height) as ViewStyle['height'],
+      minWidth: minW as ViewStyle['minWidth'],
+      minHeight: minH as ViewStyle['minHeight'],
+      maxWidth: maxW as ViewStyle['maxWidth'],
+      maxHeight: maxH as ViewStyle['maxHeight'],
       backgroundColor: bg ? colors[bg] : bgColor,
-      borderRadius: borderRadius ? BorderRadius[borderRadius] : undefined,
+      borderRadius: borderRadius ? (BorderRadius[borderRadius] as number) : undefined,
       borderWidth,
       borderColor,
       opacity,
       overflow,
-
-      // Position
       position,
       top,
       right,
       bottom,
       left,
-
-      // Shadow
+      zIndex,
       ...(shadow ? getShadow(shadow, mode) : {}),
       elevation: elevation ?? (shadow ? Shadows[mode][shadow].elevation : undefined),
-      zIndex: zIndex ? ZIndex[zIndex] : undefined,
     };
 
-    // Remove undefined values
     Object.keys(computedStyle).forEach(
       (key) => computedStyle[key as keyof ViewStyle] === undefined && delete computedStyle[key as keyof ViewStyle]
     );
@@ -235,4 +192,3 @@ const Box = forwardRef<View, BoxProps>(
 Box.displayName = 'Box';
 
 export { Box };
-export type { BoxProps };

@@ -3,7 +3,7 @@
  * Bottom Sheet con snap points, backdrop y handle
  */
 
-import React, { forwardRef, useRef, useEffect, useState } from 'react';
+import React, { forwardRef, useRef, useEffect, useState, useImperativeHandle } from 'react';
 import {
   Animated,
   PanResponder,
@@ -12,8 +12,10 @@ import {
   Dimensions,
   Keyboard,
   Pressable,
+  Platform,
 } from 'react-native';
 import { Box } from './Box';
+import { Text } from './Text';
 import { Spacing } from '@/theme/spacing';
 import { BorderRadius } from '@/theme/radius';
 import { Shadows, getShadow } from '@/theme/shadows';
@@ -50,7 +52,12 @@ const snapPointValues: Record<string, number> = {
   full: SCREEN_HEIGHT * 0.95,
 };
 
-const Sheet = forwardRef<{ snapTo: (index: number) => void; close: () => void }, SheetProps>(
+interface SheetRef {
+  snapTo: (index: number) => void;
+  close: () => void;
+}
+
+const Sheet = forwardRef<SheetRef, SheetProps>(
   (
     {
       visible,
@@ -75,54 +82,13 @@ const Sheet = forwardRef<{ snapTo: (index: number) => void; close: () => void },
     const colors = getColors(mode);
     const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
     const [currentSnap, setCurrentSnap] = useState(0);
-    const panResponder = useRef(
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: () => {
-          translateY.setOffset(translateY._value);
-          translateY.setValue(0);
-        },
-        onPanResponderMove: Animated.event([
-          null,
-          { dy: translateY },
-        ]),
-        onPanResponderRelease: (_, gesture) => {
-          translateY.flattenOffset();
-          const velocity = gesture.vy;
-          const currentY = translateY._value + SCREEN_HEIGHT - snapPointValues[initialSnap as string];
-          handleRelease(currentY, velocity);
-        },
-      })
-    ).current;
 
     const snapValues = snapPoints.map((p) =>
       typeof p === 'number' ? p : snapPointValues[p]
     );
 
-    const handleRelease = (y: number, velocity: number) => {
-      let targetIndex = 0;
-      let minDist = Infinity;
-
-      snapValues.forEach((snap, i) => {
-        const dist = Math.abs(y - (SCREEN_HEIGHT - snap));
-        if (dist < minDist) {
-          minDist = dist;
-          targetIndex = i;
-        }
-      });
-
-      // Si.velocity hacia abajo fuerte, cerrar
-      if (velocity > 1000 && targetIndex === 0) {
-        close();
-        return;
-      }
-
-      snapTo(targetIndex);
-    };
-
     const snapTo = (index: number) => {
-      const targetY = SCREEN_HEIGHT - snapValues[index];
+      const targetY = SCREEN_HEIGHT - (snapValues[index] ?? 0);
       Animated.timing(translateY, {
         toValue: targetY,
         duration: 250,
@@ -141,13 +107,53 @@ const Sheet = forwardRef<{ snapTo: (index: number) => void; close: () => void },
       });
     };
 
-    // Expose methods
-    React.useImperativeHandle(ref, () => ({
+    const handleRelease = (y: number, velocity: number) => {
+      let targetIndex = 0;
+      let minDist = Infinity;
+
+      snapValues.forEach((snap: number | undefined, i: number) => {
+        if (snap == null) return;
+        const dist = Math.abs(y - (SCREEN_HEIGHT - snap));
+        if (dist < minDist) {
+          minDist = dist;
+          targetIndex = i;
+        }
+      });
+
+      if (velocity > 1000 && targetIndex === 0) {
+        close();
+        return;
+      }
+
+      snapTo(targetIndex);
+    };
+
+    const panResponder = useRef(
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          translateY.setOffset((translateY as any)._value || 0);
+          translateY.setValue(0);
+        },
+        onPanResponderMove: Animated.event(
+          [null, { dy: translateY }],
+          { useNativeDriver: false }
+        ),
+        onPanResponderRelease: (_, gesture) => {
+          translateY.flattenOffset();
+          const velocity = gesture.vy;
+          const currentY = ((translateY as any)._value || 0) + SCREEN_HEIGHT - (snapPointValues[initialSnap as string] ?? 0);
+          handleRelease(currentY, velocity);
+        },
+      })
+    ).current;
+
+    useImperativeHandle(ref, () => ({
       snapTo,
       close,
     }));
 
-    // Handle visibility changes
     useEffect(() => {
       if (visible) {
         const initialIndex = snapPoints.indexOf(initialSnap);
@@ -157,15 +163,15 @@ const Sheet = forwardRef<{ snapTo: (index: number) => void; close: () => void },
       }
     }, [visible]);
 
-    // Close on escape (web)
     useEffect(() => {
-      if (!visible) return;
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Escape' && closeOnEscape) close();
+      if (!visible || !closeOnEscape || Platform.OS !== 'web') return;
+      const handleKeyDown = (event: any) => {
+        if (event?.key === 'Escape') close();
       };
-      if (typeof window !== 'undefined') {
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+      const win = globalThis as any;
+      if (win?.addEventListener) {
+        win.addEventListener('keydown', handleKeyDown);
+        return () => win.removeEventListener('keydown', handleKeyDown);
       }
     }, [visible, closeOnEscape]);
 
@@ -197,8 +203,8 @@ const Sheet = forwardRef<{ snapTo: (index: number) => void; close: () => void },
       borderRadius: BorderRadius.full,
       backgroundColor: colors.borderStrong,
       alignSelf: 'center',
-      marginTop: Spacing[3],
-      marginBottom: Spacing[2],
+      marginTop: Spacing.sm,
+      marginBottom: Spacing.xs,
     };
 
     return (
@@ -222,32 +228,32 @@ const Sheet = forwardRef<{ snapTo: (index: number) => void; close: () => void },
             )}
 
             {(title || subtitle) && (
-              <Box
-                px={4}
-                pb={3}
-                borderBottomWidth={1}
-                borderColor={colors.divider}
-                style={headerStyle}
-                testID={`${testID}-header`}
-                mode={mode}
-              >
+      <Box
+        px="md"
+        pb="sm"
+        style={[{ borderBottomWidth: 1, borderColor: colors.divider }, headerStyle as any]}
+        testID={`${testID}-header`}
+        mode={mode}
+      >
                 {title && (
                   <Text variant="titleLarge" color="text" mode={mode} testID={`${testID}-title`}>
                     {title}
                   </Text>
                 )}
                 {subtitle && (
-                  <Text variant="bodyMedium" color="textSecondary" mode={mode} mt={1} testID={`${testID}-subtitle`}>
-                    {subtitle}
-                  </Text>
+                  <Box mt="xxxs">
+                    <Text variant="bodyMedium" color="textSecondary" mode={mode} testID={`${testID}-subtitle`}>
+                      {subtitle}
+                    </Text>
+                  </Box>
                 )}
               </Box>
             )}
 
             <Box
               flex={1}
-              px={4}
-              pb={4}
+              px="md"
+              pb="md"
               style={contentStyle}
               testID={`${testID}-content`}
               mode={mode}
@@ -264,7 +270,3 @@ const Sheet = forwardRef<{ snapTo: (index: number) => void; close: () => void },
 Sheet.displayName = 'Sheet';
 
 export { Sheet };
-export type { SheetProps, SheetSize, SheetSnapPoint };
-
-// Import Text
-import { Text } from './Text';

@@ -4,7 +4,8 @@
  */
 
 import { httpClient } from '@/lib/api-client';
-import type { ProductWithOffers, PaginatedResponse } from '@/types';
+import type { ProductWithOffers } from '@/types';
+import type { PaginatedResponse } from '@/lib/api-client';
 
 // ============================================
 // TYPES

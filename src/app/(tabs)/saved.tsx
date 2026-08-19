@@ -1,258 +1,297 @@
 /**
- * Dónde Hay - Saved Screen
- * Guardados del usuario: Productos, Búsquedas, Vendedores
- * Nota: implementación completa con datos de API en tarea posterior
+ * Dónde Hay - Saved Tab
+ * Pantalla de guardados con tabs: Products, Searches, Sellers
  */
 
 import React, { useState } from 'react';
-import { ScrollView, Pressable } from 'react-native';
+import { FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { Spinner } from '@/components/ui/Spinner';
+import { ProductCard } from '@/components/product/ProductCard';
+import { SavedSearchCard } from '@/components/saved/SavedSearchCard';
+import { SavedSellerCard } from '@/components/saved/SavedSellerCard';
 import { useThemeStore } from '@/store/themeStore';
-import { getColors } from '@/theme/colors';
-import { Spacing } from '@/theme/spacing';
+import { useFavoriteProducts, useFavoriteSellers, useSavedSearches, useRemoveFavorite, useDeleteSavedSearch, useToggleSearchNotification } from '@/hooks/use-favorites';
+import { useAuthStore } from '@/store/authStore';
+import type { ProductWithOffers, Seller, SavedSearch } from '@/types';
 
-type SavedTab = 'products' | 'searches' | 'sellers';
-
-const TAB_CONFIG: { id: SavedTab; label: string; icon: string }[] = [
-  { id: 'products', label: 'Productos', icon: '📦' },
-  { id: 'searches', label: 'Búsquedas', icon: '🔍' },
-  { id: 'sellers', label: 'Vendedores', icon: '👤' },
-];
+type TabType = 'products' | 'searches' | 'sellers';
 
 export default function SavedScreen() {
+  const router = useRouter();
   const { resolvedMode } = useThemeStore();
-  const [activeTab, setActiveTab] = useState<SavedTab>('products');
+  const { isAuthenticated } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<TabType>('products');
 
-  const renderContent = () => {
+  // Queries
+  const { data: favoriteProducts, isLoading: loadingProducts, refetch: refetchProducts } = useFavoriteProducts();
+  const { data: favoriteSellers, isLoading: loadingSellers, refetch: refetchSellers } = useFavoriteSellers();
+  const { data: savedSearches, isLoading: loadingSearches, refetch: refetchSearches } = useSavedSearches();
+
+  // Mutations
+  const removeFavorite = useRemoveFavorite();
+  const deleteSavedSearch = useDeleteSavedSearch();
+  const toggleSearchNotification = useToggleSearchNotification();
+
+  // Refetch based on active tab
+  const handleRefresh = () => {
     switch (activeTab) {
       case 'products':
-        return (
-          <Box gap={3} mode={resolvedMode}>
-            <Card variant="elevated" padding="3" mode={resolvedMode} testID="saved-product-1">
-              <Box flexDirection="row" gap={3} alignItems="center" mode={resolvedMode}>
-                <Box
-                  width={60}
-                  height={60}
-                  borderRadius="md"
-                  bg="surfaceVariant"
-                  alignItems="center"
-                  justifyContent="center"
-                  mode={resolvedMode}
-                >
-                  <Text variant="headlineSmall" colorMode={resolvedMode}>📱</Text>
-                </Box>
-                <Box flex={1} mode={resolvedMode}>
-                  <Text variant="titleSmall" color="text" colorMode={resolvedMode}>
-                    iPhone 13 128GB
-                  </Text>
-                  <Text variant="bodySmall" color="success" fontWeight="semiBold" colorMode={resolvedMode}>
-                    desde $430
-                  </Text>
-                  <Text variant="labelSmall" color="textTertiary" colorMode={resolvedMode}>
-                    📍 La Habana · 3 ofertas
-                  </Text>
-                </Box>
-                <Text variant="bodyLarge" colorMode={resolvedMode}>❤️</Text>
-              </Box>
-            </Card>
-
-            <Card variant="elevated" padding="3" mode={resolvedMode} testID="saved-product-2">
-              <Box flexDirection="row" gap={3} alignItems="center" mode={resolvedMode}>
-                <Box
-                  width={60}
-                  height={60}
-                  borderRadius="md"
-                  bg="surfaceVariant"
-                  alignItems="center"
-                  justifyContent="center"
-                  mode={resolvedMode}
-                >
-                  <Text variant="headlineSmall" colorMode={resolvedMode}>💻</Text>
-                </Box>
-                <Box flex={1} mode={resolvedMode}>
-                  <Text variant="titleSmall" color="text" colorMode={resolvedMode}>
-                    Laptop HP Pavilion 15
-                  </Text>
-                  <Text variant="bodySmall" color="success" fontWeight="semiBold" colorMode={resolvedMode}>
-                    $380
-                  </Text>
-                  <Text variant="labelSmall" color="textTertiary" colorMode={resolvedMode}>
-                    📍 Villa Clara · 1 oferta
-                  </Text>
-                </Box>
-                <Text variant="bodyLarge" colorMode={resolvedMode}>❤️</Text>
-              </Box>
-            </Card>
-          </Box>
-        );
-
+        refetchProducts();
+        break;
       case 'searches':
-        return (
-          <Box gap={3} mode={resolvedMode}>
-            <Card variant="elevated" padding="3" mode={resolvedMode} testID="saved-search-1">
-              <Box flexDirection="row" alignItems="center" gap={3} mode={resolvedMode}>
-                <Box
-                  width={48}
-                  height={48}
-                  borderRadius="full"
-                  bg="primaryContainer"
-                  alignItems="center"
-                  justifyContent="center"
-                  mode={resolvedMode}
-                >
-                  <Text variant="headlineSmall" colorMode={resolvedMode}>🔔</Text>
-                </Box>
-                <Box flex={1} mode={resolvedMode}>
-                  <Text variant="titleSmall" color="text" colorMode={resolvedMode}>
-                    iPhone 13 · hasta $450
-                  </Text>
-                  <Text variant="labelSmall" color="textTertiary" colorMode={resolvedMode}>
-                    Alerta activa · La Habana
-                  </Text>
-                </Box>
-                <Badge variant="success" size="xs">
-                  Activa
-                </Badge>
-              </Box>
-            </Card>
-
-            <Card variant="elevated" padding="3" mode={resolvedMode} testID="saved-search-2">
-              <Box flexDirection="row" alignItems="center" gap={3} mode={resolvedMode}>
-                <Box
-                  width={48}
-                  height={48}
-                  borderRadius="full"
-                  bg="primaryContainer"
-                  alignItems="center"
-                  justifyContent="center"
-                  mode={resolvedMode}
-                >
-                  <Text variant="headlineSmall" colorMode={resolvedMode}>🎮</Text>
-                </Box>
-                <Box flex={1} mode={resolvedMode}>
-                  <Text variant="titleSmall" color="text" colorMode={resolvedMode}>
-                    PS5 · cualquier precio
-                  </Text>
-                  <Text variant="labelSmall" color="textTertiary" colorMode={resolvedMode}>
-                    Sin alerta
-                  </Text>
-                </Box>
-                <Badge variant="default" size="xs">
-                  Inactiva
-                </Badge>
-              </Box>
-            </Card>
-          </Box>
-        );
-
+        refetchSearches();
+        break;
       case 'sellers':
-        return (
-          <Box gap={3} mode={resolvedMode}>
-            <Card variant="elevated" padding="3" mode={resolvedMode} testID="saved-seller-1">
-              <Box flexDirection="row" alignItems="center" gap={3} mode={resolvedMode}>
-                <Avatar size="lg" name="Yanis Tech" mode={resolvedMode} />
-                <Box flex={1} mode={resolvedMode}>
-                  <Box flexDirection="row" alignItems="center" gap={2} mode={resolvedMode}>
-                    <Text variant="titleSmall" color="text" colorMode={resolvedMode}>
-                      Yanis Tech
-                    </Text>
-                    <Badge variant="success" size="xs">
-                      ✓ Verificado
-                    </Badge>
-                  </Box>
-                  <Text variant="labelSmall" color="textTertiary" colorMode={resolvedMode}>
-                    ⭐ 4.8 · La Habana · Tecnología
-                  </Text>
-                </Box>
-              </Box>
-            </Card>
-
-            <Card variant="elevated" padding="3" mode={resolvedMode} testID="saved-seller-2">
-              <Box flexDirection="row" alignItems="center" gap={3} mode={resolvedMode}>
-                <Avatar size="lg" name="Santa Clara Deals" mode={resolvedMode} />
-                <Box flex={1} mode={resolvedMode}>
-                  <Text variant="titleSmall" color="text" colorMode={resolvedMode}>
-                    Santa Clara Deals
-                  </Text>
-                  <Text variant="labelSmall" color="textTertiary" colorMode={resolvedMode}>
-                    ⭐ 4.5 · Villa Clara · Variado
-                  </Text>
-                </Box>
-              </Box>
-            </Card>
-          </Box>
-        );
+        refetchSellers();
+        break;
     }
   };
 
-  return (
-    <Box flex={1} bg="background" mode={resolvedMode} testID="saved-screen">
+  const isLoading = activeTab === 'products' ? loadingProducts :
+                    activeTab === 'searches' ? loadingSearches :
+                    loadingSellers;
+
+  // Handlers
+  const handleProductPress = (product: ProductWithOffers) => {
+    router.push({
+      pathname: '/product/[id]' as any,
+      params: { id: product.id },
+    });
+  };
+
+  const handleRemoveFavorite = (id: string) => {
+    removeFavorite.mutate(id);
+  };
+
+  const handleSearchPress = (search: SavedSearch) => {
+    router.push({
+      pathname: '/search' as any,
+      params: { query: typeof search.query === 'string' ? search.query : JSON.stringify(search.query) },
+    });
+  };
+
+  const handleDeleteSearch = (search: SavedSearch) => {
+    deleteSavedSearch.mutate(search.id);
+  };
+
+  const handleToggleNotification = (search: SavedSearch, enabled: boolean) => {
+    toggleSearchNotification.mutate({ id: search.id, enabled });
+  };
+
+  const handleSellerPress = (seller: Seller) => {
+    // TODO: Navigate to seller profile
+    console.log('Seller pressed:', seller.id);
+  };
+
+  const handleRemoveSeller = (seller: Seller) => {
+    handleRemoveFavorite(seller.id);
+  };
+
+  // Tabs
+  const tabs: { key: TabType; label: string; icon: string }[] = [
+    { key: 'products', label: 'Productos', icon: '📦' },
+    { key: 'searches', label: 'Búsquedas', icon: '🔍' },
+    { key: 'sellers', label: 'Vendedores', icon: '👤' },
+  ];
+
+  // Empty states
+  const renderEmpty = () => (
+    <Box flex={1} alignItems="center" justifyContent="center" p="xl">
+      <Text variant="displaySmall">
+        {activeTab === 'products' ? '📦' : activeTab === 'searches' ? '🔍' : '👤'}
+      </Text>
+      <Box mt="md" alignItems="center">
+        <Text variant="titleMedium" color="text">
+          {activeTab === 'products' && 'No tienes productos guardados'}
+          {activeTab === 'searches' && 'No tienes búsquedas guardadas'}
+          {activeTab === 'sellers' && 'No tienes vendedores guardados'}
+        </Text>
+      </Box>
+      <Box mt="xs" alignItems="center">
+        <Text variant="bodyMedium" color="textSecondary" textAlign="center">
+          {activeTab === 'products' && 'Guarda productos que te interesen para encontrarlos fácilmente después'}
+          {activeTab === 'searches' && 'Guarda búsquedas para recibir notificaciones cuando haya nuevos resultados'}
+          {activeTab === 'sellers' && 'Sigue a vendedores para ver sus productos fácilmente'}
+        </Text>
+      </Box>
+      <Box mt="lg">
+        <Button
+          variant="primary"
+          size="md"
+          onPress={() => router.push('/' as any)}
+        >
+          {activeTab === 'products' ? 'Explorar productos' : 'Buscar ahora'}
+        </Button>
+      </Box>
+    </Box>
+  );
+
+  // Render product item
+  const renderProductItem = ({ item }: { item: ProductWithOffers }) => (
+    <Box px="md" mb="sm">
+      <ProductCard
+        product={item}
+        onPress={handleProductPress}
+        onFavoritePress={() => handleRemoveFavorite(item.id)}
+        isFavorite={true}
+        layout="list"
+      />
+    </Box>
+  );
+
+  // Render search item
+  const renderSearchItem = ({ item }: { item: SavedSearch }) => (
+    <Box px="md" mb="sm">
+      <SavedSearchCard
+        search={item}
+        onPress={handleSearchPress}
+        onDelete={handleDeleteSearch}
+        onToggleNotification={handleToggleNotification}
+      />
+    </Box>
+  );
+
+  // Render seller item
+  const renderSellerItem = ({ item }: { item: Seller }) => (
+    <Box px="md" mb="sm">
+      <SavedSellerCard
+        seller={item}
+        onPress={handleSellerPress}
+        onRemove={handleRemoveSeller}
+      />
+    </Box>
+  );
+
+  // Get data based on active tab
+  const getData = () => {
+    switch (activeTab) {
+      case 'products':
+        return favoriteProducts || [];
+      case 'searches':
+        return savedSearches || [];
+      case 'sellers':
+        return favoriteSellers || [];
+      default:
+        return [];
+    }
+  };
+
+  const renderItem = ({ item }: { item: any }) => {
+    switch (activeTab) {
+      case 'products':
+        return renderProductItem({ item });
+      case 'searches':
+        return renderSearchItem({ item });
+      case 'sellers':
+        return renderSellerItem({ item });
+      default:
+        return null;
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <Box px={4} py={4} mode={resolvedMode}>
-          <Text variant="headlineMedium" color="text" colorMode={resolvedMode}>
-            ❤️ Mis guardados
+        <Box flex={1} bg="background" mode={resolvedMode} alignItems="center" justifyContent="center" p="xl">
+          <Text variant="headlineSmall" color="text" textAlign="center">
+            Inicia sesión para ver tus guardados
+          </Text>
+          <Box mt="sm">
+            <Text variant="bodyMedium" color="textSecondary" textAlign="center">
+              Guarda productos, búsquedas y vendedores para acceder rápido
+            </Text>
+          </Box>
+          <Box mt="lg">
+            <Button
+              variant="primary"
+              size="md"
+              onPress={() => router.push('/(auth)/login' as any)}
+            >
+              Iniciar sesión
+            </Button>
+          </Box>
+        </Box>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <Box flex={1} bg="background" mode={resolvedMode}>
+        {/* Header */}
+        <Box
+          px="md"
+          py="sm"
+          mode={resolvedMode}
+          style={{ borderBottomWidth: 1, borderBottomColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb' }}
+        >
+          <Text variant="titleLarge" color="text">
+            ❤️ Guardados
           </Text>
         </Box>
 
-        {/* Tab selector */}
-        <Box px={4} mb={4} mode={resolvedMode}>
-          <Box flexDirection="row" bg="surfaceVariant" borderRadius="lg" p={1} mode={resolvedMode}>
-            {TAB_CONFIG.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <Pressable
-                  key={tab.id}
-                  onPress={() => setActiveTab(tab.id)}
-                  testID={`saved-tab-${tab.id}`}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: isActive }}
-                  style={{ flex: 1 }}
-                >
-                  <Box
-                    alignItems="center"
-                    py={2}
-                    borderRadius="md"
-                    bg={isActive ? 'surface' : 'transparent'}
-                    shadow={isActive ? 'xs' : undefined}
-                    mode={resolvedMode}
-                  >
-                    <Text
-                      variant="labelMedium"
-                      color={isActive ? 'primary' : 'textSecondary'}
-                      fontWeight={isActive ? 'semiBold' : 'regular'}
-                      mode={resolvedMode}
-                    >
-                      {tab.icon} {tab.label}
-                    </Text>
-                  </Box>
-                </Pressable>
-              );
-            })}
-          </Box>
+        {/* Tabs */}
+        <Box
+          flexDirection="row"
+          px="md"
+          py="sm"
+          mode={resolvedMode}
+          style={{ borderBottomWidth: 1, borderBottomColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb' }}
+        >
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              onPress={() => setActiveTab(tab.key)}
+              style={{
+                flex: 1,
+                paddingVertical: 8,
+                alignItems: 'center',
+                borderBottomWidth: activeTab === tab.key ? 2 : 0,
+                borderBottomColor: activeTab === tab.key ? '#2563EB' : 'transparent',
+              }}
+            >
+              <Text
+                variant="labelMedium"
+                color={activeTab === tab.key ? 'primary' : 'textSecondary'}
+              >
+                {tab.icon} {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </Box>
 
-        <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {renderContent()}
-
-          <Box mt={6} p={4} borderRadius="lg" bg="surfaceVariant" mode={resolvedMode}>
-            <Text variant="titleSmall" color="text" colorMode={resolvedMode} mb={1}>
-              💡 Sincronización pendiente
-            </Text>
-            <Text variant="bodySmall" color="textSecondary" colorMode={resolvedMode}>
-              Los guardados mostrados son de ejemplo. La sincronización con tu cuenta
-              estará disponible al conectar el backend.
-            </Text>
+        {/* Content */}
+        {isLoading ? (
+          <Box flex={1} alignItems="center" justifyContent="center">
+            <Spinner size="lg" mode={resolvedMode} />
           </Box>
-        </ScrollView>
-      </SafeAreaView>
-    </Box>
+        ) : (
+          <FlatList
+            data={getData()}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={renderEmpty}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingTop: 16,
+              paddingBottom: 20,
+            }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={false}
+                onRefresh={handleRefresh}
+                tintColor="#2563EB"
+              />
+            }
+          />
+        )}
+      </Box>
+    </SafeAreaView>
   );
 }

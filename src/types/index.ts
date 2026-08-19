@@ -102,6 +102,7 @@ export interface ProductWithOffers extends Product {
     lastSeen: string;
     status: 'recent' | 'old' | 'unknown';
   };
+  isFavorite?: boolean;
 }
 
 // ============================================
@@ -131,7 +132,7 @@ export interface UserPreferences {
     alerts: boolean;
     promotions: boolean;
   };
-  searchRadius: number; // km
+  searchRadius: number;
   defaultLocation?: string;
   favoriteCategories?: string[];
 }
@@ -161,14 +162,14 @@ export interface SavedSearch {
 export interface Alert {
   id: string;
   userId: string;
-  productQuery: string;
-  maxPrice?: number;
-  locationId?: string;
-  sourceIds?: string[];
-  frequency: 'realtime' | 'daily' | 'weekly';
+  productId: string;
+  targetPrice: number;
+  currency: 'USD' | 'CUP' | 'MLC';
+  direction: 'below' | 'above';
   isActive: boolean;
-  lastTriggeredAt?: string;
+  lastNotifiedAt?: string;
   createdAt: string;
+  product?: Product;
 }
 
 // ============================================
@@ -201,76 +202,30 @@ export interface SearchHistoryItem {
 }
 
 // ============================================
-// API RESPONSES
-// ============================================
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
-
-export interface ApiError {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-  statusCode: number;
-}
-
-export interface ApiResponse<T> {
-  data: T;
-  meta?: {
-    timestamp: string;
-    version: string;
-  };
-}
-
-// ============================================
 // NAVEGACIÓN
 // ============================================
 
 export interface RouteParams {
-  // Home routes
   index?: undefined;
   search?: { query?: string };
   explore?: { category?: string };
-  
-  // Product routes
   'product-details': { productId: string };
-  
-  // Category routes
   'category-products': { categorySlug: string };
-  
-  // Auth routes
   login?: undefined;
   register?: undefined;
   'forgot-password'?: undefined;
   'reset-password'?: { token: string };
-  
-  // Profile routes
   profile?: undefined;
   'profile-edit'?: undefined;
   'profile-preferences'?: undefined;
-  
-  // Saved routes
   saved?: undefined;
   'saved-product'?: { productId: string };
   'saved-search'?: { searchId: string };
   'saved-seller'?: { sellerId: string };
-  
-  // Alert routes
   alerts?: undefined;
   'alert-create'?: undefined;
   'alert-edit'?: { alertId: string };
-  
-  // Location routes
   'nearby-products'?: { latitude: number; longitude: number };
-  
-  // Publish route
   publish?: undefined;
 }
 
@@ -295,28 +250,3 @@ export interface FilterOption<T = string> {
   label: string;
   count?: number;
 }
-
-// Export all interfaces for easy importing
-export type {
-  Product,
-  ProductOffer,
-  Seller,
-  Source,
-  SearchQuery,
-  SearchResult,
-  ProductWithOffers,
-  User,
-  UserPreferences,
-  Favorite,
-  SavedSearch,
-  Alert,
-  Location,
-  SearchHistoryItem,
-  PaginatedResponse,
-  ApiError,
-  ApiResponse,
-  RouteParams,
-  PriceRange,
-  SortOption,
-  FilterOption,
-};

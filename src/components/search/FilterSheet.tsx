@@ -9,15 +9,9 @@ import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Sheet, SheetProps } from '@/components/ui/Sheet';
-import { Badge } from '@/components/ui/Badge';
 import { Divider } from '@/components/ui/Divider';
-import { Spacing } from '@/theme/spacing';
 import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
-
-// ============================================
-// TIPOS
-// ============================================
 
 export interface FilterState {
   minPrice?: number;
@@ -48,10 +42,6 @@ export interface FilterSheetProps extends Omit<SheetProps, 'children' | 'title'>
   testID?: string;
 }
 
-// ============================================
-// CONSTANTES
-// ============================================
-
 const CURRENCIES: { id: FilterState['currency']; label: string; symbol: string }[] = [
   { id: 'USD', label: 'USD', symbol: '$' },
   { id: 'CUP', label: 'CUP', symbol: '₱' },
@@ -73,10 +63,6 @@ const POSTED_WITHIN: { id: FilterState['postedWithin']; label: string }[] = [
 
 const PRICE_PRESETS = [50, 100, 200, 500, 1000, 2000];
 
-// ============================================
-// COMPONENTE
-// ============================================
-
 const FilterSheet = ({
   visible,
   onClose,
@@ -93,10 +79,8 @@ const FilterSheet = ({
   const { resolvedMode } = useThemeStore();
   const colors = getColors(resolvedMode);
 
-  // Estado local para edición antes de aplicar
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
 
-  // Reset local filters cuando se abre el sheet
   React.useEffect(() => {
     if (visible) {
       setLocalFilters(filters);
@@ -122,7 +106,6 @@ const FilterSheet = ({
     setLocalFilters((prev) => ({
       ...prev,
       [key]: value,
-      // Reset municipality cuando cambia province
       ...(key === 'provinceId' && { municipalityId: undefined }),
     }));
   };
@@ -152,14 +135,12 @@ const FilterSheet = ({
     onReset();
   };
 
-  // ============================================
-  // SUB-COMPONENTES
-  // ============================================
-
   const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-    <Text variant="titleMedium" color="text" mode={resolvedMode} mb={3}>
-      {children}
-    </Text>
+    <Box mb="sm">
+      <Text variant="titleMedium" color="text">
+        {children}
+      </Text>
+    </Box>
   );
 
   const ChipButton = ({
@@ -180,18 +161,17 @@ const FilterSheet = ({
       accessibilityState={{ selected: active }}
     >
       <Box
-        px={4}
-        py={2}
+        px="md"
+        py="xs"
         borderRadius="full"
         borderWidth={1.5}
         borderColor={active ? 'primary' : 'border'}
-        bg={active ? 'primaryContainer' : 'transparent'}
+        bg={active ? 'primaryContainer' : 'surfaceVariant'}
         mode={resolvedMode}
       >
         <Text
           variant="labelMedium"
           color={active ? 'primary' : 'textSecondary'}
-          mode={resolvedMode}
         >
           {label}
           {count !== undefined ? ` (${count})` : ''}
@@ -212,12 +192,12 @@ const FilterSheet = ({
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: Spacing[6] }}
+        contentContainerStyle={{ paddingBottom: 32 }}
       >
         {/* Moneda */}
-        <Box mb={5}>
+        <Box mb="lg">
           <SectionTitle>Moneda</SectionTitle>
-          <Box flexDirection="row" gap={2}>
+          <Box flexDirection="row" gap="xxs">
             {CURRENCIES.map((currency) => (
               <ChipButton
                 key={currency.id}
@@ -230,22 +210,22 @@ const FilterSheet = ({
         </Box>
 
         {/* Rango de precio */}
-        <Box mb={5}>
+        <Box mb="lg">
           <SectionTitle>Precio</SectionTitle>
-          <Box flexDirection="row" gap={2} mb={3}>
+          <Box flexDirection="row" gap="xxs" mb="sm">
             <Box
               flex={1}
               borderWidth={1.5}
               borderColor="border"
               borderRadius="md"
-              px={3}
-              py={2}
+              px="sm"
+              py="xs"
               mode={resolvedMode}
             >
-              <Text variant="labelSmall" color="textSecondary" mode={resolvedMode}>
+              <Text variant="labelSmall" color="textSecondary">
                 Mínimo
               </Text>
-              <Text variant="bodyLarge" color="text" mode={resolvedMode}>
+              <Text variant="bodyLarge" color="text">
                 {localFilters.minPrice !== undefined
                   ? `${localFilters.currency === 'USD' ? '$' : '₱'}${localFilters.minPrice}`
                   : 'Cualquiera'}
@@ -256,21 +236,21 @@ const FilterSheet = ({
               borderWidth={1.5}
               borderColor="border"
               borderRadius="md"
-              px={3}
-              py={2}
+              px="sm"
+              py="xs"
               mode={resolvedMode}
             >
-              <Text variant="labelSmall" color="textSecondary" mode={resolvedMode}>
+              <Text variant="labelSmall" color="textSecondary">
                 Máximo
               </Text>
-              <Text variant="bodyLarge" color="text" mode={resolvedMode}>
+              <Text variant="bodyLarge" color="text">
                 {localFilters.maxPrice !== undefined
                   ? `${localFilters.currency === 'USD' ? '$' : '₱'}${localFilters.maxPrice}`
                   : 'Cualquiera'}
               </Text>
             </Box>
           </Box>
-          <Box flexDirection="row" flexWrap="wrap" gap={2}>
+          <Box flexDirection="row" flexWrap="wrap" gap="xxs">
             {PRICE_PRESETS.map((price) => (
               <ChipButton
                 key={`max-${price}`}
@@ -286,12 +266,14 @@ const FilterSheet = ({
 
         {/* Ubicación */}
         {provinces.length > 0 && (
-          <Box mb={5}>
+          <Box mb="lg">
             <SectionTitle>Ubicación</SectionTitle>
-            <Text variant="labelSmall" color="textSecondary" mode={resolvedMode} mb={2}>
-              Provincia
-            </Text>
-            <Box flexDirection="row" flexWrap="wrap" gap={2} mb={3}>
+            <Box mb="xxs">
+              <Text variant="labelSmall" color="textSecondary">
+                Provincia
+              </Text>
+            </Box>
+            <Box flexDirection="row" flexWrap="wrap" gap="xxs" mb="sm">
               {provinces.map((province) => (
                 <ChipButton
                   key={province.id}
@@ -310,10 +292,12 @@ const FilterSheet = ({
 
             {localFilters.provinceId && municipalities.length > 0 && (
               <>
-                <Text variant="labelSmall" color="textSecondary" mode={resolvedMode} mb={2}>
-                  Municipio
-                </Text>
-                <Box flexDirection="row" flexWrap="wrap" gap={2}>
+                <Box mb="xxs">
+                  <Text variant="labelSmall" color="textSecondary">
+                    Municipio
+                  </Text>
+                </Box>
+                <Box flexDirection="row" flexWrap="wrap" gap="xxs">
                   {municipalities.map((municipality) => (
                     <ChipButton
                       key={municipality.id}
@@ -337,9 +321,9 @@ const FilterSheet = ({
 
         {/* Fuentes */}
         {sources.length > 0 && (
-          <Box mb={5}>
+          <Box mb="lg">
             <SectionTitle>Fuentes</SectionTitle>
-            <Box flexDirection="row" flexWrap="wrap" gap={2}>
+            <Box flexDirection="row" flexWrap="wrap" gap="xxs">
               {sources.map((source) => (
                 <ChipButton
                   key={source.id}
@@ -354,9 +338,9 @@ const FilterSheet = ({
         )}
 
         {/* Condición */}
-        <Box mb={5}>
+        <Box mb="lg">
           <SectionTitle>Condición</SectionTitle>
-          <Box flexDirection="row" gap={2}>
+          <Box flexDirection="row" gap="xxs">
             {CONDITIONS.map((condition) => (
               <ChipButton
                 key={condition.id}
@@ -369,9 +353,9 @@ const FilterSheet = ({
         </Box>
 
         {/* Fecha de publicación */}
-        <Box mb={5}>
+        <Box mb="lg">
           <SectionTitle>Publicado</SectionTitle>
-          <Box flexDirection="row" flexWrap="wrap" gap={2}>
+          <Box flexDirection="row" flexWrap="wrap" gap="xxs">
             {POSTED_WITHIN.map((period) => (
               <ChipButton
                 key={period.id}
@@ -386,27 +370,29 @@ const FilterSheet = ({
         <Divider mode={resolvedMode} />
 
         {/* Acciones */}
-        <Box flexDirection="row" gap={3} mt={4}>
-          <Button
-            variant="outline"
-            size="lg"
-            flex={1}
-            onPress={handleReset}
-            mode={resolvedMode}
-            testID={`${testID}-reset`}
-          >
-            Limpiar
-          </Button>
-          <Button
-            variant="primary"
-            size="lg"
-            flex={2}
-            onPress={handleApply}
-            mode={resolvedMode}
-            testID={`${testID}-apply`}
-          >
-            Aplicar filtros
-          </Button>
+        <Box flexDirection="row" gap="md" mt="md">
+          <Box flex={1}>
+            <Button
+              variant="outline"
+              size="lg"
+              onPress={handleReset}
+              mode={resolvedMode}
+              testID={`${testID}-reset`}
+            >
+              Limpiar
+            </Button>
+          </Box>
+          <Box flex={2}>
+            <Button
+              variant="primary"
+              size="lg"
+              onPress={handleApply}
+              mode={resolvedMode}
+              testID={`${testID}-apply`}
+            >
+              Aplicar filtros
+            </Button>
+          </Box>
         </Box>
       </ScrollView>
     </Sheet>
@@ -416,4 +402,3 @@ const FilterSheet = ({
 FilterSheet.displayName = 'FilterSheet';
 
 export { FilterSheet };
-export type { FilterSheetProps, FilterState };

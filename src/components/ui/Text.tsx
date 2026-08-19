@@ -20,7 +20,7 @@ export interface TextProps extends React.ComponentPropsWithoutRef<typeof Text> {
 
   // Overrides de estilo
   fontSize?: number;
-  fontWeight?: keyof typeof FontWeights;
+  fontWeight?: React.ComponentPropsWithoutRef<typeof Text>['style'] extends { fontWeight?: infer R } ? R : TextStyle['fontWeight'];
   lineHeight?: number;
   letterSpacing?: number;
   fontFamily?: string;
@@ -83,8 +83,6 @@ const TextComponent = forwardRef<Text, TextProps>(
       textDecorationLine,
       textDecorationColor,
       textDecorationStyle,
-      numberOfLines,
-      ellipsizeMode,
     };
 
     // Remove undefined values
@@ -97,6 +95,8 @@ const TextComponent = forwardRef<Text, TextProps>(
         ref={ref}
         style={[computedStyle, style]}
         testID={testID}
+        numberOfLines={numberOfLines}
+        ellipsizeMode={ellipsizeMode}
         {...rest}
       >
         {children}
@@ -108,4 +108,3 @@ const TextComponent = forwardRef<Text, TextProps>(
 TextComponent.displayName = 'Text';
 
 export { TextComponent as Text };
-export type { TextProps };

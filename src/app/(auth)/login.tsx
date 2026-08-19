@@ -173,7 +173,7 @@ export default function LoginScreen() {
                 </Text>
                 <Link href="/(auth)/register" asChild>
                   <Pressable>
-                    <Text variant="bodyMedium" color="primary" fontWeight="semiBold" mode={resolvedMode}>
+                    <Text variant="bodyMedium" color="primary" fontWeight="600" mode={resolvedMode}>
                       Regístrate
                     </Text>
                   </Pressable>

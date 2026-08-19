@@ -4,7 +4,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { ViewStyle, StyleProp, TextStyle } from 'react-native';
+import { View, ViewStyle, StyleProp, TextStyle } from 'react-native';
 import { Box } from './Box';
 import { Text as TextComponent } from './Text';
 import { Spacing } from '@/theme/spacing';
@@ -26,7 +26,7 @@ export interface DividerProps {
   labelStyle?: StyleProp<TextStyle>;
 }
 
-const Divider = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, DividerProps>(
+const Divider = forwardRef<View, DividerProps>(
   (
     {
       orientation = 'horizontal',
@@ -49,7 +49,7 @@ const Divider = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, DividerPr
       flexDirection: orientation === 'horizontal' ? 'row' : 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: Spacing[3],
+      gap: Spacing.sm,
       width: orientation === 'horizontal' ? '100%' : undefined,
       height: orientation === 'vertical' ? '100%' : undefined,
     };
@@ -112,4 +112,3 @@ const Divider = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, DividerPr
 Divider.displayName = 'Divider';
 
 export { Divider };
-export type { DividerProps, DividerOrientation, DividerVariant };

@@ -1,9 +1,9 @@
 /**
  * Dónde Hay - Auth Service
- * Endpoints de autenticación
+ * Autenticación con Supabase Auth
  */
 
-import { httpClient } from '@/lib/api-client';
+import { supabase } from '@/lib/supabase';
 import type { User } from '@/types';
 
 // ============================================
@@ -44,56 +44,150 @@ export const authService = {
   /**
    * Login with email and password
    */
-  login: (data: LoginRequest) =>
-    httpClient.post<AuthResponse>('/auth/login', data, { skipAuth: true }),
+  login: async (data: LoginRequest): Promise<AuthResponse> => {
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) throw error;
+
+    const user: User = {
+      id: authData.user.id,
+      email: authData.user.email || '',
+      name: authData.user.user_metadata?.['name'] || '',
+      avatarUrl: authData.user.user_metadata?.['avatar_url'] || undefined,
+      phone: authData.user.phone || undefined,
+      role: 'user',
+      createdAt: authData.user.created_at,
+      updatedAt: authData.user.updated_at || authData.user.created_at,
+    };
+
+    return {
+      user,
+      accessToken: authData.session?.access_token || '',
+      refreshToken: authData.session?.refresh_token || '',
+    };
+  },
 
   /**
    * Register new user
    */
-  register: (data: RegisterRequest) =>
-    httpClient.post<AuthResponse>('/auth/register', data, { skipAuth: true }),
+  register: async (data: RegisterRequest): Promise<AuthResponse> => {
+    const { data: authData, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+        },
+      },
+    });
+
+    if (error) throw error;
+
+    const user: User = {
+      id: authData.user?.id || '',
+      email: authData.user?.email || data.email,
+      name: data.name,
+      avatarUrl: undefined,
+      phone: undefined,
+      role: 'user',
+      createdAt: authData.user?.created_at || new Date().toISOString(),
+      updatedAt: authData.user?.updated_at || new Date().toISOString(),
+    };
+
+    return {
+      user,
+      accessToken: authData.session?.access_token || '',
+      refreshToken: authData.session?.refresh_token || '',
+    };
+  },
 
   /**
    * Get current user profile
    */
-  me: () => httpClient.get<User>('/auth/me'),
+  me: async (): Promise<User> => {
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error) throw error;
+    if (!user) throw new Error('No authenticated user');
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      name: user.user_metadata?.['name'] || '',
+      avatarUrl: user.user_metadata?.['avatar_url'] || undefined,
+      phone: user.phone || undefined,
+      role: 'user',
+      createdAt: user.created_at,
+      updatedAt: user.updated_at || user.created_at,
+    };
+  },
 
   /**
    * Refresh access token
    */
-  refresh: (refreshToken: string) =>
-    httpClient.post<{ accessToken: string; refreshToken: string }>(
-      '/auth/refresh',
-      { refreshToken },
-      { skipAuth: true }
-    ),
+  refresh: async (): Promise<{ accessToken: string; refreshToken: string }> => {
+    const { data, error } = await supabase.auth.refreshSession();
+
+    if (error) throw error;
+
+    return {
+      accessToken: data.session?.access_token || '',
+      refreshToken: data.session?.refresh_token || '',
+    };
+  },
 
   /**
    * Request password reset email
    */
-  forgotPassword: (data: ForgotPasswordRequest) =>
-    httpClient.post<{ message: string }>('/auth/forgot-password', data, { skipAuth: true }),
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<{ message: string }> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+      redirectTo: 'dondehay://reset-password',
+    });
+
+    if (error) throw error;
+
+    return { message: 'Password reset email sent' };
+  },
 
   /**
    * Reset password with token
    */
-  resetPassword: (data: ResetPasswordRequest) =>
-    httpClient.post<{ message: string }>('/auth/reset-password', data, { skipAuth: true }),
+  resetPassword: async (data: ResetPasswordRequest): Promise<{ message: string }> => {
+    const { error } = await supabase.auth.updateUser({
+      password: data.password,
+    });
+
+    if (error) throw error;
+
+    return { message: 'Password updated successfully' };
+  },
 
   /**
-   * Logout (invalidate tokens)
+   * Logout
    */
-  logout: () => httpClient.post('/auth/logout'),
+  logout: async (): Promise<void> => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  },
 
   /**
    * Change password
    */
-  changePassword: (data: { currentPassword: string; newPassword: string }) =>
-    httpClient.post('/auth/change-password', data),
+  changePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
+    const { error } = await supabase.auth.updateUser({
+      password: data.newPassword,
+    });
+
+    if (error) throw error;
+  },
 
   /**
-   * Verify email
+   * Verify email (Supabase handles this automatically)
    */
-  verifyEmail: (token: string) =>
-    httpClient.post<{ message: string }>(`/auth/verify-email/${token}`, undefined, { skipAuth: true }),
+  verifyEmail: async (_token: string): Promise<{ message: string }> => {
+    return { message: 'Email verification handled by Supabase' };
+  },
 };

@@ -23,7 +23,7 @@ export function useAuthGuard() {
     if (!isHydrated) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const currentRoute = segments[segments.length - 1];
+    const currentRoute = segments[segments.length - 1] ?? '';
     const isAuthRoute = inAuthGroup || AUTH_ROUTES.includes(currentRoute);
 
     if (!isAuthenticated && !isAuthRoute) {

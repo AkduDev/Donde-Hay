@@ -17,7 +17,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.dondehay"
     },
     "web": {
       "output": "static",
@@ -32,11 +33,33 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Permitir a Dónde Hay acceder a tu ubicación para encontrar productos cercanos.",
+          "locationAlwaysPermission": "Permitir a Dónde Hay acceder a tu ubicación en segundo plano para alertas de productos cercanos.",
+          "locationWhenInUsePermission": "Permitir a Dónde Hay acceder a tu ubicación para encontrar productos cercanos."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#208AEF"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "41d6883e-6a1c-4de7-89bc-be26c1a98c58"
+      }
+    },
+    "owner": "akdudev"
   }
 }

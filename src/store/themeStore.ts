@@ -71,7 +71,7 @@ export const useThemeStore = create<ThemeStore>()(
       // Actions
       setMode: (mode) => {
         const systemScheme = useColorScheme();
-        const resolved = mode === 'system' ? (systemScheme ?? 'light') : mode;
+        const resolved: 'light' | 'dark' = mode === 'system' ? (systemScheme as 'light' | 'dark' ?? 'light') : mode;
         set({ mode, resolvedMode: resolved });
       },
 
@@ -79,14 +79,14 @@ export const useThemeStore = create<ThemeStore>()(
         const { mode } = get();
         const modes: ThemeMode[] = ['light', 'dark', 'system'];
         const currentIndex = modes.indexOf(mode);
-        const nextMode = modes[(currentIndex + 1) % modes.length];
+        const nextMode = modes[(currentIndex + 1) % modes.length] as ThemeMode;
         get().setMode(nextMode);
       },
 
       initialize: () => {
         const systemScheme = useColorScheme();
         const { mode } = get();
-        const resolved = mode === 'system' ? (systemScheme ?? 'light') : mode;
+        const resolved: 'light' | 'dark' = mode === 'system' ? (systemScheme as 'light' | 'dark' ?? 'light') : mode;
         set({ resolvedMode: resolved, isLoading: false });
       },
     }),

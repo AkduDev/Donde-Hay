@@ -4,8 +4,9 @@
  */
 
 import React, { forwardRef } from 'react';
-import { ActivityIndicator, ActivityIndicatorProps, ViewStyle, StyleProp } from 'react-native';
+import { ActivityIndicator, ActivityIndicatorProps, View, ViewStyle, StyleProp } from 'react-native';
 import { Box } from './Box';
+import { Text } from './Text';
 import { Spacing } from '@/theme/spacing';
 import { ColorPalette, getColors } from '@/theme/colors';
 
@@ -29,11 +30,11 @@ const sizeConfig: Record<SpinnerSize, {
   diameter: number;
   labelGap: keyof typeof Spacing;
 }> = {
-  xs: { rnSize: 'small', diameter: 16, labelGap: '1' },
-  sm: { rnSize: 'small', diameter: 20, labelGap: '2' },
-  md: { rnSize: 'small', diameter: 24, labelGap: '2' },
-  lg: { rnSize: 'large', diameter: 36, labelGap: '3' },
-  xl: { rnSize: 'large', diameter: 48, labelGap: '3' },
+  xs: { rnSize: 'small', diameter: 16, labelGap: 'xxxs' },
+  sm: { rnSize: 'small', diameter: 20, labelGap: 'xs' },
+  md: { rnSize: 'small', diameter: 24, labelGap: 'xs' },
+  lg: { rnSize: 'large', diameter: 36, labelGap: 'sm' },
+  xl: { rnSize: 'large', diameter: 48, labelGap: 'sm' },
 };
 
 const variantColors: Record<SpinnerVariant, keyof ColorPalette> = {
@@ -44,7 +45,7 @@ const variantColors: Record<SpinnerVariant, keyof ColorPalette> = {
   inverse: 'textInverse',
 };
 
-const Spinner = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, SpinnerProps>(
+const Spinner = forwardRef<View, SpinnerProps>(
   (
     {
       size = 'md',
@@ -68,7 +69,7 @@ const Spinner = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, SpinnerPr
       flexDirection: labelPosition === 'right' ? 'row' : 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: Spacing[sConfig.labelGap],
+      gap: Spacing[sConfig.labelGap] as number,
       ...(overlay && {
         position: 'absolute' as const,
         top: 0,
@@ -98,7 +99,7 @@ const Spinner = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, SpinnerPr
             style={{
               flexDirection: labelPosition === 'right' ? 'row' : 'column',
               alignItems: 'center',
-              gap: Spacing[1],
+              gap: Spacing.xxxs,
             }}
             testID={`${testID}-label-container`}
             mode={mode}
@@ -116,7 +117,3 @@ const Spinner = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, SpinnerPr
 Spinner.displayName = 'Spinner';
 
 export { Spinner };
-export type { SpinnerProps, SpinnerSize, SpinnerVariant };
-
-// Import Text
-import { Text } from './Text';

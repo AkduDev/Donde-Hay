@@ -122,10 +122,8 @@ export function useToggleFavorite(type: string, targetId: string) {
   const { data: isFavorite } = useIsFavorite(type, targetId);
 
   return useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (isFavorite?.isFavorite) {
-        // Need to find the favorite ID to remove it
-        // This is a simplified version - in real app, you'd store the favorite ID
         return favoritesService.remove(targetId);
       }
       return favoritesService.add({ type: type as 'product' | 'search' | 'seller', targetId });

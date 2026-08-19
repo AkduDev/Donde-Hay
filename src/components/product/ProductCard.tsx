@@ -5,20 +5,15 @@
  */
 
 import React from 'react';
-import { Pressable, Image, ViewStyle, StyleProp, TextStyle } from 'react-native';
+import { Pressable, Image, ViewStyle, StyleProp } from 'react-native';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { BorderRadius } from '@/theme/radius';
-import { Spacing } from '@/theme/spacing';
 import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
 import type { ProductWithOffers } from '@/types';
-
-// ============================================
-// TIPOS
-// ============================================
 
 export interface ProductCardProps {
   product: ProductWithOffers;
@@ -32,11 +27,6 @@ export interface ProductCardProps {
   testID?: string;
 }
 
-// ============================================
-// HELPERS
-// ============================================
-
-/** Calcula el estado de disponibilidad basado en la última oferta */
 function getAvailabilityStatus(product: ProductWithOffers): {
   label: string;
   variant: 'success' | 'warning' | 'default';
@@ -62,14 +52,12 @@ function getAvailabilityStatus(product: ProductWithOffers): {
   }
 }
 
-/** Formatea el precio según la moneda */
 function formatPrice(price: number, currency: string): string {
   const symbols: Record<string, string> = { USD: '$', CUP: '₱', MLC: 'M' };
   const symbol = symbols[currency] ?? '$';
   return `${symbol}${price.toLocaleString('es-CU')}`;
 }
 
-/** Obtiene el tiempo relativo desde publicación */
 function getRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const diffMs = Date.now() - date.getTime();
@@ -82,10 +70,6 @@ function getRelativeTime(dateString: string): string {
   if (diffDays < 7) return `hace ${diffDays}d`;
   return date.toLocaleDateString('es-CU', { day: 'numeric', month: 'short' });
 }
-
-// ============================================
-// COMPONENTE
-// ============================================
 
 const ProductCard = ({
   product,
@@ -113,13 +97,9 @@ const ProductCard = ({
 
   const isGrid = layout === 'grid';
 
-  // ============================================
-  // SUB-COMPONENTES
-  // ============================================
-
   const ProductImage = () => (
     <Box
-      width={isGrid ? '100%' : 100}
+      width={isGrid ? 150 : 100}
       height={isGrid ? 140 : 100}
       borderRadius="md"
       overflow="hidden"
@@ -135,7 +115,7 @@ const ProductCard = ({
         />
       ) : (
         <Box flex={1} alignItems="center" justifyContent="center" mode={resolvedMode}>
-          <Text variant="headlineSmall" color="textTertiary" mode={resolvedMode}>
+          <Text variant="headlineSmall" color="textTertiary">
             📦
           </Text>
         </Box>
@@ -160,7 +140,7 @@ const ProductCard = ({
         justifyContent="center"
         mode={resolvedMode}
       >
-        <Text variant="bodyLarge" mode={resolvedMode}>
+        <Text variant="bodyLarge">
           {isFavorite ? '❤️' : '🤍'}
         </Text>
       </Box>
@@ -176,7 +156,7 @@ const ProductCard = ({
       .slice(0, maxOffersToShow);
 
     return (
-      <Box gap={2} mt={3} pt={3} borderWidth={0} borderTopWidth={1} borderColor="divider" mode={resolvedMode}>
+      <Box gap="xxs" mt="xs" pt="xs" mode={resolvedMode} style={{ borderTopWidth: 1, borderTopColor: colors.divider }}>
         {offersToShow.map((offer, index) => (
           <Box
             key={offer.id}
@@ -185,36 +165,31 @@ const ProductCard = ({
             alignItems="center"
             mode={resolvedMode}
           >
-            <Box flexDirection="row" alignItems="center" gap={2}>
-              <Text variant="bodySmall" mode={resolvedMode}>
+            <Box flexDirection="row" alignItems="center" gap="xxs">
+              <Text variant="bodySmall">
                 {index === 0 ? '🏆' : '•'}
               </Text>
-              <Text variant="labelMedium" color="textSecondary" mode={resolvedMode}>
+              <Text variant="labelMedium" color="textSecondary">
                 {offer.sourceId}
               </Text>
             </Box>
             <Text
               variant="labelMedium"
               color={index === 0 ? 'success' : 'text'}
-              fontWeight={index === 0 ? 'semiBold' : 'regular'}
-              mode={resolvedMode}
+              fontWeight={index === 0 ? '600' : '400'}
             >
               {formatPrice(offer.price, offer.currency)} · {getRelativeTime(offer.postedAt)}
             </Text>
           </Box>
         ))}
         {offerCount > maxOffersToShow && (
-          <Text variant="labelSmall" color="primary" mode={resolvedMode}>
+          <Text variant="labelSmall" color="primary">
             +{offerCount - maxOffersToShow} ofertas más
           </Text>
         )}
       </Box>
     );
   };
-
-  // ============================================
-  // RENDER
-  // ============================================
 
   return (
     <Pressable
@@ -225,7 +200,7 @@ const ProductCard = ({
     >
       <Card
         variant="elevated"
-        padding={isGrid ? '2' : '3'}
+        padding={isGrid ? 'xs' : 'md'}
         style={[
           {
             width: isGrid ? '100%' : undefined,
@@ -235,11 +210,10 @@ const ProductCard = ({
         mode={resolvedMode}
       >
         {isGrid ? (
-          // Grid layout (vertical)
           <Box mode={resolvedMode}>
-            <Box position="relative" mb={2} mode={resolvedMode}>
+            <Box position="relative" mb="xxs" mode={resolvedMode}>
               <ProductImage />
-              <Box position="absolute" top={2} right={2} mode={resolvedMode}>
+              <Box position="absolute" top={4} right={4} mode={resolvedMode}>
                 <FavoriteButton />
               </Box>
             </Box>
@@ -249,32 +223,29 @@ const ProductCard = ({
               color="text"
               numberOfLines={2}
               ellipsizeMode="tail"
-              mode={resolvedMode}
-              mb={1}
             >
               {product.canonicalName}
             </Text>
 
             {minPriceOffer && (
-              <Text variant="titleMedium" color="success" fontWeight="bold" mode={resolvedMode}>
+              <Text variant="titleMedium" color="success" fontWeight="bold">
                 {formatPrice(minPriceOffer.price, minPriceOffer.currency)}
               </Text>
             )}
 
-            <Box flexDirection="row" justifyContent="space-between" alignItems="center" mt={1}>
+            <Box flexDirection="row" justifyContent="space-between" alignItems="center" mt="xxs" mode={resolvedMode}>
               <Badge variant={availability.variant} size="xs">
                 {availability.icon} {availability.label}
               </Badge>
               {offerCount > 1 && (
-                <Text variant="labelSmall" color="textSecondary" mode={resolvedMode}>
+                <Text variant="labelSmall" color="textSecondary">
                   {offerCount} ofertas
                 </Text>
               )}
             </Box>
           </Box>
         ) : (
-          // List layout (horizontal)
-          <Box flexDirection="row" gap={3} mode={resolvedMode}>
+          <Box flexDirection="row" gap="md" mode={resolvedMode}>
             <ProductImage />
 
             <Box flex={1} mode={resolvedMode}>
@@ -284,17 +255,16 @@ const ProductCard = ({
                 alignItems="flex-start"
                 mode={resolvedMode}
               >
-                <Box flex={1} mr={2} mode={resolvedMode}>
+                <Box flex={1} mr="xxs" mode={resolvedMode}>
                   <Text
                     variant="titleSmall"
                     color="text"
                     numberOfLines={1}
                     ellipsizeMode="tail"
-                    mode={resolvedMode}
                   >
                     {product.canonicalName}
                   </Text>
-                  <Text variant="bodySmall" color="textSecondary" mode={resolvedMode} mt={0.5}>
+                  <Text variant="bodySmall" color="textSecondary">
                     {product.brand} {product.model}
                   </Text>
                 </Box>
@@ -302,24 +272,24 @@ const ProductCard = ({
               </Box>
 
               {minPriceOffer && (
-                <Box flexDirection="row" alignItems="baseline" gap={2} mt={2} mode={resolvedMode}>
-                  <Text variant="titleLarge" color="success" fontWeight="bold" mode={resolvedMode}>
+                <Box flexDirection="row" alignItems="baseline" gap="xxs" mt="xxs" mode={resolvedMode}>
+                  <Text variant="titleLarge" color="success" fontWeight="bold">
                     {formatPrice(minPriceOffer.price, minPriceOffer.currency)}
                   </Text>
                   {offerCount > 1 && (
-                    <Text variant="labelSmall" color="textSecondary" mode={resolvedMode}>
+                    <Text variant="labelSmall" color="textSecondary">
                       en {offerCount} ofertas
                     </Text>
                   )}
                 </Box>
               )}
 
-              <Box flexDirection="row" justifyContent="space-between" alignItems="center" mt={2}>
+              <Box flexDirection="row" justifyContent="space-between" alignItems="center" mt="xxs" mode={resolvedMode}>
                 <Badge variant={availability.variant} size="xs">
                   {availability.icon} {availability.label}
                 </Badge>
                 {minPriceOffer && (
-                  <Text variant="labelSmall" color="textTertiary" mode={resolvedMode}>
+                  <Text variant="labelSmall" color="textTertiary">
                     📍 {minPriceOffer.locationId}
                   </Text>
                 )}
@@ -337,4 +307,3 @@ const ProductCard = ({
 ProductCard.displayName = 'ProductCard';
 
 export { ProductCard };
-export type { ProductCardProps };

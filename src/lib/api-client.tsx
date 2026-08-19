@@ -90,7 +90,7 @@ export interface RequestConfig extends RequestInit {
 
 class HttpClient {
   private baseUrl: string;
-  private defaultHeaders: HeadersInit;
+  private defaultHeaders: Record<string, string>;
   private getToken: () => Promise<string | null>;
 
   constructor(
@@ -127,10 +127,10 @@ class HttpClient {
     const url = this.buildUrl(endpoint, params);
     const token = skipAuth ? null : await this.getToken();
 
-    const requestHeaders: HeadersInit = {
+    const requestHeaders: Record<string, string> = {
       ...this.defaultHeaders,
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(headers as Record<string, string> | undefined),
     };
 
     const controller = new AbortController();
@@ -140,7 +140,7 @@ class HttpClient {
       const response = await fetch(url, {
         method,
         headers: requestHeaders,
-        body: body ? JSON.stringify(body) : undefined,
+        body: body != null ? JSON.stringify(body) : undefined,
         signal: controller.signal,
         ...rest,
       });
@@ -178,15 +178,15 @@ class HttpClient {
   }
 
   post<T>(endpoint: string, body?: unknown, config?: RequestConfig): Promise<T> {
-    return this.request('POST', endpoint, { ...config, body });
+    return this.request('POST', endpoint, { ...config, body: body as string | undefined });
   }
 
   put<T>(endpoint: string, body?: unknown, config?: RequestConfig): Promise<T> {
-    return this.request('PUT', endpoint, { ...config, body });
+    return this.request('PUT', endpoint, { ...config, body: body as string | undefined });
   }
 
   patch<T>(endpoint: string, body?: unknown, config?: RequestConfig): Promise<T> {
-    return this.request('PATCH', endpoint, { ...config, body });
+    return this.request('PATCH', endpoint, { ...config, body: body as string | undefined });
   }
 
   delete<T>(endpoint: string, config?: RequestConfig): Promise<T> {
@@ -215,10 +215,10 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutos
       gcTime: 1000 * 60 * 30, // 30 minutos (cache time)
-      retry: (failureCount, error) => {
+      retry: (failureCount: number, error: Error) => {
         // No reintentar en errores 4xx
-        if (error instanceof Object && 'statusCode' in error) {
-          const statusCode = (error as ApiError).statusCode;
+        if (error && typeof error === 'object' && 'statusCode' in error) {
+          const statusCode = (error as unknown as ApiError).statusCode;
           if (statusCode >= 400 && statusCode < 500) return false;
         }
         return failureCount < 3;

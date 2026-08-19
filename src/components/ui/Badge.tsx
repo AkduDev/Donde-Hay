@@ -4,7 +4,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { ViewStyle, StyleProp, TextStyle } from 'react-native';
+import { View, ViewStyle, StyleProp, TextStyle } from 'react-native';
 import { Box } from './Box';
 import { Text as TextComponent } from './Text';
 import { BorderRadius } from '@/theme/radius';
@@ -56,18 +56,18 @@ const sizeConfig: Record<BadgeSize, {
   paddingX: keyof typeof Spacing;
   paddingY: keyof typeof Spacing;
   fontSize: number;
-  fontWeight: 'medium' | 'semiBold';
+  fontWeight: 'medium' | '600';
   borderRadius: keyof typeof BorderRadius;
   gap: keyof typeof Spacing;
   dotSize: number;
 }> = {
-  xs: { paddingX: '2', paddingY: '0', fontSize: 10, fontWeight: 'medium', borderRadius: 'full', gap: '1', dotSize: 4 },
-  sm: { paddingX: '2', paddingY: '0', fontSize: 11, fontWeight: 'medium', borderRadius: 'full', gap: '1', dotSize: 5 },
-  md: { paddingX: '3', paddingY: '0', fontSize: 12, fontWeight: 'semiBold', borderRadius: 'full', gap: '2', dotSize: 6 },
-  lg: { paddingX: '3', paddingY: '1', fontSize: 13, fontWeight: 'semiBold', borderRadius: 'full', gap: '2', dotSize: 7 },
+  xs: { paddingX: 'xxs', paddingY: 'none', fontSize: 10, fontWeight: 'medium', borderRadius: 'full', gap: 'xxxs', dotSize: 4 },
+  sm: { paddingX: 'xxs', paddingY: 'none', fontSize: 11, fontWeight: 'medium', borderRadius: 'full', gap: 'xxxs', dotSize: 5 },
+  md: { paddingX: 'xs', paddingY: 'none', fontSize: 12, fontWeight: '600', borderRadius: 'full', gap: 'xxs', dotSize: 6 },
+  lg: { paddingX: 'xs', paddingY: 'xxxs', fontSize: 13, fontWeight: '600', borderRadius: 'full', gap: 'xxs', dotSize: 7 },
 };
 
-const Badge = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, BadgeProps>(
+const Badge = forwardRef<View, BadgeProps>(
   (
     {
       children,
@@ -89,13 +89,13 @@ const Badge = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, BadgeProps>
     const badgeStyle: ViewStyle = {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: Spacing[sConfig.paddingX],
-      paddingVertical: Spacing[sConfig.paddingY],
-      borderRadius: BorderRadius[sConfig.borderRadius],
+      paddingHorizontal: Spacing[sConfig.paddingX] as number,
+      paddingVertical: Spacing[sConfig.paddingY] as number,
+      borderRadius: BorderRadius[sConfig.borderRadius] as number,
       backgroundColor: colors[vConfig.bg],
       borderWidth: variant === 'outline' ? 1 : 0,
       borderColor: colors[vConfig.border],
-      gap: Spacing[sConfig.gap],
+      gap: Spacing[sConfig.gap] as number,
     };
 
     return (
@@ -121,7 +121,7 @@ const Badge = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, BadgeProps>
             { fontSize: sConfig.fontSize, fontWeight: sConfig.fontWeight },
             textStyle,
           ]}
-          color={vConfig.text as keyof ColorPalette}
+          color={vConfig.text}
           mode={mode}
           testID={`${testID}-text`}
         >
@@ -135,4 +135,3 @@ const Badge = forwardRef<React.ComponentPropsWithoutRef<typeof Box>, BadgeProps>
 Badge.displayName = 'Badge';
 
 export { Badge };
-export type { BadgeProps, BadgeVariant, BadgeSize };

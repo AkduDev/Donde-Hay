@@ -235,15 +235,16 @@ src/app/(tabs)/profile/
 > Objetivo: Productos cercanos con ubicación real
 
 ### 6.1 Infraestructura
-- [ ] Instalar `expo-location`
-- [ ] Crear `useLocation` hook con permisos y watchPosition
-- [ ] Crear `src/services/locations.service.ts` (si no existe)
+- [x] Instalar `expo-location`
+- [x] Crear `useDeviceLocation` hook con permisos y watchPosition
+- [x] Crear `useLocationStore` para estado global de ubicación
+- [x] Actualizar `src/services/locations.service.ts` con Supabase
 
 ### 6.2 Nearby Screen refactor
-- [ ] Reemplazar lista hardcodeada por ubicación real del usuario
-- [ ] Implementar mapa con `react-native-maps` (futuro)
-- [ ] Lista de productos cercanos con distancia
-- [ ] Filtro por radio de búsqueda
+- [x] Reemplazar lista hardcodeada por ubicación real del usuario
+- [ ] Implementar mapa con `react-native-maps` (fase futura)
+- [x] Lista de productos cercanos con distancia
+- [x] Filtro por radio de búsqueda (5km, 10km, 25km, 50km)
 
 ### 6.3 Mapa interactivo (fase futura)
 - [ ] Instalar `react-native-maps`
@@ -257,16 +258,16 @@ src/app/(tabs)/profile/
 > Objetivo: Sistema de alertas de precio
 
 ### 7.1 Alertas
-- [ ] Crear pantalla `alerts.tsx` en tabs o perfil
-- [ ] Crear `alert-create.tsx` y `alert-edit.tsx`
-- [ ] CRUD completo con `useAlerts` hooks
-- [ ] Frequencia: tiempo real, diaria, semanal
+- [x] Crear pantalla `alerts.tsx` en tabs
+- [x] Crear `alerts/create.tsx` y `alerts/[id].tsx`
+- [x] CRUD completo con `useAlerts` hooks
+- [x] Frecuencia: tiempo real, diaria, semanal
 
 ### 7.2 Push Notifications
-- [ ] Instalar `expo-notifications`
-- [ ] Registrar token de dispositivo
-- [ ] Manejar notificaciones en foreground/background
-- [ ] Deep linking desde notificación a producto
+- [x] Instalar `expo-notifications`
+- [x] Registrar token de dispositivo
+- [x] Manejar notificaciones en foreground/background
+- [x] Deep linking desde notificación a producto
 
 ### 7.3 WebSocket (tiempo real)
 - [ ] Crear WebSocket client en `src/lib/ws-client.ts`
