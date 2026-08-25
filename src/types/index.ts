@@ -89,6 +89,44 @@ export interface SearchResult {
   hasPrev: boolean;
   query: string;
   processingTimeMs: number;
+  sources: SourceSummary[];
+}
+
+export interface SourceSummary {
+  sourceId: string;
+  count: number;
+}
+
+export interface ScrapedProduct {
+  id: string;
+  canonicalName: string;
+  brand?: string;
+  model?: string;
+  description?: string;
+  imageUrls: string[];
+  sourceId: 'revolico';
+  sourceExternalId: string;
+  sourceUrl: string;
+  price: number;
+  currency: 'USD' | 'CUP' | 'MLC';
+  sellerName?: string;
+  sellerPhone?: string;
+  sellerWhatsapp?: boolean;
+  provinceId?: string;
+  municipalityId?: string;
+  viewCount?: number;
+  postedAt: string;
+}
+
+export type SourceFilter = 'all' | 'comunidad' | 'revolico';
+
+export interface MultiSourceSearchResult {
+  dbResults: SearchResult;
+  scrapedProducts: ScrapedProduct[];
+  combinedProducts: ProductWithOffers[];
+  total: number;
+  sourceCounts: Record<string, number>;
+  errors: { source: string; message: string }[];
 }
 
 export interface ProductWithOffers extends Product {

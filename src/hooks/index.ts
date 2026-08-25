@@ -4,7 +4,7 @@
 
 export { useUser, useLogin, useRegister, useLogout, useForgotPassword, useResetPassword, useChangePassword } from './use-auth';
 export { useProducts, useInfiniteProducts, useProduct, useProductOffers, usePriceHistory, useTrending, useNearbyProducts, useRelatedProducts, useReportProduct } from './use-products';
-export { useSearch, useInfiniteSearch, useSuggestions, useSearchFacets, useTrendingSearches } from './use-search';
+export { useMultiSourceSearch, useSearch, useInfiniteSearch, useSuggestions, useSearchFacets, useTrendingSearches } from './use-search';
 export { useCategories, useCategory, useCategoryProducts } from './use-categories';
 export { useFavorites, useFavoriteProducts, useFavoriteSellers, useSavedSearches, useIsFavorite, useAddFavorite, useRemoveFavorite, useToggleFavorite, useSaveSearch, useDeleteSavedSearch, useToggleSearchNotification } from './use-favorites';
 export { useAlerts, useAlertMatches, useCreateAlert, useUpdateAlert, useDeleteAlert, useToggleAlert } from './use-alerts';
@@ -18,6 +18,7 @@ export { useDebounce, useDebouncedCallback } from './use-debounce';
 export { useAuthGuard, useInitialRoute } from './use-auth-guard';
 export { useRealtimeAlerts } from './use-realtime-alerts';
 export { useRealtimeProduct } from './use-realtime-product';
+export { useRevolicoSearch, useScrapeRevolico, useScrapedProducts } from './use-revolico-search';
 
 // Re-export existing hooks
 export { useColorScheme } from './use-color-scheme';

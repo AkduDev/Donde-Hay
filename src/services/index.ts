@@ -11,6 +11,7 @@ export { alertsService } from './alerts.service';
 export { locationsService } from './locations.service';
 export { profileService } from './profile.service';
 export { sellersService } from './sellers.service';
+export { scraperService } from './scraper.service';
 
 // Re-export types
 export type { AuthResponse, LoginRequest, RegisterRequest } from './auth.service';
@@ -21,3 +22,4 @@ export type { CreateAlertRequest, UpdateAlertRequest } from './alerts.service';
 export type { Province, Municipality } from './locations.service';
 export type { UpdateProfileRequest, UpdatePreferencesRequest, UserStats } from './profile.service';
 export type { SellerWithProducts, SellerProductsParams } from './sellers.service';
+export type { ScrapeResult, ScrapeCategoryParams, ScrapeSearchParams } from './scraper.service';

@@ -326,6 +326,8 @@ export const queryKeys = {
   search: {
     results: (query: string, params?: object) =>
       ['search', 'results', query, params] as const,
+    multiSource: (query: string, sourceFilter?: string, params?: object) =>
+      ['search', 'multiSource', query, sourceFilter, params] as const,
     suggestions: (query: string) => ['search', 'suggestions', query] as const,
     facets: (query?: string) => ['search', 'facets', query] as const,
   },

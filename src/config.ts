@@ -53,43 +53,77 @@ export const SOURCES = {
     name: 'Revolico',
     type: 'marketplace' as const,
     baseUrl: 'https://revolico.com',
+    color: '#E44D26',
   },
   '1cuba': {
     id: '1cuba',
     name: '1Cuba',
     type: 'marketplace' as const,
     baseUrl: 'https://1cuba.cu',
+    color: '#1877F2',
   },
   choleslibres: {
     id: 'choleslibres',
     name: 'CholesLibres',
     type: 'marketplace' as const,
     baseUrl: 'https://choleslibres.com',
+    color: '#25D366',
   },
   facebook: {
     id: 'facebook',
     name: 'Facebook',
     type: 'social' as const,
     baseUrl: 'https://facebook.com/marketplace',
+    color: '#1877F2',
   },
   instagram: {
     id: 'instagram',
     name: 'Instagram',
     type: 'social' as const,
     baseUrl: 'https://instagram.com',
+    color: '#E4405F',
   },
   telegram: {
     id: 'telegram',
     name: 'Telegram',
     type: 'social' as const,
     baseUrl: 'https://t.me',
+    color: '#0088CC',
   },
   comunidad: {
     id: 'comunidad',
     name: 'Comunidad Dónde Hay',
     type: 'community' as const,
     baseUrl: 'https://dondehay.app',
+    color: '#22C55E',
   },
 } as const;
 
 export type SourceId = keyof typeof SOURCES;
+
+export const REVOLICO_CATEGORIES: Record<string, string> = {
+  tecnologia: '1200',
+  vehiculos: '1000',
+  inmobiliaria: '1100',
+  electrodomesticos: '1300',
+  otros: '1400',
+};
+
+export const REVOLICO_PROVINCES: Record<string, string> = {
+  '1': 'La Habana',
+  '2': 'Artemisa',
+  '3': 'Mayabeque',
+  '4': 'Pinar del Río',
+  '5': 'Matanzas',
+  '6': 'Cienfuegos',
+  '7': 'Villa Clara',
+  '8': 'Sancti Spíritus',
+  '9': 'Ciego de Ávila',
+  '10': 'Camagüey',
+  '11': 'Las Tunas',
+  '12': 'Granma',
+  '13': 'Holguín',
+  '14': 'Santiago de Cuba',
+  '15': 'Guantánamo',
+  '16': 'Isla de la Juventud',
+};

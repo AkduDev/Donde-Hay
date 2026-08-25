@@ -1,16 +1,17 @@
 /**
  * Dónde Hay - ProductCard Component
- * Card para mostrar productos en resultados de búsqueda
- * Muestra información agrupada de ofertas del mismo producto
+ * Card for displaying products in search results.
+ * Shows grouped offer info, source badges, and Revolico seller contact.
  */
 
 import React from 'react';
-import { Pressable, ViewStyle, StyleProp } from 'react-native';
+import { Pressable, ViewStyle, StyleProp, Linking } from 'react-native';
 import { Image } from 'expo-image';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
+import { SourceChip } from '@/components/product/SourceChip';
 import { BorderRadius } from '@/theme/radius';
 import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
@@ -72,6 +73,32 @@ function getRelativeTime(dateString: string): string {
   return date.toLocaleDateString('es-CU', { day: 'numeric', month: 'short' });
 }
 
+function getSourceCounts(product: ProductWithOffers): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const offer of product.offers ?? []) {
+    counts[offer.sourceId] = (counts[offer.sourceId] ?? 0) + 1;
+  }
+  return counts;
+}
+
+function getRevolicoContactInfo(product: ProductWithOffers): {
+  phone?: string;
+  whatsapp?: boolean;
+  viewCount?: number;
+} {
+  for (const offer of product.offers ?? []) {
+    if (offer.sourceId === 'revolico' && offer.rawData) {
+      const raw = offer.rawData as Record<string, unknown>;
+      return {
+        phone: raw['sellerPhone'] as string | undefined,
+        whatsapp: raw['sellerWhatsapp'] as boolean | undefined,
+        viewCount: raw['viewCount'] as number | undefined,
+      };
+    }
+  }
+  return {};
+}
+
 const ProductCard = React.memo(({
   product,
   onPress,
@@ -92,6 +119,8 @@ const ProductCard = React.memo(({
     ? validOffers.reduce((min, offer) => (offer.price < min.price ? offer : min))
     : null;
   const offerCount = validOffers.length;
+  const sourceCounts = getSourceCounts(product);
+  const revolicoContact = getRevolicoContactInfo(product);
 
   const handlePress = () => onPress?.(product);
   const handleFavorite = () => onFavoritePress?.(product);
@@ -147,6 +176,36 @@ const ProductCard = React.memo(({
       </Box>
     </Pressable>
   );
+
+  const SourceBadges = () => {
+    const entries = Object.entries(sourceCounts);
+    if (entries.length === 0) return null;
+
+    return (
+      <Box flexDirection="row" flexWrap="wrap" gap="xxs" mt="xxs">
+        {entries.map(([sourceId, count]) => (
+          <SourceChip key={sourceId} sourceId={sourceId} count={count} size="xs" />
+        ))}
+      </Box>
+    );
+  };
+
+  const RevolicoContactBadge = () => {
+    if (!revolicoContact.phone) return null;
+
+    return (
+      <Box flexDirection="row" alignItems="center" gap="xxs" mt="xxs">
+        <Text variant="labelSmall" color="textSecondary">
+          📞 {revolicoContact.phone}
+        </Text>
+        {revolicoContact.whatsapp && (
+          <Text variant="labelSmall" color="textSecondary">
+            · WhatsApp
+          </Text>
+        )}
+      </Box>
+    );
+  };
 
   const OffersList = () => {
     if (!showOffers || validOffers.length === 0) return null;
@@ -217,6 +276,9 @@ const ProductCard = React.memo(({
               <Box position="absolute" top={4} right={4} mode={resolvedMode}>
                 <FavoriteButton />
               </Box>
+              <Box position="absolute" top={4} left={4} mode={resolvedMode}>
+                <SourceBadges />
+              </Box>
             </Box>
 
             <Text
@@ -284,6 +346,9 @@ const ProductCard = React.memo(({
                   )}
                 </Box>
               )}
+
+              <SourceBadges />
+              <RevolicoContactBadge />
 
               <Box flexDirection="row" justifyContent="space-between" alignItems="center" mt="xxs" mode={resolvedMode}>
                 <Badge variant={availability.variant} size="xs">

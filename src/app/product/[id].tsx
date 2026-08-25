@@ -1,6 +1,6 @@
 /**
  * Dónde Hay - Product Detail Screen
- * Pantalla de detalle del producto con comparación de precios
+ * Product detail with price comparison and Revolico seller contact
  */
 
 import React, { useState } from 'react';
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
+import { SourceChip } from '@/components/product/SourceChip';
 import { useThemeStore } from '@/store/themeStore';
 import { useProduct } from '@/hooks/use-products';
 import { useAddFavorite, useRemoveFavorite } from '@/hooks/use-favorites';
@@ -29,8 +30,25 @@ function getSourceName(sourceId: string): string {
     telegram: 'Telegram',
     '1cuba': '1Cuba',
     choleslibres: 'CholesLibres',
+    comunidad: 'Comunidad',
   };
   return sources[sourceId] || sourceId;
+}
+
+function getRevolicoSellerInfo(offer: ProductOffer): {
+  phone?: string;
+  whatsapp?: boolean;
+  viewCount?: number;
+  provinceId?: string;
+} | null {
+  if (offer.sourceId !== 'revolico' || !offer.rawData) return null;
+  const raw = offer.rawData as Record<string, unknown>;
+  return {
+    phone: raw['sellerPhone'] as string | undefined,
+    whatsapp: raw['sellerWhatsapp'] as boolean | undefined,
+    viewCount: raw['viewCount'] as number | undefined,
+    provinceId: raw['provinceId'] as string | undefined,
+  };
 }
 
 export default function ProductDetailScreen() {
@@ -95,6 +113,15 @@ export default function ProductDetailScreen() {
     Linking.openURL(url);
   };
 
+  const handleCallPhone = (phone: string) => {
+    Linking.openURL(`tel:${phone}`);
+  };
+
+  const handleWhatsApp = (phone: string) => {
+    const cleaned = phone.replace(/[^0-9]/g, '');
+    Linking.openURL(`https://wa.me/${cleaned}`);
+  };
+
   const getAvailabilityStatus = (offer: ProductOffer) => {
     const hoursSincePosted =
       (Date.now() - new Date(offer.postedAt).getTime()) / (1000 * 60 * 60);
@@ -107,6 +134,16 @@ export default function ProductDetailScreen() {
       return { label: 'Antiguo', variant: 'default' as const, icon: '⚪' };
     }
   };
+
+  const getSourceCounts = (): Record<string, number> => {
+    const counts: Record<string, number> = {};
+    for (const offer of product.offers ?? []) {
+      counts[offer.sourceId] = (counts[offer.sourceId] ?? 0) + 1;
+    }
+    return counts;
+  };
+
+  const sourceCounts = getSourceCounts();
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
@@ -209,6 +246,12 @@ export default function ProductDetailScreen() {
                   {product.brand} {product.model}
                 </Text>
               </Box>
+              {/* Source badges */}
+              <Box flexDirection="row" flexWrap="wrap" gap="xxs" mt="sm">
+                {Object.entries(sourceCounts).map(([sourceId, count]) => (
+                  <SourceChip key={sourceId} sourceId={sourceId} count={count} size="sm" />
+                ))}
+              </Box>
             </Box>
 
             {/* Price Range */}
@@ -253,6 +296,7 @@ export default function ProductDetailScreen() {
               <Box mt="sm">
                 {sortedOffers.map((offer, index) => {
                   const status = getAvailabilityStatus(offer);
+                  const revolicoSeller = getRevolicoSellerInfo(offer);
                   return (
                     <Box key={offer.id} mb="sm">
                       <Card
@@ -284,6 +328,63 @@ export default function ProductDetailScreen() {
                               {new Date(offer.postedAt).toLocaleDateString('es-CU')}
                             </Text>
                           </Box>
+
+                          {/* Revolico seller info */}
+                          {revolicoSeller && (
+                            <Box mt="sm">
+                              {revolicoSeller.viewCount != null && (
+                                <Text variant="labelSmall" color="textTertiary">
+                                  👁 {revolicoSeller.viewCount.toLocaleString()} vistas
+                                </Text>
+                              )}
+                              {revolicoSeller.phone && (
+                                <Box flexDirection="row" alignItems="center" gap="xs" mt="xxs">
+                                  <Pressable
+                                    onPress={() => handleCallPhone(revolicoSeller.phone!)}
+                                    accessibilityLabel={`Llamar a ${revolicoSeller.phone}`}
+                                    accessibilityRole="button"
+                                  >
+                                    <Box
+                                      flexDirection="row"
+                                      alignItems="center"
+                                      gap="xxs"
+                                      px="xs"
+                                      py="xxs"
+                                      borderRadius="sm"
+                                      bg="successContainer"
+                                      mode={resolvedMode}
+                                    >
+                                      <Text variant="labelSmall" color="onSuccessContainer">
+                                        📞 {revolicoSeller.phone}
+                                      </Text>
+                                    </Box>
+                                  </Pressable>
+                                  {revolicoSeller.whatsapp && (
+                                    <Pressable
+                                      onPress={() => handleWhatsApp(revolicoSeller.phone!)}
+                                      accessibilityLabel="Enviar WhatsApp"
+                                      accessibilityRole="button"
+                                    >
+                                      <Box
+                                        flexDirection="row"
+                                        alignItems="center"
+                                        gap="xxs"
+                                        px="xs"
+                                        py="xxs"
+                                        borderRadius="sm"
+                                        bg="successContainer"
+                                        mode={resolvedMode}
+                                      >
+                                        <Text variant="labelSmall" color="onSuccessContainer">
+                                          💬 WhatsApp
+                                        </Text>
+                                      </Box>
+                                    </Pressable>
+                                  )}
+                                </Box>
+                              )}
+                            </Box>
+                          )}
                         </Box>
                         <Box alignItems="flex-end">
                           <Text
