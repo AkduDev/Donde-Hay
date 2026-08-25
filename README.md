@@ -17,6 +17,18 @@ Agregador de productos para el mercado cubano. Busca y compara precios en **Revo
 | Performance | FlashList + expo-image + React.memo |
 | Build | EAS Build (development/preview/production) |
 | TypeScript | v6 estricto |
+| Icons | @expo/vector-icons (Ionicons) |
+| Logos | Imágenes Dónde Hay (icon, splash, notificaciones) |
+
+## Assets / Logos
+
+| Archivo | Uso |
+|---------|-----|
+| `DondeHay.jpeg` | Icono principal app, splash screen, favicon |
+| `DondeHay1.jpeg` | Icono de notificaciones push |
+| `DondeHay3.jpeg` | Logo en pantalla Home y Profile |
+| `Dondehay2.jpeg` | Reserva / uso futuro |
+| `WebDondeHay.jpeg` | Versión web del logo |
 
 ## Arquitectura
 
@@ -249,6 +261,96 @@ profiles (id, name, phone, avatar_url, currency, theme)
 | 9 | Quality (testing, performance, a11y, errors) | ✅ |
 | 10 | Publicación (EAS, Edge Functions, monitoring) | ✅ |
 | 11 | Scraping Revolico (GraphQL, multi-source) | ✅ |
+| 12 | Logos y Assets Dónde Hay | ✅ |
+
+---
+
+## Cómo Ejecutar la APK por USB
+
+### Requisitos Previos
+
+1. **Dispositivo Android** conectado por USB
+2. **Depuración USB habilitada** en el dispositivo:
+   - Ajustes → Acerca del teléfono → Toca "Número de compilación" 7 veces
+   - Ajustes → Opciones de desarrollador → Depuración USB → ON
+3. **ADB instalado** en la computadora:
+   ```bash
+   # Verificar que el dispositivo está conectado
+   adb devices
+   ```
+4. **Java JDK 17** instalado
+5. **Android SDK** instalado
+
+### Opción 1: Build Local con Gradle (Recomendada para Cuba)
+
+```bash
+# 1. Conectar dispositivo por USB y verificar
+adb devices
+
+# 2. Prebuild (genera proyecto nativo Android)
+npx expo prebuild --platform android
+
+# 3. Build APK de desarrollo
+cd android
+./gradlew assembleDebug
+
+# 4. Instalar en el dispositivo
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+**Ubicación del APK generado:**
+```
+android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Opción 2: EAS Build (Requiere Internet)
+
+```bash
+# 1. Login en EAS
+eas login
+
+# 2. Build APK (se compila en la nube de Expo)
+eas build --platform android --profile preview
+
+# 3. Descargar APK desde el link que te da EAS
+# 4. Instalar manualmente en el dispositivo
+```
+
+### Opción 3: Expo Dev Client (Desarrollo)
+
+```bash
+# 1. Build de development client
+eas build --platform android --profile development
+
+# 2. Instalar en dispositivo
+# 3. Ejecutar
+npx expo start --dev-client
+```
+
+### Troubleshooting
+
+| Problema | Solución |
+|----------|----------|
+| `adb: device not found` | Habilitar depuración USB, probar otro cable |
+| `Gradle build failed` | Verificar Java 17: `java -version` |
+| `SDK not found` | Verificar `ANDROID_HOME` o `ANDROID_SDK_ROOT` |
+| `dl.google.com timeout` | Usar VPN o Aliyun mirrors (configurados en `~/.gradle/init.gradle`) |
+| `Expo Go incompatible` | SDK 57 requiere development build, no Expo Go |
+| `403 EAS Build` | Verificar cuenta EAS y método de pago |
+
+### Build Sin Internet (Offline)
+
+Si no hay conexión a internet, el build local con Gradle es la mejor opción. Los mirrors de Aliyun ya están configurados en `~/.gradle/init.gradle` para descarga de dependencias.
+
+```bash
+# Verificar que los mirrors funcionan
+cat ~/.gradle/init.gradle
+
+# Si hay problemas con Aliyun, intentar con VPN
+# o pre-descargar dependencias en máquina con internet
+```
+
+---
 
 ## Deployment
 
