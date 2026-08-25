@@ -13,8 +13,11 @@ export { useDeviceLocation } from './use-device-location';
 export { useNotifications } from './use-notifications';
 export { useProfile, useProfileStats, useSearchHistory, useUpdateProfile, useUpdatePreferences, useClearHistory, useDeleteHistoryItem, useUploadAvatar, useDeleteAccount } from './use-profile';
 export { useSeller, useSellerProducts, useSellerReviews } from './use-sellers';
+export { usePublish } from './use-publish';
 export { useDebounce, useDebouncedCallback } from './use-debounce';
 export { useAuthGuard, useInitialRoute } from './use-auth-guard';
+export { useRealtimeAlerts } from './use-realtime-alerts';
+export { useRealtimeProduct } from './use-realtime-product';
 
 // Re-export existing hooks
 export { useColorScheme } from './use-color-scheme';

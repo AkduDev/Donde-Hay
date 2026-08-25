@@ -227,6 +227,7 @@ export interface RouteParams {
   'alert-edit'?: { alertId: string };
   'nearby-products'?: { latitude: number; longitude: number };
   publish?: undefined;
+  'publish/index'?: undefined;
 }
 
 // ============================================
