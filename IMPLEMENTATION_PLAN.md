@@ -18,26 +18,34 @@ El usuario puede **filtrar por fuente**, ver de **qué sitio viene cada oferta**
 
 ---
 
-## Estado Actual (v0.2.0)
+## Estado Actual (v1.0.0)
 
 | Capa | Estado |
 |------|--------|
 | Design System (theme, 12 UI components) | ✅ Completo (0 TS errors) |
-| Navegación (5 tabs + auth + alerts) | ✅ Completo |
+| Navegación (5 tabs + auth + alerts + publish + seller) | ✅ Completo |
 | API Client + TanStack Query | ✅ Completo |
-| Zustand Stores (auth, theme, location) | ✅ Completo |
-| TypeScript Types (322 líneas) | ✅ Completo |
+| Zustand Stores (auth, theme, location, toast) | ✅ Completo |
+| TypeScript Types (322+ líneas) | ✅ Completo |
 | Search Components (SearchBar, FilterSheet, SortSelector) | ✅ Completo |
-| ProductCard | ✅ Completo |
-| Supabase Backend | ✅ Configurado (schema.sql, .env.development) |
-| Services Layer | ✅ Completo (auth, products, favorites, alerts, locations, categories, profile, sellers) |
-| Auth screens (login, register) | ✅ Completo |
+| ProductCard (React.memo + expo-image) | ✅ Completo |
+| Supabase Backend | ✅ Configurado (schema.sql, Edge Functions) |
+| Services Layer (9 services) | ✅ Completo |
+| Auth screens (login, register, forgot/reset) | ✅ Completo |
 | Product Detail screen | ✅ Completo |
-| Geolocation (Phase 6) | 🔄 En progreso |
-| Alerts + Push (Phase 7) | 🔄 En progreso |
+| Geolocation (Phase 6) | ✅ Completo |
+| Alerts + Push (Phase 7) | ✅ Completo |
+| WebSocket/Real-time (Phase 7.3) | ✅ Completo |
+| Publish Product (Phase 8) | ✅ Completo |
 | Saved (Phase 4) | ✅ Completo |
 | Profile (Phase 5) | ✅ Completo |
-| Tests | ❌ No existe |
+| Testing (Phase 9.1) | ✅ Completo |
+| Performance (Phase 9.2) | ✅ Completo |
+| Accessibility (Phase 9.3) | ✅ Completo |
+| Error Handling (Phase 9.4) | ✅ Completo |
+| EAS Build + Submit (Phase 10) | ✅ Completo |
+| Edge Functions (Phase 10) | ✅ Completo |
+| Monitoring + Analytics (Phase 10) | ✅ Completo |
 
 ---
 

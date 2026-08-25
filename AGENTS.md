@@ -23,23 +23,46 @@
 ```
 src/
 ├── app/                    # Expo Router pages
-│   ├── (tabs)/            # Home, Favorites, Alerts, Profile
+│   ├── (tabs)/            # Home, Search, Saved, Alerts, Profile
 │   ├── (auth)/            # Login, Register, Forgot/Reset Password
-│   └── _layout.tsx        # Root layout con auth guard
+│   ├── alerts/            # Create/Edit alert
+│   ├── publish/           # Multi-step publish form (5 steps)
+│   ├── product/           # Product detail screen
+│   ├── seller/            # Seller detail screen
+│   ├── profile/           # Edit profile, Preferences
+│   └── _layout.tsx        # Root layout con auth guard + ErrorBoundary
 ├── components/            # Componentes reutilizables
 │   ├── ui/                # Design system (Box, Text, Button, Input, etc.)
 │   ├── product/           # ProductCard, ProductList, SourceChip
-│   └── search/            # SearchBar, FilterPanel, ResultsGrid
+│   ├── search/            # SearchBar, FilterPanel, ResultsGrid
+│   ├── publish/           # CategoryPicker, ImagePicker, LocationPicker
+│   └── saved/             # SavedSearchCard, SavedSellerCard
 ├── config.ts              # Centralizada: API URLs, Cuban sources, timeouts
-├── hooks/                 # Custom hooks (use-auth, use-products, use-search, etc.)
+├── config/                # Build metadata (eas.ts)
+├── hooks/                 # Custom hooks (auth, products, search, favorites, alerts, etc.)
 ├── lib/
 │   ├── api-client.tsx     # Axios instance, QueryProvider, queryKeys
-│   └── supabase.ts        # Cliente Supabase (auth, DB, realtime)
-├── services/              # API services (auth, products, search, categories, etc.)
-├── store/                 # Zustand stores (auth, location, theme, etc.)
+│   ├── supabase.ts        # Cliente Supabase (auth, DB, realtime)
+│   ├── ws-client.ts       # WebSocket/real-time subscriptions
+│   ├── monitoring.ts      # Performance monitoring
+│   └── analytics.ts       # Event tracking
+├── services/              # API services (9 services with Supabase integration)
+├── store/                 # Zustand stores (auth, location, theme, toast)
 ├── theme/                 # Design tokens (colors, spacing, typography, radius)
 ├── types/                 # TypeScript interfaces y types
-└── utils/                 # Utilities (format, validation, storage, platform)
+└── utils/                 # Utilities (format, validation, platform)
+```
+
+### Supabase Edge Functions
+```
+supabase/
+├── config.toml
+├── functions/
+│   ├── _shared/           # CORS, auth, supabase admin client
+│   ├── search-products/   # Full-text search with filters
+│   ├── check-price-alerts/ # Scheduled price matching
+│   └── scrape-sources/    # Stub for future scraping
+└── migrations/            # Database migrations
 ```
 
 ## Supabase — Backend como Servicio
@@ -387,11 +410,11 @@ Ver `IMPLEMENTATION_PLAN.md` para el plan completo de 10 fases.
 | 0 — Infraestructura | ✅ Completo |
 | 1 — Capa de Servicios | ✅ Completo |
 | 2 — Autenticación | ✅ Completo |
-| 3 — Home + Búsqueda | ✅ UI mock completa |
+| 3 — Home + Búsqueda | ✅ Completo |
 | 4 — Guardados | ✅ Completo |
 | 5 — Perfil | ✅ Completo |
-| 6 — Geolocalización | 🔄 En progreso |
-| 7 — Alertas + Push | 🔲 Pendiente |
-| 8 — Publicar Producto | 🔲 Pendiente |
-| 9 — Calidad + Polish | 🔲 Pendiente |
-| 10 — Publicación | 🔲 Pendiente |
+| 6 — Geolocalización | ✅ Completo |
+| 7 — Alertas + Push | ✅ Completo |
+| 8 — Publicar Producto | ✅ Completo |
+| 9 — Calidad + Polish | ✅ Completo |
+| 10 — Publicación | ✅ Completo |
