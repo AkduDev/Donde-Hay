@@ -84,8 +84,10 @@ export default function SavedScreen() {
   };
 
   const handleSellerPress = (seller: Seller) => {
-    // TODO: Navigate to seller profile
-    console.log('Seller pressed:', seller.id);
+    router.push({
+      pathname: '/seller/[id]' as any,
+      params: { id: seller.id },
+    });
   };
 
   const handleRemoveSeller = (seller: Seller) => {

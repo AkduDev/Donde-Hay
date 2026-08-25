@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ScrollView, Pressable, Alert } from 'react-native';
+import { ScrollView, Pressable, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/Card';
 import { Divider } from '@/components/ui/Divider';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
+import { supabase } from '@/lib/supabase';
 
 type ThemeOption = 'light' | 'dark' | 'system';
 type CurrencyOption = 'USD' | 'CUP' | 'MLC';
@@ -41,6 +42,9 @@ export default function PreferencesScreen() {
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyOption>(
     user?.preferences?.currency || 'USD'
   );
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    user?.preferences?.notifications?.alerts ?? true
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
@@ -49,6 +53,17 @@ export default function PreferencesScreen() {
       updatePreferences({
         theme: selectedTheme,
         currency: selectedCurrency,
+        notifications: {
+          push: notificationsEnabled,
+          email: user?.preferences?.notifications?.email ?? true,
+          alerts: notificationsEnabled,
+          promotions: user?.preferences?.notifications?.promotions ?? true,
+        },
+      });
+
+      // Persist currency to Supabase user metadata
+      await supabase.auth.updateUser({
+        data: { currency: selectedCurrency, notifications_enabled: notificationsEnabled },
       });
 
       // Update theme
@@ -237,17 +252,12 @@ export default function PreferencesScreen() {
                     </Text>
                   </Box>
                 </Box>
-                <Box
-                  width={50}
-                  height={28}
-                  borderRadius="full"
-                  bg="primary"
-                  alignItems="center"
-                  justifyContent="center"
-                  mode={resolvedMode}
-                >
-                  <Text variant="labelSmall" color="onPrimary">ON</Text>
-                </Box>
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                  trackColor={{ false: '#767577', true: '#2563EB' }}
+                  thumbColor="#ffffff"
+                />
               </Box>
             </Card>
           </Box>

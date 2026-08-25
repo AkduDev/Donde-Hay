@@ -7,10 +7,15 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { QueryProvider } from '@/lib/api-client';
+import { QueryProvider, setAuthTokenGetter } from '@/lib/api-client';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import { getColors } from '@/theme/colors';
+
+setAuthTokenGetter(async () => {
+  const state = useAuthStore.getState();
+  return state.getAccessToken?.() ?? null;
+});
 
 const AUTH_ROUTES = ['login', 'register', 'forgot-password', 'reset-password'];
 

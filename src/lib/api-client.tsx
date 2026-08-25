@@ -204,7 +204,7 @@ export function setAuthTokenGetter(getter: () => Promise<string | null>) {
   authTokenGetter = getter;
 }
 
-export const httpClient = new HttpClient(API_BASE_URL, authTokenGetter);
+export const httpClient = new HttpClient(API_BASE_URL, async () => authTokenGetter());
 
 // ============================================
 // TANSTACK QUERY CLIENT

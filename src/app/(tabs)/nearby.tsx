@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import { ScrollView, Pressable, RefreshControl, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -171,10 +171,10 @@ export default function NearbyScreen() {
                           bg="surfaceVariant"
                           overflow="hidden"
                         >
-                          <img
-                            src={product.imageUrls[0]}
-                            alt={product.canonicalName}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          <Image
+                            source={{ uri: product.imageUrls[0] }}
+                            style={{ width: '100%', height: '100%' }}
+                            resizeMode="cover"
                           />
                         </Box>
                       ) : (

@@ -18,29 +18,11 @@ import { SearchBar } from '@/components/search/SearchBar';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useProducts } from '@/hooks/use-products';
+import { useCategories } from '@/hooks/use-categories';
+import { useFavorites, useAddFavorite, useRemoveFavorite } from '@/hooks/use-favorites';
+import { useTrendingSearches } from '@/hooks/use-search';
 import type { ProductWithOffers } from '@/types';
 
-const CATEGORIES = [
-  { id: 'electronics', name: 'Tecnología', icon: '📱' },
-  { id: 'computing', name: 'Computación', icon: '💻' },
-  { id: 'vehicles', name: 'Vehículos', icon: '🚗' },
-  { id: 'home', name: 'Hogar', icon: '🏠' },
-  { id: 'fashion', name: 'Ropa', icon: '👕' },
-  { id: 'gaming', name: 'Videojuegos', icon: '🎮' },
-  { id: 'tools', name: 'Herramientas', icon: '🔧' },
-  { id: 'sports', name: 'Deportes', icon: '⚽' },
-];
-
-const TRENDING_SEARCHES = [
-  'iPhone 13',
-  'Laptop HP',
-  'PS5',
-  'Toyota Corolla',
-  'Samsung Galaxy S23',
-  'Nintendo Switch',
-];
-
-// TODO: Replace with real API call
 const MOCK_PRODUCTS: ProductWithOffers[] = [
   {
     id: '1',
@@ -102,6 +84,28 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: productsResponse, isLoading, refetch } = useProducts({});
+  const { data: categories = [] } = useCategories();
+  const { data: trendingSearches = [] } = useTrendingSearches(6);
+  const { data: favoritesData } = useFavorites('product');
+  const addFavorite = useAddFavorite();
+  const removeFavorite = useRemoveFavorite();
+
+  const favoriteProductIds = new Set(
+    (favoritesData as any[] | undefined)?.map((f: any) => f.targetId) ?? []
+  );
+
+  const handleFavoritePress = (product: ProductWithOffers) => {
+    if (!user) {
+      router.push('/(auth)/login' as any);
+      return;
+    }
+    if (favoriteProductIds.has(product.id)) {
+      const fav = (favoritesData as any[])?.find((f: any) => f.targetId === product.id);
+      if (fav) removeFavorite.mutate(fav.id);
+    } else {
+      addFavorite.mutate({ type: 'product', targetId: product.id });
+    }
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -147,7 +151,7 @@ export default function HomeScreen() {
     </Box>
   );
 
-  const displayProducts = Array.isArray(productsResponse) ? productsResponse : MOCK_PRODUCTS;
+  const displayProducts = productsResponse?.data ?? MOCK_PRODUCTS;
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
@@ -199,10 +203,10 @@ export default function HomeScreen() {
           <Box px="md" mb="lg" mode={resolvedMode}>
             {renderSectionHeader('Categorías', '📂')}
             <Box flexDirection="row" flexWrap="wrap" gap="sm">
-              {CATEGORIES.map((category) => (
+              {categories.map((category) => (
                 <Pressable
                   key={category.id}
-                  onPress={() => handleCategoryPress(category.id)}
+                  onPress={() => handleCategoryPress(category.slug)}
                   style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
                 >
                   <Box
@@ -232,7 +236,7 @@ export default function HomeScreen() {
           <Box px="md" mb="lg" mode={resolvedMode}>
             {renderSectionHeader('Tendencias', '🔥')}
             <Box flexDirection="row" flexWrap="wrap" gap="xs">
-              {TRENDING_SEARCHES.map((search, index) => (
+              {trendingSearches.map((search, index) => (
                 <Button
                   key={index}
                   variant="outline"
@@ -264,6 +268,8 @@ export default function HomeScreen() {
                     key={product.id}
                     product={product}
                     onPress={handleProductPress}
+                    onFavoritePress={handleFavoritePress}
+                    isFavorite={favoriteProductIds.has(product.id)}
                     layout="list"
                   />
                 ))}
@@ -304,6 +310,8 @@ export default function HomeScreen() {
                     <ProductCard
                       product={item}
                       onPress={handleProductPress}
+                      onFavoritePress={handleFavoritePress}
+                      isFavorite={favoriteProductIds.has(item.id)}
                       layout="grid"
                     />
                   </Box>
@@ -334,6 +342,8 @@ export default function HomeScreen() {
                     <ProductCard
                       product={item}
                       onPress={handleProductPress}
+                      onFavoritePress={handleFavoritePress}
+                      isFavorite={favoriteProductIds.has(item.id)}
                       layout="grid"
                     />
                   </Box>

@@ -4,10 +4,9 @@
  */
 
 import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '@/store/themeStore';
 import { getColors } from '@/theme/colors';
-import { Box } from '@/components/ui/Box';
-import { Text } from '@/components/ui/Text';
 
 export default function TabsLayout() {
   const { resolvedMode } = useThemeStore();
@@ -36,8 +35,8 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Inicio',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon icon="🏠" size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon iconName={focused ? 'home' : 'home-outline'} color={color as string} size={size} />
           ),
         }}
       />
@@ -45,8 +44,8 @@ export default function TabsLayout() {
         name="search"
         options={{
           title: 'Buscar',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon icon="🔍" size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon iconName={focused ? 'search' : 'search-outline'} color={color as string} size={size} />
           ),
         }}
       />
@@ -54,8 +53,8 @@ export default function TabsLayout() {
         name="saved"
         options={{
           title: 'Guardados',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon icon="❤️" size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon iconName={focused ? 'heart' : 'heart-outline'} color={color as string} size={size} />
           ),
         }}
       />
@@ -63,8 +62,8 @@ export default function TabsLayout() {
         name="alerts"
         options={{
           title: 'Alertas',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon icon="🔔" size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon iconName={focused ? 'notifications' : 'notifications-outline'} color={color as string} size={size} />
           ),
         }}
       />
@@ -72,8 +71,8 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon icon="👤" size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon iconName={focused ? 'person' : 'person-outline'} color={color as string} size={size} />
           ),
         }}
       />
@@ -81,10 +80,14 @@ export default function TabsLayout() {
   );
 }
 
-function TabIcon({ icon, size }: { icon: string; size: number }) {
-  return (
-    <Box alignItems="center" justifyContent="center">
-      <Text variant="bodyLarge">{icon}</Text>
-    </Box>
-  );
+function TabIcon({
+  iconName,
+  color,
+  size,
+}: {
+  iconName: string;
+  color: string;
+  size: number;
+}) {
+  return <Ionicons name={iconName as any} size={size} color={color} />;
 }

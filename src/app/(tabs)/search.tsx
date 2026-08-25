@@ -9,15 +9,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
-import { Card } from '@/components/ui/Card';
 import { SearchBar, SearchSuggestion } from '@/components/search/SearchBar';
 import { useThemeStore } from '@/store/themeStore';
-
-const RECENT_SEARCHES = [
-  'iPhone 13',
-  'Laptop HP',
-  'PS5',
-];
+import { useCategories } from '@/hooks/use-categories';
+import { useSavedSearches } from '@/hooks/use-favorites';
 
 const TRENDING_SEARCHES: SearchSuggestion[] = [
   { id: '1', text: 'iPhone 13', type: 'trending', icon: '🔥' },
@@ -28,29 +23,40 @@ const TRENDING_SEARCHES: SearchSuggestion[] = [
   { id: '6', text: 'Nintendo Switch', type: 'trending', icon: '🔥' },
 ];
 
-const CATEGORIES: SearchSuggestion[] = [
-  { id: 'cat1', text: 'Tecnología', type: 'category', icon: '📱' },
-  { id: 'cat2', text: 'Computación', type: 'category', icon: '💻' },
-  { id: 'cat3', text: 'Vehículos', type: 'category', icon: '🚗' },
-  { id: 'cat4', text: 'Hogar', type: 'category', icon: '🏠' },
-  { id: 'cat5', text: 'Ropa', type: 'category', icon: '👕' },
-  { id: 'cat6', text: 'Videojuegos', type: 'category', icon: '🎮' },
-];
+const CATEGORY_ICONS: Record<string, string> = {
+  tecnologia: '📱',
+  computacion: '💻',
+  vehiculos: '🚗',
+  hogar: '🏠',
+  ropa: '👕',
+  videojuegos: '🎮',
+};
 
 export default function SearchTabScreen() {
   const router = useRouter();
   const { resolvedMode } = useThemeStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const { data: categories } = useCategories();
+  const { data: savedSearches } = useSavedSearches();
+
+  const recentSearches: SearchSuggestion[] = (savedSearches ?? []).slice(0, 5).map((s) => ({
+    id: s.id,
+    text: s.query.query,
+    type: 'history' as const,
+    icon: '🕐',
+  }));
+
+  const categorySuggestions: SearchSuggestion[] = (categories ?? []).map((cat) => ({
+    id: cat.id,
+    text: cat.name,
+    type: 'category' as const,
+    icon: CATEGORY_ICONS[cat.slug] ?? '📂',
+  }));
 
   const allSuggestions: SearchSuggestion[] = [
-    ...RECENT_SEARCHES.map((text, i) => ({
-      id: `recent-${i}`,
-      text,
-      type: 'history' as const,
-      icon: '🕐',
-    })),
+    ...recentSearches,
     ...TRENDING_SEARCHES,
-    ...CATEGORIES,
+    ...categorySuggestions,
   ];
 
   const handleSearch = (query: string) => {
@@ -95,7 +101,7 @@ export default function SearchTabScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Recent Searches */}
-          {RECENT_SEARCHES.length > 0 && (
+          {recentSearches.length > 0 && (
             <Box px="md" mt="lg" mode={resolvedMode}>
               <Box mb="sm">
                 <Text variant="titleMedium" color="text">
@@ -103,10 +109,10 @@ export default function SearchTabScreen() {
                 </Text>
               </Box>
               <Box gap="xs">
-                {RECENT_SEARCHES.map((search, index) => (
+                {recentSearches.map((search) => (
                   <Pressable
-                    key={index}
-                    onPress={() => handleSearch(search)}
+                    key={search.id}
+                    onPress={() => handleSearch(search.text)}
                   >
                     <Box
                       flexDirection="row"
@@ -121,7 +127,7 @@ export default function SearchTabScreen() {
                         🕐
                       </Text>
                       <Text variant="bodyMedium" color="text" mode={resolvedMode}>
-                        {search}
+                        {search.text}
                       </Text>
                     </Box>
                   </Pressable>
@@ -173,7 +179,7 @@ export default function SearchTabScreen() {
               </Text>
             </Box>
             <Box gap="xs">
-              {CATEGORIES.map((category) => (
+              {categorySuggestions.map((category) => (
                 <Pressable
                   key={category.id}
                   onPress={() => handleSuggestionPress(category)}
