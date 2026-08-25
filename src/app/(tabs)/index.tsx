@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { ScrollView, Pressable, FlatList, RefreshControl } from 'react-native';
+import { ScrollView, Pressable, RefreshControl } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -142,7 +143,11 @@ export default function HomeScreen() {
         </Text>
       </Box>
       {onSeeAll && (
-        <Pressable onPress={onSeeAll}>
+        <Pressable
+          onPress={onSeeAll}
+          accessibilityLabel={`Ver todas las ${title}`}
+          accessibilityRole="button"
+        >
           <Text variant="bodySmall" color="primary">
             Ver todo →
           </Text>
@@ -196,6 +201,7 @@ export default function HomeScreen() {
               onChangeText={setSearchQuery}
               onSubmit={handleSearch}
               placeholder="iPhone 13, laptop, TV..."
+              accessibilityLabel="Buscar productos"
             />
           </Box>
 
@@ -208,6 +214,8 @@ export default function HomeScreen() {
                   key={category.id}
                   onPress={() => handleCategoryPress(category.slug)}
                   style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  accessibilityLabel={`Categoría ${category.name}`}
+                  accessibilityRole="button"
                 >
                   <Box
                     width="23%"
@@ -243,6 +251,7 @@ export default function HomeScreen() {
                   size="sm"
                   onPress={() => handleSearch(search)}
                   mode={resolvedMode}
+                  accessibilityLabel={`Buscar: ${search}`}
                 >
                   {search}
                 </Button>
@@ -300,7 +309,7 @@ export default function HomeScreen() {
                 <Spinner size="md" mode={resolvedMode} />
               </Box>
             ) : (
-              <FlatList
+              <FlashList
                 data={displayProducts.filter((p: ProductWithOffers) => p.categoryId === 'electronics').slice(0, 6)}
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -332,7 +341,7 @@ export default function HomeScreen() {
                 <Spinner size="md" mode={resolvedMode} />
               </Box>
             ) : (
-              <FlatList
+              <FlashList
                 data={displayProducts.filter((p: ProductWithOffers) => p.categoryId === 'vehicles').slice(0, 6)}
                 horizontal
                 showsHorizontalScrollIndicator={false}

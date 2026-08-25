@@ -19,7 +19,7 @@ export interface SavedSearchCardProps {
   testID?: string;
 }
 
-export function SavedSearchCard({
+export const SavedSearchCard = React.memo(function SavedSearchCard({
   search,
   onPress,
   onDelete,
@@ -115,4 +115,4 @@ export function SavedSearchCard({
       </Box>
     </TouchableOpacity>
   );
-}
+});

@@ -96,6 +96,7 @@ export default function SearchTabScreen() {
             showSuggestions={true}
             placeholder="Buscar productos..."
             autoFocus
+            accessibilityLabel="Buscar productos"
           />
         </Box>
 
@@ -113,6 +114,8 @@ export default function SearchTabScreen() {
                   <Pressable
                     key={search.id}
                     onPress={() => handleSearch(search.text)}
+                    accessibilityLabel={`Buscar: ${search.text}`}
+                    accessibilityRole="button"
                   >
                     <Box
                       flexDirection="row"
@@ -148,6 +151,8 @@ export default function SearchTabScreen() {
                 <Pressable
                   key={item.id}
                   onPress={() => handleSearch(item.text)}
+                  accessibilityLabel={`Tendencia: ${item.text}`}
+                  accessibilityRole="button"
                 >
                   <Box
                     flexDirection="row"
@@ -183,6 +188,8 @@ export default function SearchTabScreen() {
                 <Pressable
                   key={category.id}
                   onPress={() => handleSuggestionPress(category)}
+                  accessibilityLabel={`Categoría: ${category.text}`}
+                  accessibilityRole="button"
                 >
                   <Box
                     flexDirection="row"

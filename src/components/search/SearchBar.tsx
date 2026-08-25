@@ -53,7 +53,7 @@ export interface SearchBarProps extends Omit<TextInputProps, 'style'> {
   testID?: string;
 }
 
-const SearchBar = forwardRef<TextInput, SearchBarProps>(
+const SearchBar = React.memo(forwardRef<TextInput, SearchBarProps>(
   (
     {
       value,
@@ -290,7 +290,7 @@ const SearchBar = forwardRef<TextInput, SearchBarProps>(
       </Box>
     );
   }
-);
+));
 
 SearchBar.displayName = 'SearchBar';
 

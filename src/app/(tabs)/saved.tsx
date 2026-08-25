@@ -122,11 +122,12 @@ export default function SavedScreen() {
         </Text>
       </Box>
       <Box mt="lg">
-        <Button
-          variant="primary"
-          size="md"
-          onPress={() => router.push('/' as any)}
-        >
+            <Button
+              variant="primary"
+              size="md"
+              onPress={() => router.push('/' as any)}
+              accessibilityLabel={activeTab === 'products' ? 'Explorar productos' : 'Buscar productos'}
+            >
           {activeTab === 'products' ? 'Explorar productos' : 'Buscar ahora'}
         </Button>
       </Box>
@@ -213,6 +214,7 @@ export default function SavedScreen() {
               variant="primary"
               size="md"
               onPress={() => router.push('/(auth)/login' as any)}
+              accessibilityLabel="Iniciar sesión para ver guardados"
             >
               Iniciar sesión
             </Button>
@@ -249,6 +251,9 @@ export default function SavedScreen() {
             <TouchableOpacity
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}
+              accessibilityLabel={tab.label}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: activeTab === tab.key }}
               style={{
                 flex: 1,
                 paddingVertical: 8,

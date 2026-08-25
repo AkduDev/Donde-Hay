@@ -179,6 +179,8 @@ export default function ProfileScreen() {
                     bottom: 0,
                     right: 0,
                   }}
+                  accessibilityLabel="Editar foto de perfil"
+                  accessibilityRole="button"
                 >
                   <Box
                     width={32}
@@ -280,6 +282,9 @@ export default function ProfileScreen() {
                       style={({ pressed }) => ({
                         opacity: pressed ? 0.7 : 1,
                       })}
+                      accessibilityLabel={item.label}
+                      accessibilityRole="button"
+                      accessibilityHint={item.description}
                     >
                       <Box
                         flexDirection="row"
@@ -341,7 +346,7 @@ export default function ProfileScreen() {
           {/* Botón logout si está autenticado */}
           {isAuthenticated && (
             <Box px="md" mt="lg" mode={resolvedMode}>
-              <Pressable onPress={handleLogout}>
+              <Pressable onPress={handleLogout} accessibilityLabel="Cerrar sesión" accessibilityRole="button">
                 <Card variant="outlined" padding="md" mode={resolvedMode}>
                   <Box alignItems="center" mode={resolvedMode}>
                     <Text variant="bodyMedium" color="error" fontWeight="medium">

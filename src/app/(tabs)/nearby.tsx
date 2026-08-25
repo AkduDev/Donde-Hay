@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { ScrollView, Pressable, RefreshControl, ActivityIndicator, Image } from 'react-native';
+import { ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -69,7 +70,11 @@ export default function NearbyScreen() {
             <Text variant="headlineMedium" color="text">
               📍 Cerca de ti
             </Text>
-            <Pressable onPress={() => setShowRadiusPicker(!showRadiusPicker)}>
+            <Pressable
+              onPress={() => setShowRadiusPicker(!showRadiusPicker)}
+              accessibilityLabel={`Radio de búsqueda: ${selectedRadius} kilómetros. Pulsa para cambiar.`}
+              accessibilityRole="button"
+            >
               <Badge variant="primary" size="sm">
                 {selectedRadius}km
               </Badge>
@@ -85,6 +90,9 @@ export default function NearbyScreen() {
                     setSelectedRadius(radius);
                     setShowRadiusPicker(false);
                   }}
+                  accessibilityLabel={`Radio ${radius} kilómetros`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedRadius === radius }}
                 >
                   <Badge
                     variant={selectedRadius === radius ? 'primary' : 'outline'}
@@ -125,6 +133,7 @@ export default function NearbyScreen() {
                 <Button
                   variant="primary"
                   onPress={handleLocationPress}
+                  accessibilityLabel="Activar ubicación para ver productos cercanos"
                 >
                   Activar ubicación
                 </Button>
@@ -160,6 +169,8 @@ export default function NearbyScreen() {
                 <Pressable
                   key={product.id}
                   onPress={() => handleProductPress(product.id)}
+                  accessibilityLabel={`${product.canonicalName}, ${product.brand} ${product.model}, precio ${product.minPrice?.toFixed(2) || product.offers[0]?.price.toFixed(2) || '0.00'} dólares`}
+                  accessibilityRole="button"
                 >
                   <Card variant="elevated" padding="md" mode={resolvedMode}>
                     <Box flexDirection="row" gap="md">
@@ -222,6 +233,7 @@ export default function NearbyScreen() {
               <Button
                 variant="outline"
                 onPress={() => setSelectedRadius(selectedRadius * 2)}
+                accessibilityLabel={`Ampliar radio a ${selectedRadius * 2} kilómetros`}
               >
                 Ampliar radio a {selectedRadius * 2}km
               </Button>

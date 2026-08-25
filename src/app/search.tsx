@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { FlatList, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -235,7 +236,7 @@ export default function SearchResultsScreen() {
             <Spinner size="lg" mode={resolvedMode} />
           </Box>
         ) : (
-          <FlatList
+          <FlashList
             data={results?.products || []}
             renderItem={renderProduct}
             keyExtractor={(item) => item.id}

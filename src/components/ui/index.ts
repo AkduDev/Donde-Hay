@@ -25,3 +25,7 @@ export { Spinner, type SpinnerProps, type SpinnerSize, type SpinnerVariant } fro
 export { Modal, type ModalBaseProps as ModalProps, type ModalSize, type ModalPosition } from './Modal';
 export { Sheet, type SheetProps, type SheetSize, type SheetSnapPoint } from './Sheet';
 export { Tooltip, type TooltipProps, type TooltipPlacement } from './Tooltip';
+
+// Error Handling
+export { ErrorBoundary } from './ErrorBoundary';
+export { ToastContainer } from './Toast';

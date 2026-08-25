@@ -20,7 +20,7 @@ export interface SavedSellerCardProps {
   testID?: string;
 }
 
-export function SavedSellerCard({
+export const SavedSellerCard = React.memo(function SavedSellerCard({
   seller,
   onPress,
   onRemove,
@@ -159,4 +159,4 @@ export function SavedSellerCard({
       </Box>
     </TouchableOpacity>
   );
-}
+});

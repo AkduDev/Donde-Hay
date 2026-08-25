@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { ScrollView, Pressable, Image, Linking } from 'react-native';
+import { ScrollView, Pressable, Linking } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -119,7 +120,11 @@ export default function ProductDetailScreen() {
           mode={resolvedMode}
           style={{ borderBottomWidth: 1, borderBottomColor: colors.divider }}
         >
-          <Pressable onPress={() => router.back()}>
+          <Pressable
+              onPress={() => router.back()}
+              accessibilityLabel="Volver a la pantalla anterior"
+              accessibilityRole="button"
+            >
             <Text variant="bodyLarge" color="primary">
               ←
             </Text>
@@ -129,7 +134,11 @@ export default function ProductDetailScreen() {
               {product.canonicalName}
             </Text>
           </Box>
-          <Pressable onPress={handleFavoriteToggle}>
+          <Pressable
+            onPress={handleFavoriteToggle}
+            accessibilityLabel={product.isFavorite ? 'Quitar de guardados' : 'Guardar producto'}
+            accessibilityRole="button"
+          >
             <Text variant="bodyLarge">
               {product.isFavorite ? '❤️' : '🤍'}
             </Text>
@@ -206,7 +215,9 @@ export default function ProductDetailScreen() {
             {bestOffer && (
               <Card variant="elevated" padding="md" mode={resolvedMode}>
                 <Box flexDirection="row" justifyContent="space-between" alignItems="center">
-                  <Box>
+                  <Box
+                    accessibilityLabel={`Mejor precio: ${formatPrice(bestOffer.price, bestOffer.currency)} en ${getSourceName(bestOffer.sourceId)}`}
+                  >
                     <Text variant="labelMedium" color="textSecondary">
                       Mejor precio
                     </Text>
@@ -248,6 +259,7 @@ export default function ProductDetailScreen() {
                         variant={index === 0 ? 'elevated' : 'outlined'}
                         padding="md"
                         mode={resolvedMode}
+                        accessibilityLabel={`Oferta de ${getSourceName(offer.sourceId)}: ${formatPrice(offer.price, offer.currency)}, ${status.label}`}
                       >
                       <Box flexDirection="row" justifyContent="space-between" alignItems="center">
                         <Box flex={1}>
@@ -326,6 +338,8 @@ export default function ProductDetailScreen() {
               onPress={() => {
                 // TODO: Implement share
               }}
+              accessibilityLabel="Compartir producto"
+              accessibilityRole="button"
             >
               📤 Compartir producto
             </Button>

@@ -115,7 +115,7 @@ export default function AlertsScreen() {
               {alerts?.length || 0} alertas activas
             </Text>
           </Box>
-          <Button variant="primary" onPress={handleCreateAlert}>
+          <Button variant="primary" onPress={handleCreateAlert} accessibilityLabel="Crear nueva alerta de precio">
             + Nueva
           </Button>
         </Box>
@@ -154,6 +154,9 @@ export default function AlertsScreen() {
                   key={alert.id}
                   onPress={() => handleEditAlert(alert.id)}
                   onLongPress={() => handleDeleteAlert(alert.id)}
+                  accessibilityLabel={`Alerta para ${alert.product?.canonicalName || 'producto'}, precio objetivo ${alert.targetPrice} ${alert.currency}, ${alert.isActive ? 'activa' : 'pausada'}`}
+                  accessibilityRole="button"
+                  accessibilityHint="Pulsa para editar, mantén pulsado para eliminar"
                 >
                   <Card
                     variant={alert.isActive ? 'elevated' : 'outlined'}
@@ -195,6 +198,8 @@ export default function AlertsScreen() {
                       </Box>
                       <Pressable
                         onPress={() => handleToggleAlert(alert.id, alert.isActive)}
+                        accessibilityLabel={alert.isActive ? 'Pausar alerta' : 'Reactivar alerta'}
+                        accessibilityRole="button"
                       >
                         <Box
                           width={32}

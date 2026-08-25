@@ -35,6 +35,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Inicio',
+          tabBarAccessibilityLabel: 'Inicio',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon iconName={focused ? 'home' : 'home-outline'} color={color as string} size={size} />
           ),
@@ -44,6 +45,7 @@ export default function TabsLayout() {
         name="search"
         options={{
           title: 'Buscar',
+          tabBarAccessibilityLabel: 'Buscar productos',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon iconName={focused ? 'search' : 'search-outline'} color={color as string} size={size} />
           ),
@@ -53,6 +55,7 @@ export default function TabsLayout() {
         name="saved"
         options={{
           title: 'Guardados',
+          tabBarAccessibilityLabel: 'Productos guardados',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon iconName={focused ? 'heart' : 'heart-outline'} color={color as string} size={size} />
           ),
@@ -62,6 +65,7 @@ export default function TabsLayout() {
         name="alerts"
         options={{
           title: 'Alertas',
+          tabBarAccessibilityLabel: 'Alertas de precio',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon iconName={focused ? 'notifications' : 'notifications-outline'} color={color as string} size={size} />
           ),
@@ -71,6 +75,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Perfil',
+          tabBarAccessibilityLabel: 'Perfil de usuario',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon iconName={focused ? 'person' : 'person-outline'} color={color as string} size={size} />
           ),

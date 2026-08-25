@@ -8,6 +8,7 @@ import { ReactNode } from 'react';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { API_CONFIG } from '@/config';
+import { useToastStore } from '@/store/toastStore';
 
 // ============================================
 // CONFIGURACIÓN BASE
@@ -155,6 +156,20 @@ class HttpClient {
           details: errorData.details,
           statusCode: response.status,
         };
+        try {
+          const showToast = useToastStore.getState().showToast;
+          if (response.status >= 500) {
+            showToast('Error del servidor. Intenta de nuevo.', 'error');
+          } else if (response.status === 401) {
+            showToast('Sesión expirada. Inicia sesión de nuevo.', 'warning');
+          } else if (response.status === 403) {
+            showToast('No tienes permiso para esta acción.', 'error');
+          } else if (response.status === 404) {
+            showToast('Recurso no encontrado.', 'info');
+          } else if (response.status >= 400) {
+            showToast(errorData.message || 'Error en la solicitud.', 'warning');
+          }
+        } catch { /* toast store may not be initialized */ }
         throw error;
       }
 
@@ -166,6 +181,9 @@ class HttpClient {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
+        try {
+          useToastStore.getState().showToast('Tiempo de espera agotado.', 'error');
+        } catch { /* toast store may not be initialized */ }
         throw { code: 'TIMEOUT', message: 'Request timeout', statusCode: 408 } as ApiError;
       }
       throw error;

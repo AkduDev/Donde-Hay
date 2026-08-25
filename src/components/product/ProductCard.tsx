@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { Pressable, Image, ViewStyle, StyleProp } from 'react-native';
+import { Pressable, ViewStyle, StyleProp } from 'react-native';
+import { Image } from 'expo-image';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Badge } from '@/components/ui/Badge';
@@ -71,7 +72,7 @@ function getRelativeTime(dateString: string): string {
   return date.toLocaleDateString('es-CU', { day: 'numeric', month: 'short' });
 }
 
-const ProductCard = ({
+const ProductCard = React.memo(({
   product,
   onPress,
   onFavoritePress,
@@ -302,7 +303,7 @@ const ProductCard = ({
       </Card>
     </Pressable>
   );
-};
+});
 
 ProductCard.displayName = 'ProductCard';
 
