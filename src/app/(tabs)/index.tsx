@@ -4,14 +4,13 @@
  */
 
 import React, { useState } from 'react';
-import { ScrollView, Pressable, RefreshControl } from 'react-native';
+import { ScrollView, Pressable, RefreshControl, Image } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
-import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { ProductCard } from '@/components/product/ProductCard';
@@ -23,6 +22,8 @@ import { useCategories } from '@/hooks/use-categories';
 import { useFavorites, useAddFavorite, useRemoveFavorite } from '@/hooks/use-favorites';
 import { useTrendingSearches } from '@/hooks/use-search';
 import type { ProductWithOffers } from '@/types';
+
+const LOGO = require('../../../assets/images/DondeHay3.jpeg');
 
 const MOCK_PRODUCTS: ProductWithOffers[] = [
   {
@@ -177,11 +178,10 @@ export default function HomeScreen() {
             mode={resolvedMode}
           >
             <Box flexDirection="row" alignItems="center" gap="sm">
-              <Avatar
-                size="md"
-                name={user?.name || 'Usuario'}
-                source={user?.avatarUrl ? { uri: user.avatarUrl } : undefined}
-                mode={resolvedMode}
+              <Image
+                source={LOGO}
+                style={{ width: 44, height: 44, borderRadius: 22 }}
+                resizeMode="cover"
               />
               <Box>
                 <Text variant="titleMedium" color="text">

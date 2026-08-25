@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { ScrollView, Pressable, Alert } from 'react-native';
+import { ScrollView, Pressable, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -17,6 +17,8 @@ import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import { getColors } from '@/theme/colors';
 import { useFavorites, useSavedSearches } from '@/hooks/use-favorites';
+
+const LOGO = require('../../../assets/images/DondeHay3.jpeg');
 
 type MenuItem = {
   id: string;
@@ -360,6 +362,11 @@ export default function ProfileScreen() {
 
           {/* Footer branding */}
           <Box alignItems="center" mt="xl" mode={resolvedMode}>
+            <Image
+              source={LOGO}
+              style={{ width: 60, height: 60, borderRadius: 12, marginBottom: 8 }}
+              resizeMode="cover"
+            />
             <Text variant="labelSmall" color="textTertiary">
               Dónde Hay · Encuentra lo que buscas.
             </Text>
