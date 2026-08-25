@@ -84,7 +84,6 @@ function getSourceCounts(product: ProductWithOffers): Record<string, number> {
 function getRevolicoContactInfo(product: ProductWithOffers): {
   phone?: string;
   whatsapp?: boolean;
-  viewCount?: number;
 } {
   for (const offer of product.offers ?? []) {
     if (offer.sourceId === 'revolico' && offer.rawData) {
@@ -92,7 +91,6 @@ function getRevolicoContactInfo(product: ProductWithOffers): {
       return {
         phone: raw['sellerPhone'] as string | undefined,
         whatsapp: raw['sellerWhatsapp'] as boolean | undefined,
-        viewCount: raw['viewCount'] as number | undefined,
       };
     }
   }

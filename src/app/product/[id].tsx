@@ -332,11 +332,6 @@ export default function ProductDetailScreen() {
                           {/* Revolico seller info */}
                           {revolicoSeller && (
                             <Box mt="sm">
-                              {revolicoSeller.viewCount != null && (
-                                <Text variant="labelSmall" color="textTertiary">
-                                  👁 {revolicoSeller.viewCount.toLocaleString()} vistas
-                                </Text>
-                              )}
                               {revolicoSeller.phone && (
                                 <Box flexDirection="row" alignItems="center" gap="xs" mt="xxs">
                                   <Pressable
