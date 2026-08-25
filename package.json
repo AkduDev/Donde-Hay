@@ -52,7 +52,12 @@
     "lint": "expo lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "build:dev": "eas build --profile development",
+    "build:preview": "eas build --profile preview",
+    "build:prod": "eas build --profile production",
+    "submit": "eas submit",
+    "prebuild": "bash ./eas-build-prebuild.sh"
   },
   "private": true
 }

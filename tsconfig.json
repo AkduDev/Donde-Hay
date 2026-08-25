@@ -65,6 +65,7 @@
     "node_modules",
     "dist",
     "build",
-    "**/__tests__/**"
+    "**/__tests__/**",
+    "supabase/functions"
   ]
 }

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "donde-hay",
+    "name": "Dónde Hay",
     "slug": "donde-hay",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +8,9 @@
     "scheme": "dondehay",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.akdudev.dondehay",
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +20,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.dondehay"
+      "package": "com.akdudev.dondehay",
+      "versionCode": 1
     },
     "web": {
       "output": "static",
@@ -48,6 +51,13 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#208AEF"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir a Dónde Hay acceder a tus fotos para publicar productos.",
+          "cameraPermission": "Permitir a Dónde Hay acceder a tu cámara para tomar fotos de productos."
+        }
       ]
     ],
     "experiments": {
@@ -60,6 +70,10 @@
         "projectId": "41d6883e-6a1c-4de7-89bc-be26c1a98c58"
       }
     },
-    "owner": "akdudev"
+    "owner": "akdudev",
+    "notification": {
+      "icon": "./assets/images/notification-icon.png",
+      "color": "#208AEF"
+    }
   }
 }
