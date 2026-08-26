@@ -410,40 +410,56 @@ Todos reemplazados con binarios Linux descargados de `dl.google.com`:
 - **Path**: `/media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006/`
 - **Problema**: Solo tiene `windows-x86_64/` en `toolchains/llvm/prebuilt/`. Falta `linux-x86_64/` con clang/clang++
 - **Error actual**: `The CMAKE_C_COMPILER: .../toolchains/llvm/prebuilt/linux-x86_64/bin/clang is not a full path to an existing compiler tool`
-- **Solución**: Descargar NDK r27b para Linux desde `https://dl.google.com/android/repository/android-ndk-r27b-linux.zip` (~633MB)
-- **Velocidad descarga**: ~700KB/s (~12-15 min)
+- **Solución**: Descargar NDK r27b para Linux (~633MB)
+- **Fuente de descarga**: `https://mirrors.cloud.tencent.com/AndroidSDK/android-ndk-r27b-linux.zip` (dl.google.com retorna 404 desde Cuba)
+- **Velocidad**: ~150KB/s desde Tencent, conexión inestable (~65-180MB descargados antes de cortar)
+- **Archivo parcial**: `/tmp/android-ndk-r27b-linux.zip` — **178MB de 633MB descargados** (28%)
+- **Script de descarga**: `/tmp/download-ndk.sh` — Soporta resume con `curl -C -`, 20 reintentos automáticos
 - **Disco**: 95GB libres en `/dev/sda4`
 
-### Pasos para Continuar (mañana)
+### Pasos para Continuar
 
 ```bash
-# 1. Descargar NDK r27b Linux (~633MB, ~12min a 700KB/s)
-curl -L --connect-timeout 30 --max-time 3600 \
-  -o /tmp/android-ndk-r27b-linux.zip \
-  "https://dl.google.com/android/repository/android-ndk-r27b-linux.zip"
+# 1. Reanudar descarga NDK r27b (reanuda desde donde se cortó)
+chmod +x /tmp/download-ndk.sh
+nohup /tmp/download-ndk.sh > /tmp/ndk-download-v2.log 2>&1 &
+# Monitorear: tail -f /tmp/ndk-download-v2.log
+# Verificar tamaño: ls -la /tmp/android-ndk-r27b-linux.zip
+# Necesita llegar a ~663MB para estar completo
 
-# 2. Backup del NDK Windows actual
+# 2. Verificar integridad cuando llegue a ~633MB
+SIZE=$(stat -c%s /tmp/android-ndk-r27b-linux.zip)
+echo "Tamaño: $SIZE bytes (necesita ~663976775)"
+
+# 3. Backup del NDK Windows actual
 mv /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006 \
    /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006-windows-backup
 
-# 3. Extraer NDK Linux
+# 4. Extraer NDK Linux
 cd /tmp && unzip -q android-ndk-r27b-linux.zip
-# El zip extrae como 'android-ndk-r27b/'
 mv /tmp/android-ndk-r27b \
    /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006
 
-# 4. Verificar que clang existe
+# 5. Verificar que clang existe
 ls /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/linux-x86_64/bin/clang
 
-# 5. Limpiar build anterior y rebuild
+# 6. Limpiar build anterior y rebuild
 cd "/media/Akdulay/27B09181315B1AF21/Donde Hay/donde-hay/android"
 ./gradlew clean
 export PATH="$HOME/.local/bin:$PATH"
 ./gradlew assembleDebug --no-daemon --warning-mode=none
 
-# 6. Instalar APK en dispositivo
+# 7. Instalar APK en dispositivo
 adb install app/build/outputs/apk/debug/app-debug.apk
 ```
+
+### Descarga NDK — Notas de Red (Cuba)
+- `dl.google.com` retorna 404 para todas las descargas (bloqueo geográfico)
+- Tencent mirror (`mirrors.cloud.tencent.com`) funciona pero conexión inestable
+- `aria2c` y `curl` con resume (`-C -`) ambos fallan después de ~65-180MB
+- Script `/tmp/download-ndk.sh` reintenta automáticamente 20 veces con 5s entre intentos
+- **Alternativa**: Descargar NDK en otra máquina con internet y copiar vía USB/external drive
+- **Alternativa**: Usar VPN antes de descargar
 
 ### SDK Android (estado completo)
 ```
@@ -464,6 +480,16 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 │       └── linux-x86_64/    ← MISSING (necesita NDK r27b Linux)
 └── platforms/  (assume OK)
 ```
+
+### Archivos Temporales de Build
+| Archivo | Propósito |
+|---------|-----------|
+| `/tmp/android-ndk-r27b-linux.zip` | Descarga parcial NDK (178MB/633MB) |
+| `/tmp/download-ndk.sh` | Script de descarga con resume y reintentos |
+| `/tmp/ndk-download-v2.log` | Log de la última descarga |
+| `/tmp/gradle-build*.log` | Logs de los 8+ intentos de build |
+| `/tmp/cmake-3.31.6-linux-x86_64/` | CMake Kitware extraído (fuente para SDK) |
+| `/tmp/ninja-extract/ninja` | Ninja 1.13.2 binario fuente |
 
 ### Variables de Entorno Importantes
 ```bash
