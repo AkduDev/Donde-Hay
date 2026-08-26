@@ -376,6 +376,111 @@ npx supabase migration new  # Crear migración
 - **Local build offline**: Investigar pre-descargar dependencias en máquina con internet
 - **Expo Go update**: Actualizar Expo Go en el dispositivo (Google Play bloqueado, alternativas: APK directa)
 
+## Build Android — Estado Actual y Próximos Pasos
+
+### Resumen del Problema
+El Android SDK en esta máquina **solo tiene binarios de Windows (.exe)** para build-tools, cmake, cmdline-tools y NDK. El build.gradle intenta usar binarios Linux y falla. Se han ido instalando versiones Linux manualmente, pero falta el NDK.
+
+### Archivos Clave de Build
+| Archivo | Propósito |
+|---------|-----------|
+| `android/gradle.properties` | Configuración Gradle (JVM args, architectures, new arch) |
+| `android/local.properties` | SDK path: `sdk.dir=/media/Akdulay/27B09181315B1AF21/Android/Sdk` |
+| `~/.gradle/init.gradle` | Aliyun Maven mirrors (timeout 120s) |
+| `~/.local/bin/ninja` | Ninja 1.13.2 instalado manualmente (Linux) |
+| `~/.local/bin/cmake` | CMake 3.31.6 instalado manualmente (Linux, de Kitware) |
+
+### Build-tools — Corregidos
+Todos reemplazados con binarios Linux descargados de `dl.google.com`:
+
+| Versión | Estado | Fuente descarga |
+|---------|--------|-----------------|
+| 35.0.0 | ✅ Corregido | `build-tools-35-linux.zip` → extrae como `android-15/` |
+| 36.0.0 | ✅ Corregido | `build-tools_r36_linux.zip` → extrae como `android-16/` |
+| 36.1.0 | ✅ Corregido | `build-tools-361-linux.zip` → extrae como `android-16/` |
+
+### CMake — Corregido
+- SDK tenía `cmake.exe` en `cmake/3.22.1/bin/` y `cmake/3.31.6/bin/`
+- Reemplazados con binary Linux de Kitware: `cp ~/.local/bin/cmake SDK/cmake/X.Y.Z/bin/cmake`
+- Copiados módulos `share/cmake-3.31` a ambos directorios
+- Ninja 1.13.2 copiado a ambos `bin/ninja`
+
+### NDK — BLOQUEADO (única dependencia restante)
+- **Versión requerida**: 27.1.12297006 (NDK r27b)
+- **Path**: `/media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006/`
+- **Problema**: Solo tiene `windows-x86_64/` en `toolchains/llvm/prebuilt/`. Falta `linux-x86_64/` con clang/clang++
+- **Error actual**: `The CMAKE_C_COMPILER: .../toolchains/llvm/prebuilt/linux-x86_64/bin/clang is not a full path to an existing compiler tool`
+- **Solución**: Descargar NDK r27b para Linux desde `https://dl.google.com/android/repository/android-ndk-r27b-linux.zip` (~633MB)
+- **Velocidad descarga**: ~700KB/s (~12-15 min)
+- **Disco**: 95GB libres en `/dev/sda4`
+
+### Pasos para Continuar (mañana)
+
+```bash
+# 1. Descargar NDK r27b Linux (~633MB, ~12min a 700KB/s)
+curl -L --connect-timeout 30 --max-time 3600 \
+  -o /tmp/android-ndk-r27b-linux.zip \
+  "https://dl.google.com/android/repository/android-ndk-r27b-linux.zip"
+
+# 2. Backup del NDK Windows actual
+mv /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006 \
+   /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006-windows-backup
+
+# 3. Extraer NDK Linux
+cd /tmp && unzip -q android-ndk-r27b-linux.zip
+# El zip extrae como 'android-ndk-r27b/'
+mv /tmp/android-ndk-r27b \
+   /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006
+
+# 4. Verificar que clang existe
+ls /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/linux-x86_64/bin/clang
+
+# 5. Limpiar build anterior y rebuild
+cd "/media/Akdulay/27B09181315B1AF21/Donde Hay/donde-hay/android"
+./gradlew clean
+export PATH="$HOME/.local/bin:$PATH"
+./gradlew assembleDebug --no-daemon --warning-mode=none
+
+# 6. Instalar APK en dispositivo
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+### SDK Android (estado completo)
+```
+/media/Akdulay/27B09181315B1AF21/Android/Sdk/
+├── build-tools/
+│   ├── 35.0.0/  ✅ Linux binaries
+│   ├── 36.0.0/  ✅ Linux binaries  
+│   └── 36.1.0/  ✅ Linux binaries
+├── cmake/
+│   ├── 3.22.1/bin/cmake  ✅ Linux binary (Kitware 3.31.6)
+│   ├── 3.22.1/bin/ninja  ✅ Linux binary (1.13.2)
+│   ├── 3.31.6/bin/cmake  ✅ Linux binary (Kitware 3.31.6)
+│   └── 3.31.6/bin/ninja  ✅ Linux binary (1.13.2)
+├── cmdline-tools/latest/ ✅ Linux (but sdkmanager broken - incompatible classpath jars)
+├── ndk/27.1.12297006/
+│   └── toolchains/llvm/prebuilt/
+│       ├── windows-x86_64/  ← actual (solo Windows)
+│       └── linux-x86_64/    ← MISSING (necesita NDK r27b Linux)
+└── platforms/  (assume OK)
+```
+
+### Variables de Entorno Importantes
+```bash
+# Agregar a ~/.bashrc si no está
+export PATH="$HOME/.local/bin:$PATH"
+export ANDROID_HOME="/media/Akdulay/27B09181315B1AF21/Android/Sdk"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+```
+
+### Specs de la Sesión de Build
+- **Build-tools 36.0.0**: Completado OK (configure + compile tasks)
+- **Gradle tasks ejecutados**: 384 total, 346 UP-TO-DATE en último intento
+- **Fallo**: `configureCMakeDebug[arm64-v8a]` — NDK clang no encontrado
+- **Build logs**: `/tmp/gradle-build*.log` (8 intentos)
+- **gradle.properties**: `reactNativeArchitectures=arm64-v8a` (solo arm64 para velocidad)
+- **gradle.properties**: `newArchEnabled=true` (New Architecture habilitada)
+
 ## Skills Disponibles
 
 ### desarrallador-rn-fullstack
