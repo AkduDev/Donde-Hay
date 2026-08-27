@@ -405,61 +405,29 @@ Todos reemplazados con binarios Linux descargados de `dl.google.com`:
 - Copiados módulos `share/cmake-3.31` a ambos directorios
 - Ninja 1.13.2 copiado a ambos `bin/ninja`
 
-### NDK — BLOQUEADO (única dependencia restante)
-- **Versión requerida**: 27.1.12297006 (NDK r27b)
+### NDK — ✅ CORREGIDO
+- **Versión instalada**: 27.1.12297006 (NDK r27b Linux) — clang 18.0.2
 - **Path**: `/media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006/`
-- **Problema**: Solo tiene `windows-x86_64/` en `toolchains/llvm/prebuilt/`. Falta `linux-x86_64/` con clang/clang++
-- **Error actual**: `The CMAKE_C_COMPILER: .../toolchains/llvm/prebuilt/linux-x86_64/bin/clang is not a full path to an existing compiler tool`
-- **Solución**: Descargar NDK r27b para Linux (~633MB)
-- **Fuente de descarga**: `https://mirrors.cloud.tencent.com/AndroidSDK/android-ndk-r27b-linux.zip` (dl.google.com retorna 404 desde Cuba)
-- **Velocidad**: ~150KB/s desde Tencent, conexión inestable (~65-180MB descargados antes de cortar)
-- **Archivo parcial**: `/tmp/android-ndk-r27b-linux.zip` — **178MB de 633MB descargados** (28%)
-- **Script de descarga**: `/tmp/download-ndk.sh` — Soporta resume con `curl -C -`, 20 reintentos automáticos
-- **Disco**: 95GB libres en `/dev/sda4`
+- **Origen**: descargado el 27/ago/2026 con VPN activa desde Tencent mirror (`mirrors.cloud.tencent.com/AndroidSDK/android-ndk-r27b-linux.zip`, 633MB)
+- **Nota**: El backup del NDK Windows quedó en `27.1.12297006-windows-backup` (ya no necesario, puede borrarse)
+- **Instalación especial**: La extracción NO debe cruzarse de filesystem (`/tmp` → HDD externo). El `mv` entre filesystems se cortó a mitad (copia lenta NTFS) y dejó un NDK incompleto. **Solución**: extraer el zip directamente dentro del SDK (`unzip` en `/media/.../Sdk/ndk/`) y luego `mv` (rename local = instantáneo)
+- **`:react-native-worklets:configureCMakeDebug`**: ✅ pasa. El NDK clang compila correctamente
 
-### Pasos para Continuar
+### Build APK — ✅ COMPLETADO
+- **APK**: `android/app/build/outputs/apk/debug/app-debug.apk` (92.7MB, arm64-v8a)
+- **Estado**: `BUILD SUCCESSFUL in 47m 51s`
+- **Fecha**: 27/ago/2026
+- **Instalar en dispositivo**:
+  ```bash
+  adb install -r "/media/Akdulay/27B09181315B1AF21/Donde Hay/donde-hay/android/app/build/outputs/apk/debug/app-debug.apk"
+  ```
 
-```bash
-# 1. Reanudar descarga NDK r27b (reanuda desde donde se cortó)
-chmod +x /tmp/download-ndk.sh
-nohup /tmp/download-ndk.sh > /tmp/ndk-download-v2.log 2>&1 &
-# Monitorear: tail -f /tmp/ndk-download-v2.log
-# Verificar tamaño: ls -la /tmp/android-ndk-r27b-linux.zip
-# Necesita llegar a ~663MB para estar completo
-
-# 2. Verificar integridad cuando llegue a ~633MB
-SIZE=$(stat -c%s /tmp/android-ndk-r27b-linux.zip)
-echo "Tamaño: $SIZE bytes (necesita ~663976775)"
-
-# 3. Backup del NDK Windows actual
-mv /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006 \
-   /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006-windows-backup
-
-# 4. Extraer NDK Linux
-cd /tmp && unzip -q android-ndk-r27b-linux.zip
-mv /tmp/android-ndk-r27b \
-   /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006
-
-# 5. Verificar que clang existe
-ls /media/Akdulay/27B09181315B1AF21/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/linux-x86_64/bin/clang
-
-# 6. Limpiar build anterior y rebuild
-cd "/media/Akdulay/27B09181315B1AF21/Donde Hay/donde-hay/android"
-./gradlew clean
-export PATH="$HOME/.local/bin:$PATH"
-./gradlew assembleDebug --no-daemon --warning-mode=none
-
-# 7. Instalar APK en dispositivo
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
-
-### Descarga NDK — Notas de Red (Cuba)
-- `dl.google.com` retorna 404 para todas las descargas (bloqueo geográfico)
-- Tencent mirror (`mirrors.cloud.tencent.com`) funciona pero conexión inestable
-- `aria2c` y `curl` con resume (`-C -`) ambos fallan después de ~65-180MB
-- Script `/tmp/download-ndk.sh` reintenta automáticamente 20 veces con 5s entre intentos
-- **Alternativa**: Descargar NDK en otra máquina con internet y copiar vía USB/external drive
-- **Alternativa**: Usar VPN antes de descargar
+### Corrupción NTFS del disco externo (importante)
+Durante el build aparecieron errores `Input/output error` en 4 directorios de `node_modules/expo-dev-launcher/android/build/tmp/...` y un JSON sobrescrito con datos binarios en `react-native-screens/.cxx/`. Causa probable: conexión USB inestable del HDD externo (`/dev/sda4`, NTFS/FAT fuseblk). **Workarounds aplicados**:
+- **Delete falla (`I/O error`)**: usar `mv` para renombrar dentro del MISMO filesystem (rename no atraviesa children) — p.ej. `mv build build-corrupt`, luego Gradle regenera de cero
+- **JSON corrupto en `.cxx`**: borrar/renombrar `android/.cxx` de ese módulo, Gradle lo regenera
+- **Disco**: 88GB libres, sin errores SMART reportados
+- **Recomendación**: hacer backup periódico y revisar cable/USB controller; si los I/O errors se repiten, considerar `chkdsk`/`ntfsfix`
 
 ### SDK Android (estado completo)
 ```
@@ -474,20 +442,21 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 │   ├── 3.31.6/bin/cmake  ✅ Linux binary (Kitware 3.31.6)
 │   └── 3.31.6/bin/ninja  ✅ Linux binary (1.13.2)
 ├── cmdline-tools/latest/ ✅ Linux (but sdkmanager broken - incompatible classpath jars)
-├── ndk/27.1.12297006/
-│   └── toolchains/llvm/prebuilt/
-│       ├── windows-x86_64/  ← actual (solo Windows)
-│       └── linux-x86_64/    ← MISSING (necesita NDK r27b Linux)
+├── ndk/
+│   ├── 27.1.12297006/  ✅ Linux NDK r27b (clang 18.0.2) — usado para el build
+│   ├── 27.1.12297006-windows-backup/  ⬜ backup del NDK Windows (borrar)
+│   ├── 27.0.12077973/  ⬜ Windows only (sin uso)
+│   └── 28.2.13676358/  ⬜ Windows only (sin uso)
 └── platforms/  (assume OK)
 ```
 
 ### Archivos Temporales de Build
 | Archivo | Propósito |
 |---------|-----------|
-| `/tmp/android-ndk-r27b-linux.zip` | Descarga parcial NDK (178MB/633MB) |
-| `/tmp/download-ndk.sh` | Script de descarga con resume y reintentos |
-| `/tmp/ndk-download-v2.log` | Log de la última descarga |
-| `/tmp/gradle-build*.log` | Logs de los 8+ intentos de build |
+| `/tmp/gradle-build11.log` | Build interrumpido (expoboost from lock temporal) |
+| `/tmp/gradle-build12.log` | Build con JSON corrupto en screens/.cxx |
+| `/tmp/gradle-build13.log` | ✅ Build final SUCCESSFUL (47m 51s) |
+| `/tmp/android-ndk-r27b-linux.zip` | ⬜ Zip NDK ya extraído (puede borrarse, 633MB) |
 | `/tmp/cmake-3.31.6-linux-x86_64/` | CMake Kitware extraído (fuente para SDK) |
 | `/tmp/ninja-extract/ninja` | Ninja 1.13.2 binario fuente |
 
@@ -502,10 +471,11 @@ export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
 ### Specs de la Sesión de Build
 - **Build-tools 36.0.0**: Completado OK (configure + compile tasks)
 - **Gradle tasks ejecutados**: 384 total, 346 UP-TO-DATE en último intento
-- **Fallo**: `configureCMakeDebug[arm64-v8a]` — NDK clang no encontrado
-- **Build logs**: `/tmp/gradle-build*.log` (8 intentos)
+- **Fallo resuelto**: NDK clang no encontrado → NDK r27b Linux instalado
+- **Build logs**: `/tmp/gradle-build*.log` (13 intentos, último exitoso)
 - **gradle.properties**: `reactNativeArchitectures=arm64-v8a` (solo arm64 para velocidad)
 - **gradle.properties**: `newArchEnabled=true` (New Architecture habilitada)
+- **Errores NTFS encontrados y resueltos**: locks en expo-dev-launcher, JSON binario en react-native-screens
 
 ## Skills Disponibles
 
