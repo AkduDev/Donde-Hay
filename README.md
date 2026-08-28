@@ -323,9 +323,14 @@ eas build --platform android --profile preview
 eas build --platform android --profile development
 
 # 2. Instalar en dispositivo
-# 3. Ejecutar
+# 3. Reenviar Metro al device (una vez por conexión USB)
+adb reverse tcp:8081 tcp:8081
+
+# 4. Ejecutar
 npx expo start --dev-client
 ```
+
+> Al recargar desde el dev menu, la app usa `localhost:8081` del device vía `adb reverse`.
 
 ### Troubleshooting
 
@@ -337,6 +342,7 @@ npx expo start --dev-client
 | `dl.google.com timeout` | Usar VPN o Aliyun mirrors (configurados en `~/.gradle/init.gradle`) |
 | `Expo Go incompatible` | SDK 57 requiere development build, no Expo Go |
 | `403 EAS Build` | Verificar cuenta EAS y método de pago |
+| `Metro: I/O error scandir (EIO)` | Directorios corruptos NTFS en `node_modules/expo-dev-launcher/android/build-corrupt`. Filtrados por el `blockList` de `metro.config.js`; borrar definitivamente requiere `chkdsk`/`ntfsfix` |
 
 ### Build Sin Internet (Offline)
 

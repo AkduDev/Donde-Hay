@@ -309,6 +309,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 | `src/store/authStore.ts` | Zustand auth store con JWT refresh |
 | `src/types/index.ts` | Interfaces: Product, SearchFilters, User, etc. |
 | `src/theme/colors.ts` | Light/dark mode palettes |
+| `src/theme/typography.ts` | Design System: LineHeights→absolutos con `getLineHeight()` |
+| `src/app/results.tsx` | Pantalla de resultados (renombrada de `search.tsx`; `/search` quedó libre) |
+| `metro.config.js` | blockList de dirs corruptos NTFS en `node_modules` (fix Metro EIO) |
 | `.expo/types/router.d.ts` | Typed routes (generado, NO editar manualmente) |
 
 ## Comandos
@@ -332,6 +335,22 @@ npx supabase start          # Levantar Supabase local
 npx supabase db push        # Push schema a BD remote
 npx supabase migration new  # Crear migración
 ```
+
+### Ejecutar en dispositivo (development build)
+
+```bash
+# 1. Instalar APK debug si no está
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+
+# 2. Reenviar Metro al device (ejecutar una sola vez por conexión USB)
+adb reverse tcp:8081 tcp:8081
+
+# 3. Levantar Metro (en terminal del usuario, no como proceso en background) y pulsar 'r'
+npx expo start --dev-client
+```
+
+> Nota: al recargar desde el dev menu, la app usa la URL `localhost:8081` del device vía `adb reverse`.
+> Los procesos en background lanzados desde un agente mueren; Metro debe correrse en la terminal del usuario.
 
 ## MCP Servers Configurados
 
@@ -367,6 +386,21 @@ npx supabase migration new  # Crear migración
 - **Build local fallido**: Gradle no puede descargar todas las dependencias desde Cuba. Aliyun timeout para dependencias grandes (GlassFish JAXB, etc.)
 - **EAS Build 403**: Subida a Expo cloud falla con 403 Forbidden. Posible restricción geográfica o problema de permisos de cuenta
 - **Expo Go incompatible**: Versión de Expo Go instalada incompatible con SDK 57. Necesita development build o APK nativa
+
+## Errores Resueltos (sesión 28-ago-2026)
+
+- **Hermes sin `Intl.RelativeTimeFormat`**: El uso a nivel de módulo crasheaba todo el bundle (errores en cascada: "missing default export", "ErrorBoundary undefined"). Solucionado en `src/utils/format.ts` con detección `typeof Intl.RelativeTimeFormat === 'function'`, inicialización perezosa y fallback manual en español (`hace X min / en X horas`)
+- **Hook inválido en Zustand**: `useColorScheme()` era llamado dentro de acciones de `themeStore` (fuera de render). Reemplazado por `Appearance.getColorScheme()` de react-native
+- **Metro crash EIO (NTFS)**: Directorios corruptos `node_modules/expo-dev-launcher/android/build-corrupt/...` hacen fallar `expo start` con `I/O error, scandir`. Solucionado con el blockList en `metro.config.js` (los dirs no se pueden borrar sin `chkdsk`/`ntfsfix`)
+- **Login forzado eliminado**: La app abre directo en Home (`initialRouteName="(tabs)"`) sin auth guard en `src/app/_layout.tsx`. Iniciar sesión queda opcional
+- **Ruta `/search` duplicada**: `src/app/search.tsx` (resultados) colisionaba con `(tabs)/search.tsx`. Renombrada a `src/app/results.tsx` (`/search` quedó libre para el tab)
+- **`/login` inexistente**: En `(tabs)/alerts.tsx` se navegaba a `/login`; corregido a `/(auth)/login`
+- **Tab bar sobre la barra de Android**: El menú inferior se solapaba con la barra de navegación del sistema. Corregido con `useSafeAreaInsets()` (height `60 + insets.bottom`, paddingBottom `Math.max(insets.bottom, 8)`)
+- **Pestaña Mapa mal renderizada**: `(tabs)/nearby.tsx` existía pero sin `<Tabs.Screen>` → expo-router la auto-agregaba sin icono y con el nombre inglés "Nearby". Configurada como tab "Mapa" con icono `map`/`map-outline`
+- **Búsqueda rota en device**: `search.service.ts` consultaba un backend en `localhost:3000` (inexistente) → `ConnectException` y resultados vacíos en el teléfono. `search()`/`searchDB()` ahora consultan **Supabase directamente** (ILIKE en nombre/marca/modelo/descripción + filtros y normalización snake_case→camelCase); `searchRevolico` se omite silenciosamente cuando `API_CONFIG.baseUrl` apunta a localhost fuera de web
+- **`resizeMode` deprecado en expo-image**: Reemplazado por `contentFit` (solo en imágenes expo-image; los `Image` de react-native conservan `resizeMode`)
+- **`lineHeight` como ratio (texto aplastado en Android)**: React Native exige `lineHeight` absoluto en dp. Todos los `TypographyVariants` ahora calculan `lineHeight` absoluto con `getLineHeight(ratio, fontSize)` en `src/theme/typography.ts` (los ratios `LineHeights` quedan como referencia)
+- **`npm test` y `npm run lint` no corren**: `jest` no está en devDeps y ESLint 10.x requiere `eslint.config.js` (solo existe `.eslintrc` legacy). `npx tsc --noEmit` es el check fiable
 - **TypeScript errors UI**: Errores de tipos en componentes UI pre-existentes (Card, Button, Input, Modal, Sheet, Tooltip, Spinner, Text). Requieren refactor de tipos
 
 ## Soluciones pendientes (Cuba)
