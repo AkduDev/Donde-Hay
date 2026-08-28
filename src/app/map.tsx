@@ -67,9 +67,20 @@ export default function NearbyScreen() {
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <Box px="md" py="md">
           <Box flexDirection="row" justifyContent="space-between" alignItems="center">
-            <Text variant="headlineMedium" color="text">
-              📍 Cerca de ti
-            </Text>
+            <Box flexDirection="row" alignItems="center" gap="sm">
+              <Pressable
+                onPress={() => router.back()}
+                accessibilityLabel="Volver a la pantalla anterior"
+                accessibilityRole="button"
+              >
+                <Text variant="bodyLarge" color="primary">
+                  ←
+                </Text>
+              </Pressable>
+              <Text variant="headlineMedium" color="text">
+                📍 Cerca de ti
+              </Text>
+            </Box>
             <Pressable
               onPress={() => setShowRadiusPicker(!showRadiusPicker)}
               accessibilityLabel={`Radio de búsqueda: ${selectedRadius} kilómetros. Pulsa para cambiar.`}

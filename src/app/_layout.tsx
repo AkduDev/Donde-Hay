@@ -55,6 +55,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="publish" />
+            <Stack.Screen name="map" options={{ headerShown: false }} />
           </Stack>
           <ToastContainer />
         </ErrorBoundary>

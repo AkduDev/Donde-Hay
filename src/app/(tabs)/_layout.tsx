@@ -74,16 +74,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="nearby"
-        options={{
-          title: 'Mapa',
-          tabBarAccessibilityLabel: 'Productos cerca de ti',
-          tabBarIcon: ({ color, size, focused }) => (
-            <TabIcon iconName={focused ? 'map' : 'map-outline'} color={color as string} size={size} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Perfil',

@@ -91,16 +91,29 @@ export default function SearchResultsScreen() {
         <Text variant="bodySmall" color="textSecondary">
           {results?.products?.length || 0} resultados encontrados
         </Text>
-        <Pressable onPress={() => setShowFilters(!showFilters)}>
-          <Box flexDirection="row" alignItems="center" gap="xxs">
-            <Text variant="bodySmall" color="primary">
-              {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
-            </Text>
-            <Text variant="bodySmall" color="primary">
-              {showFilters ? '▲' : '▼'}
-            </Text>
-          </Box>
-        </Pressable>
+        <Box flexDirection="row" alignItems="center" gap="md">
+          <Pressable
+            onPress={() => router.push('/map' as any)}
+            accessibilityLabel="Ver productos en el mapa"
+            accessibilityRole="button"
+          >
+            <Box flexDirection="row" alignItems="center" gap="xxs">
+              <Text variant="bodySmall" color="primary">
+                🗺️ Mapa
+              </Text>
+            </Box>
+          </Pressable>
+          <Pressable onPress={() => setShowFilters(!showFilters)}>
+            <Box flexDirection="row" alignItems="center" gap="xxs">
+              <Text variant="bodySmall" color="primary">
+                {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
+              </Text>
+              <Text variant="bodySmall" color="primary">
+                {showFilters ? '▲' : '▼'}
+              </Text>
+            </Box>
+          </Pressable>
+        </Box>
       </Box>
 
       {/* Filters Panel */}

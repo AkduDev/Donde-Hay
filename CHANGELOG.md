@@ -29,6 +29,14 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - **Limpieza de `Spacing`**: eliminado `Spacing.radius` (los radios viven en `BorderRadius` de `radius.ts`) y movido `import { Platform }` al tope de `spacing.ts`.
 - `npx tsc --noEmit` ✅. Verificación visual Android (light/dark) pendiente.
 
+### FASE 3 — Navegación: 5 tabs, Mapa fuera del tab bar (completada)
+- **Mapa fuera del tab bar** (decisión aprobada): la pantalla de productos cercanos se movió de `(tabs)/nearby.tsx` a `src/app/map.tsx` como ruta root del Stack → el tab bar pasa de 6 a **5 tabs** (Inicio, Buscar, Guardados, Alertas, Perfil).
+- **Entrada secundaria desde results**: botón "🗺️ Mapa" en el header de `results.tsx` (mismo contexto de resultados en una vista geográfica).
+- **Header del mapa con botón de retroceso** (`←`) para volver desde la vista empujada (antes no había forma de regresar sin tab bar).
+- `map` registrado explícitamente en el Stack raíz (`headerShown: false` — mantiene el layout custom con `SafeAreaView`).
+- Nota: `.expo/types/router.d.ts` (typed routes) se regenera al correr `expo start`; está gitignored. Los `router.push` a `/map` usan cast para no depender de la generación.
+- `npx tsc --noEmit` ✅.
+
 ## [1.1.0] - 2026-08-28
 
 ### Arreglado
