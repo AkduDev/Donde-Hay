@@ -9,6 +9,7 @@ import { Box } from './Box';
 import { Text as TextComponent } from './Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
+import { FontSizes } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
 
 export type BadgeVariant =
@@ -61,10 +62,10 @@ const sizeConfig: Record<BadgeSize, {
   gap: keyof typeof Spacing;
   dotSize: number;
 }> = {
-  xs: { paddingX: 'xxs', paddingY: 'none', fontSize: 10, fontWeight: 'medium', borderRadius: 'full', gap: 'xxxs', dotSize: 4 },
-  sm: { paddingX: 'xxs', paddingY: 'none', fontSize: 11, fontWeight: 'medium', borderRadius: 'full', gap: 'xxxs', dotSize: 5 },
-  md: { paddingX: 'xs', paddingY: 'none', fontSize: 12, fontWeight: '600', borderRadius: 'full', gap: 'xxs', dotSize: 6 },
-  lg: { paddingX: 'xs', paddingY: 'xxxs', fontSize: 13, fontWeight: '600', borderRadius: 'full', gap: 'xxs', dotSize: 7 },
+  xs: { paddingX: 'xxs', paddingY: 'none', fontSize: FontSizes.xs, fontWeight: 'medium', borderRadius: 'full', gap: 'xxxs', dotSize: 4 },
+  sm: { paddingX: 'xxs', paddingY: 'none', fontSize: FontSizes.xxs, fontWeight: 'medium', borderRadius: 'full', gap: 'xxxs', dotSize: 5 },
+  md: { paddingX: 'xs', paddingY: 'none', fontSize: FontSizes.sm, fontWeight: '600', borderRadius: 'full', gap: 'xxs', dotSize: 6 },
+  lg: { paddingX: 'xs', paddingY: 'xxxs', fontSize: FontSizes.base, fontWeight: '600', borderRadius: 'full', gap: 'xxs', dotSize: 7 },
 };
 
 const Badge = forwardRef<View, BadgeProps>(

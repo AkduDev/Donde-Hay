@@ -15,6 +15,7 @@ import { Divider } from '@/components/ui/Divider';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import { supabase } from '@/lib/supabase';
+import { OpacityTokens } from '@/theme/colors';
 
 type ThemeOption = 'light' | 'dark' | 'system';
 type CurrencyOption = 'USD' | 'CUP' | 'MLC';
@@ -129,7 +130,7 @@ export default function PreferencesScreen() {
                   <Pressable
                     onPress={() => setSelectedTheme(option.value)}
                     style={({ pressed }) => ({
-                      opacity: pressed ? 0.7 : 1,
+                      opacity: pressed ? OpacityTokens.pressed : 1,
                     })}
                   >
                     <Box
@@ -179,7 +180,7 @@ export default function PreferencesScreen() {
                   <Pressable
                     onPress={() => setSelectedCurrency(option.value)}
                     style={({ pressed }) => ({
-                      opacity: pressed ? 0.7 : 1,
+                      opacity: pressed ? OpacityTokens.pressed : 1,
                     })}
                   >
                     <Box

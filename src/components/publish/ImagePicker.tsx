@@ -143,7 +143,6 @@ export function ImagePicker({
                   variant="labelSmall"
                   color="onError"
                   mode={mode}
-                  style={{ lineHeight: 16 }}
                 >
                   ✕
                 </Text>

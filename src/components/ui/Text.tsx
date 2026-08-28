@@ -5,7 +5,7 @@
 
 import React, { forwardRef } from 'react';
 import { Text, TextStyle, StyleProp } from 'react-native';
-import { TypographyVariants, TypographyVariant, FontWeights } from '@/theme/typography';
+import { TypographyVariants, TypographyVariant, getLineHeight } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
 
 export interface TextProps extends React.ComponentPropsWithoutRef<typeof Text> {
@@ -20,7 +20,7 @@ export interface TextProps extends React.ComponentPropsWithoutRef<typeof Text> {
 
   // Overrides de estilo
   fontSize?: number;
-  fontWeight?: React.ComponentPropsWithoutRef<typeof Text>['style'] extends { fontWeight?: infer R } ? R : TextStyle['fontWeight'];
+  fontWeight?: TextStyle['fontWeight'];
   lineHeight?: number;
   letterSpacing?: number;
   fontFamily?: string;
@@ -70,11 +70,19 @@ const TextComponent = forwardRef<Text, TextProps>(
     const colors = getColors(resolvedColorMode);
     const variantStyle = TypographyVariants[variant];
 
+    // Si se sobreescribe fontSize SIN lineHeight explícito, se recalcula el
+    // lineHeight usando el ratio del variant para no recortar el texto.
+    const lineHeightRatio = variantStyle.lineHeight / variantStyle.fontSize;
+
     const computedStyle: TextStyle = {
       ...variantStyle,
       fontSize: fontSize ?? variantStyle.fontSize,
       fontWeight: fontWeight ?? variantStyle.fontWeight,
-      lineHeight: lineHeight ?? variantStyle.lineHeight,
+      lineHeight:
+        lineHeight ??
+        (fontSize !== undefined
+          ? getLineHeight(lineHeightRatio, fontSize)
+          : variantStyle.lineHeight),
       letterSpacing: letterSpacing ?? variantStyle.letterSpacing,
       fontFamily: fontFamily ?? variantStyle.fontFamily,
       color: color ? colors[color] : undefined,

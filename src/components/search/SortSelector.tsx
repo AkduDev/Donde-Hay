@@ -8,7 +8,7 @@ import { Pressable, ViewStyle, StyleProp } from 'react-native';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Modal } from '@/components/ui/Modal';
-import { getColors } from '@/theme/colors';
+import { getColors, OpacityTokens } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
 
 export type SortOption =
@@ -69,7 +69,7 @@ const SortSelector = ({
         onPress={() => setModalVisible(true)}
         style={({ pressed }) => [
           triggerStyle,
-          { opacity: pressed ? 0.7 : 1 },
+          { opacity: pressed ? OpacityTokens.pressed : 1 },
           style,
         ]}
         testID={testID}

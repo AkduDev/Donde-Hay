@@ -171,6 +171,12 @@ export function getColors(mode: ColorMode): ColorPalette {
   return Colors[mode] as ColorPalette;
 }
 
+// Opacidades de interacción (feedback de estado en Pressables)
+export const OpacityTokens = {
+  pressed: 0.7,   // feedback al presionar
+  disabled: 0.6,  // elementos deshabilitados
+} as const;
+
 // Tokens semánticos para uso directo en componentes
 export const SemanticColors = {
   // Backgrounds

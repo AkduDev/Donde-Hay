@@ -18,7 +18,8 @@ import { Text as TextComponent } from './Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
 import { Shadows, getShadow } from '@/theme/shadows';
-import { ColorPalette, getColors } from '@/theme/colors';
+import { FontSizes } from '@/theme/typography';
+import { ColorPalette, getColors, OpacityTokens } from '@/theme/colors';
 
 export type ButtonVariant =
   | 'primary'
@@ -140,7 +141,7 @@ const sizeConfig: Record<ButtonSize, {
     paddingX: 'xxs',
     paddingY: 'none',
     gap: 'xxxs',
-    fontSize: 11,
+    fontSize: FontSizes.xxs,
     fontWeight: '500',
     borderRadius: 'sm',
     iconSize: 14,
@@ -150,7 +151,7 @@ const sizeConfig: Record<ButtonSize, {
     paddingX: 'xs',
     paddingY: 'none',
     gap: 'xxs',
-    fontSize: 12,
+    fontSize: FontSizes.sm,
     fontWeight: '500',
     borderRadius: 'sm',
     iconSize: 16,
@@ -160,7 +161,7 @@ const sizeConfig: Record<ButtonSize, {
     paddingX: 'sm',
     paddingY: 'xxxs',
     gap: 'xxs',
-    fontSize: 14,
+    fontSize: FontSizes.base,
     fontWeight: '600',
     borderRadius: 'md',
     iconSize: 18,
@@ -170,7 +171,7 @@ const sizeConfig: Record<ButtonSize, {
     paddingX: 'md',
     paddingY: 'xxxs',
     gap: 'xs',
-    fontSize: 16,
+    fontSize: FontSizes.lg,
     fontWeight: '600',
     borderRadius: 'md',
     iconSize: 20,
@@ -180,7 +181,7 @@ const sizeConfig: Record<ButtonSize, {
     paddingX: 'lg',
     paddingY: 'xxs',
     gap: 'xs',
-    fontSize: 18,
+    fontSize: FontSizes.xl,
     fontWeight: '700',
     borderRadius: 'lg',
     iconSize: 22,
@@ -265,7 +266,7 @@ const Button = forwardRef<View, ButtonProps>(
       justifyContent: 'center',
       gap: Spacing[iconSpacing] as number,
       width: fullWidth ? '100%' : undefined,
-      opacity: isDisabled ? 0.6 : 1,
+      opacity: isDisabled ? OpacityTokens.disabled : 1,
       ...((variant === 'primary' || variant === 'danger' || variant === 'success' || variant === 'accent') && {
         ...getShadow('sm', mode),
         elevation: 2,

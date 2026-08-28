@@ -17,6 +17,7 @@ import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
+import { FontSizes } from '@/theme/typography';
 import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
 
@@ -132,7 +133,7 @@ const SearchBar = React.memo(forwardRef<TextInput, SearchBarProps>(
 
     const inputStyle = {
       flex: 1,
-      fontSize: 16,
+      fontSize: FontSizes.lg,
       color: colors.text,
       paddingVertical: 0,
       paddingHorizontal: 0,

@@ -4,6 +4,18 @@ Todas las cambios notables de Dónde Hay se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/)
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
+## [2.0.0-canary] - 2026-08-28
+
+> UI/UX Hardening — plan de 7 fases aprobado (tipografía → design system → navegación → home → search/results → product detail → calidad). Se documenta por fases según se van cumpliendo.
+
+### FASE 1 — Tipografía (completada)
+- **`Text.tsx` recalcula `lineHeight` al sobreescribir `fontSize`**: antes, `Badge`, `Avatar`, `Button` e `Input` pasaban `fontSize` por prop (10/11/13/14/16/18/28) y el `lineHeight` del variant no se recalculaba (p.ej. Badge con fontSize 13 mantenían lineHeight 10 → texto recortado). Ahora se deriva el ratio del variant y se aplica `getLineHeight(ratio, nuevoFontSize)`; el prop `lineHeight` explícito sigue teniendo prioridad.
+- **Escala `FontSizes` con token `xxs: 11`** y mapeo de todos los fontSizes hardcoded del design system a tokens: `Badge` (10/11/12/13), `Avatar` (10/12/14/16/20/28), `Button` (11/12/14/16/18), `Input` (13/14/16), `SearchBar` (16).
+- **Eliminado `lineHeight: 16` suelto** en `ImagePicker.tsx` (contradecía el variant `labelSmall`).
+- **Nuevos tokens `OpacityTokens`** (`pressed: 0.7`, `disabled: 0.6`) en `colors.ts`; reemplazado el patrón `opacity: pressed ? 0.7 : 1` en SortSelector, preferences, profile y Home, y el `0.6` de disabled en Button.
+- **Eliminado** el token muerto `LineHeights.loose`.
+- `npx tsc --noEmit` ✅. Verificación visual en Android (light/dark) pendiente de la FASE 2.
+
 ## [1.1.0] - 2026-08-28
 
 ### Arreglado

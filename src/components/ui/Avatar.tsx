@@ -10,6 +10,7 @@ import { Text as TextComponent } from './Text';
 import { Badge } from './Badge';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
+import { FontSizes } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -34,12 +35,12 @@ const sizeConfig: Record<AvatarSize, {
   statusSize: number;
   statusBorder: number;
 }> = {
-  xs: { width: 24, height: 24, fontSize: 10, statusSize: 8, statusBorder: 1 },
-  sm: { width: 32, height: 32, fontSize: 12, statusSize: 10, statusBorder: 2 },
-  md: { width: 40, height: 40, fontSize: 14, statusSize: 12, statusBorder: 2 },
-  lg: { width: 48, height: 48, fontSize: 16, statusSize: 14, statusBorder: 2 },
-  xl: { width: 64, height: 64, fontSize: 20, statusSize: 16, statusBorder: 3 },
-  '2xl': { width: 96, height: 96, fontSize: 28, statusSize: 20, statusBorder: 3 },
+  xs: { width: 24, height: 24, fontSize: FontSizes.xs, statusSize: 8, statusBorder: 1 },
+  sm: { width: 32, height: 32, fontSize: FontSizes.sm, statusSize: 10, statusBorder: 2 },
+  md: { width: 40, height: 40, fontSize: FontSizes.base, statusSize: 12, statusBorder: 2 },
+  lg: { width: 48, height: 48, fontSize: FontSizes.lg, statusSize: 14, statusBorder: 2 },
+  xl: { width: 64, height: 64, fontSize: FontSizes.xl, statusSize: 16, statusBorder: 3 },
+  '2xl': { width: 96, height: 96, fontSize: FontSizes['3xl'], statusSize: 20, statusBorder: 3 },
 };
 
 const Avatar = forwardRef<View, AvatarProps>(

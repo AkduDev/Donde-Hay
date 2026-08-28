@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Divider } from '@/components/ui/Divider';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
-import { getColors } from '@/theme/colors';
+import { getColors, OpacityTokens } from '@/theme/colors';
 import { useFavorites, useSavedSearches } from '@/hooks/use-favorites';
 
 const LOGO = require('../../../assets/images/DondeHay3.jpeg');
@@ -282,7 +282,7 @@ export default function ProfileScreen() {
                     <Pressable
                       onPress={item.onPress || (() => console.log('Menu item:', item.id))}
                       style={({ pressed }) => ({
-                        opacity: pressed ? 0.7 : 1,
+                        opacity: pressed ? OpacityTokens.pressed : 1,
                       })}
                       accessibilityLabel={item.label}
                       accessibilityRole="button"

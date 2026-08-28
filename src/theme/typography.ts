@@ -42,6 +42,7 @@ export const FontWeights = {
 
 export const FontSizes = {
   // Escala modular 1.25 (major third)
+  xxs: 11,     // labels compactas (badges, botones xs, inputs sm)
   xs: 10,      // 0.625rem
   sm: 12,      // 0.75rem
   base: 14,    // 0.875rem
@@ -63,7 +64,6 @@ export const LineHeights = {
   snug: 1.25,
   normal: 1.5,
   relaxed: 1.625,
-  loose: 2,
 } as const;
 
 /**

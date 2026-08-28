@@ -16,6 +16,7 @@ import { Box } from './Box';
 import { Text as TextComponent } from './Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
+import { FontSizes } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
 
 export type InputSize = 'sm' | 'md' | 'lg';
@@ -67,7 +68,7 @@ const sizeConfig: Record<InputSize, {
     height: 40,
     paddingX: 'sm',
     paddingY: 'xxxs',
-    fontSize: 13,
+    fontSize: FontSizes.base,
     borderRadius: 'sm',
     iconSize: 18,
   },
@@ -75,7 +76,7 @@ const sizeConfig: Record<InputSize, {
     height: 48,
     paddingX: 'md',
     paddingY: 'xxxs',
-    fontSize: 14,
+    fontSize: FontSizes.base,
     borderRadius: 'md',
     iconSize: 20,
   },
@@ -83,7 +84,7 @@ const sizeConfig: Record<InputSize, {
     height: 56,
     paddingX: 'lg',
     paddingY: 'xs',
-    fontSize: 16,
+    fontSize: FontSizes.lg,
     borderRadius: 'lg',
     iconSize: 22,
   },

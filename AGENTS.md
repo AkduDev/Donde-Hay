@@ -402,6 +402,26 @@ npx expo start --dev-client
 - **`lineHeight` como ratio (texto aplastado en Android)**: React Native exige `lineHeight` absoluto en dp. Todos los `TypographyVariants` ahora calculan `lineHeight` absoluto con `getLineHeight(ratio, fontSize)` en `src/theme/typography.ts` (los ratios `LineHeights` quedan como referencia)
 - **`npm test` y `npm run lint` no corren**: `jest` no está en devDeps y ESLint 10.x requiere `eslint.config.js` (solo existe `.eslintrc` legacy). `npx tsc --noEmit` es el check fiable
 - **TypeScript errors UI**: Errores de tipos en componentes UI pre-existentes (Card, Button, Input, Modal, Sheet, Tooltip, Spinner, Text). Requieren refactor de tipos
+- **`lineHeight` no se recalculaba al sobreescribir `fontSize`** (`Text.tsx`): Badge/Avatar/Button/Input pasaban `fontSize` por prop (10-28) con el `lineHeight` del variant fijo → texto recortado. Ahora `Text` deriva el ratio del variant y aplica `getLineHeight(ratio, newSize)`; `lineHeight` prop explícito tiene prioridad
+- **`OpacityTokens`** (`pressed: 0.7`, `disabled: 0.6`, en `colors.ts`) reemplaza el patrón `pressed ? 0.7 : 1` suelto y el `0.6` de disabled (SortSelector, preferences, profile, Home, Button)
+
+## UI/UX Hardening (plan 7 fases, sesión 28-ago-2026)
+
+Plan aprobado para endurecer la UI. Reglas: sin funcionalidades nuevas hasta terminar; sin cambiar servicios/API; sin librerías UI nuevas; sin cambiar identidad visual.
+
+| Fase | Estado |
+|------|--------|
+| 1 — Tipografía | ✅ Completa |
+| 2 — Design System (dark mode centralizado, tokens) | 🔜 Pendiente |
+| 3 — Navegación (5 tabs, Mapa fuera del tab bar) | 🔜 Pendiente |
+| 4 — Home (búsqueda protagonista) | 🔜 Pendiente |
+| 5 — Search/Results (ProductCard agrupado) | 🔜 Pendiente |
+| 6 — Product Detail (comparar ofertas) | 🔜 Pendiente |
+| 7 — Calidad (mocks DEV, Skeleton, ESLint+Jest) | 🔜 Pendiente |
+
+Decisiones aprobadas: dark mode se resuelve **desde el store** en los UI primitives (default `mode = useThemeStore().resolvedMode`); Mapa queda **fuera** del tab bar como contexto secundario (results + product detail); regla semántica **Accent = encontrado/disponible, Success = positivo general**; **arreglar ESLint flat + jest-expo** en Fase 7.
+
+Detalles de cada fase completada en `CHANGELOG.md` bajo `[2.0.0-canary]`.
 
 ## Soluciones pendientes (Cuba)
 

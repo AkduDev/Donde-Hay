@@ -22,6 +22,7 @@ import { useCategories } from '@/hooks/use-categories';
 import { useFavorites, useAddFavorite, useRemoveFavorite } from '@/hooks/use-favorites';
 import { useTrendingSearches } from '@/hooks/use-search';
 import type { ProductWithOffers } from '@/types';
+import { OpacityTokens } from '@/theme/colors';
 
 const LOGO = require('../../../assets/images/DondeHay3.jpeg');
 
@@ -213,7 +214,7 @@ export default function HomeScreen() {
                 <Pressable
                   key={category.id}
                   onPress={() => handleCategoryPress(category.slug)}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                  style={({ pressed }) => ({ opacity: pressed ? OpacityTokens.pressed : 1 })}
                   accessibilityLabel={`Categoría ${category.name}`}
                   accessibilityRole="button"
                 >
