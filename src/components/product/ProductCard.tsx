@@ -14,8 +14,19 @@ import { Card } from '@/components/ui/Card';
 import { SourceChip } from '@/components/product/SourceChip';
 import { BorderRadius } from '@/theme/radius';
 import { getColors } from '@/theme/colors';
+import { getSourceIcon } from '@/utils/format';
 import { useThemeStore } from '@/store/themeStore';
 import type { ProductWithOffers } from '@/types';
+
+const SOURCE_NAMES: Record<string, string> = {
+  revolico: 'Revolico',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  telegram: 'Telegram',
+  '1cuba': '1Cuba',
+  choleslibres: 'CholesLibres',
+  comunidad: 'Comunidad',
+};
 
 export interface ProductCardProps {
   product: ProductWithOffers;
@@ -24,6 +35,7 @@ export interface ProductCardProps {
   isFavorite?: boolean;
   layout?: 'list' | 'grid';
   showOffers?: boolean;
+  showFavorite?: boolean;
   maxOffersToShow?: number;
   style?: StyleProp<ViewStyle>;
   testID?: string;
@@ -31,7 +43,7 @@ export interface ProductCardProps {
 
 function getAvailabilityStatus(product: ProductWithOffers): {
   label: string;
-  variant: 'success' | 'warning' | 'default';
+  variant: 'accent' | 'warning' | 'default';
   icon: string;
 } {
   if (!product.offers || product.offers.length === 0) {
@@ -46,7 +58,7 @@ function getAvailabilityStatus(product: ProductWithOffers): {
     (Date.now() - new Date(lastOffer.postedAt).getTime()) / (1000 * 60 * 60);
 
   if (hoursSincePosted <= 24) {
-    return { label: 'Reciente', variant: 'success', icon: '🟢' };
+    return { label: 'Reciente', variant: 'accent', icon: '🟢' };
   } else if (hoursSincePosted <= 24 * 7) {
     return { label: 'Esta semana', variant: 'warning', icon: '🟡' };
   } else {
@@ -104,6 +116,7 @@ const ProductCard = React.memo(({
   isFavorite = false,
   layout = 'list',
   showOffers = true,
+  showFavorite = true,
   maxOffersToShow = 3,
   style,
   testID,
@@ -227,8 +240,11 @@ const ProductCard = React.memo(({
               <Text variant="bodySmall">
                 {index === 0 ? '🏆' : '•'}
               </Text>
+              <Text variant="bodyMedium">
+                {getSourceIcon(offer.sourceId)}
+              </Text>
               <Text variant="labelMedium" color="textSecondary">
-                {offer.sourceId}
+                {SOURCE_NAMES[offer.sourceId] ?? offer.sourceId}
               </Text>
             </Box>
             <Text
@@ -272,7 +288,7 @@ const ProductCard = React.memo(({
             <Box position="relative" mb="xxs" mode={resolvedMode}>
               <ProductImage />
               <Box position="absolute" top={4} right={4} mode={resolvedMode}>
-                <FavoriteButton />
+                {showFavorite && <FavoriteButton />}
               </Box>
               <Box position="absolute" top={4} left={4} mode={resolvedMode}>
                 <SourceBadges />
@@ -329,7 +345,7 @@ const ProductCard = React.memo(({
                     {product.brand} {product.model}
                   </Text>
                 </Box>
-                <FavoriteButton />
+                {showFavorite && <FavoriteButton />}
               </Box>
 
               {minPriceOffer && (

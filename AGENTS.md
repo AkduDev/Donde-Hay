@@ -415,7 +415,7 @@ Plan aprobado para endurecer la UI. Reglas: sin funcionalidades nuevas hasta ter
 | 2 — Design System (dark mode centralizado, tokens) | ✅ Completa |
 | 3 — Navegación (5 tabs, Mapa fuera del tab bar) | ✅ Completa |
 | 4 — Home (búsqueda protagonista) | ✅ Completa |
-| 5 — Search/Results (ProductCard agrupado) | 🔜 Pendiente |
+| 5 — Search/Results (ProductCard agrupado) | ✅ Completa |
 | 6 — Product Detail (comparar ofertas) | 🔜 Pendiente |
 | 7 — Calidad (mocks DEV, Skeleton, ESLint+Jest) | 🔜 Pendiente |
 

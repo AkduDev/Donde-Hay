@@ -5,20 +5,18 @@
 
 import React, { useState } from 'react';
 import { ScrollView, Pressable } from 'react-native';
-import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Spinner } from '@/components/ui/Spinner';
 import { SearchBar, SearchSuggestion } from '@/components/search/SearchBar';
-import { SourceChip } from '@/components/product/SourceChip';
+import { ProductCard } from '@/components/product/ProductCard';
 import { useThemeStore } from '@/store/themeStore';
-import { getColors } from '@/theme/colors';
 import { useCategories } from '@/hooks/use-categories';
 import { useSavedSearches } from '@/hooks/use-favorites';
 import { useMultiSourceSearch } from '@/hooks/use-search';
-import type { SourceFilter } from '@/types';
+import type { ProductWithOffers, SourceFilter } from '@/types';
 
 const TRENDING_SEARCHES: SearchSuggestion[] = [
   { id: '1', text: 'iPhone 13', type: 'trending', icon: '🔥' },
@@ -47,7 +45,6 @@ const SOURCE_FILTERS: { key: SourceFilter; label: string; icon: string }[] = [
 export default function SearchTabScreen() {
   const router = useRouter();
   const { resolvedMode } = useThemeStore();
-  const colors = getColors(resolvedMode);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
@@ -99,7 +96,7 @@ export default function SearchTabScreen() {
     setSourceFilter(filter);
   };
 
-  const handleProductPress = (product: { id: string }) => {
+  const handleProductPress = (product: ProductWithOffers) => {
     router.push({ pathname: '/product/[id]', params: { id: product.id } });
   };
 
@@ -233,73 +230,13 @@ export default function SearchTabScreen() {
                 </Box>
                 <Box gap="sm">
                   {searchResults.map((product) => (
-                    <Pressable
+                    <ProductCard
                       key={product.id}
-                      onPress={() => handleProductPress(product)}
-                      accessibilityLabel={`${product.canonicalName}`}
-                      accessibilityRole="button"
-                    >
-                      <Box
-                        p="md"
-                        bg="surface"
-                        borderRadius="md"
-                        mode={resolvedMode}
-                        style={{ borderWidth: 1, borderColor: colors.border }}
-                      >
-                        <Box flexDirection="row" gap="md">
-                          <Box
-                            width={80}
-                            height={80}
-                            borderRadius="md"
-                            overflow="hidden"
-                            bg="surfaceVariant"
-                            mode={resolvedMode}
-                          >
-                            {product.imageUrls?.[0] ? (
-                              <Image
-                                source={{ uri: product.imageUrls[0] }}
-                                style={{ width: '100%', height: '100%' }}
-                                contentFit="cover"
-                              />
-                            ) : (
-                              <Box flex={1} alignItems="center" justifyContent="center" mode={resolvedMode}>
-                                <Text variant="bodySmall" color="textTertiary">📦</Text>
-                              </Box>
-                            )}
-                          </Box>
-                          <Box flex={1} mode={resolvedMode}>
-                            <Text
-                              variant="titleSmall"
-                              color="text"
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
-                            >
-                              {product.canonicalName}
-                            </Text>
-                            <Text variant="bodySmall" color="textSecondary">
-                              {product.brand} {product.model}
-                            </Text>
-                              {product.minPrice != null && (
-                                <Box mt="xxs">
-                                  <Text variant="titleMedium" color="success" fontWeight="bold">
-                                    ${product.minPrice.toLocaleString('es-CU')}
-                                  </Text>
-                                </Box>
-                              )}
-                            <Box flexDirection="row" flexWrap="wrap" gap="xxxs" mt="xxs">
-                              {Object.entries(sourceCounts).map(([sourceId, count]) => (
-                                <SourceChip
-                                  key={sourceId}
-                                  sourceId={sourceId}
-                                  count={count}
-                                  size="xs"
-                                />
-                              ))}
-                            </Box>
-                          </Box>
-                        </Box>
-                      </Box>
-                    </Pressable>
+                      product={product}
+                      onPress={handleProductPress}
+                      layout="list"
+                      showFavorite={false}
+                    />
                   ))}
                 </Box>
               </Box>

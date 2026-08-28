@@ -21,6 +21,7 @@ export type BadgeVariant =
   | 'warning'
   | 'error'
   | 'info'
+  | 'accent'
   | 'outline'
   | 'ghost';
 
@@ -50,6 +51,7 @@ const variantConfig: Record<BadgeVariant, {
   warning: { bg: 'warningContainer', text: 'warning', border: 'transparent' },
   error: { bg: 'errorContainer', text: 'error', border: 'transparent' },
   info: { bg: 'primaryContainer', text: 'primary', border: 'transparent' },
+  accent: { bg: 'accentContainer', text: 'accent', border: 'transparent' },
   outline: { bg: 'transparent', text: 'text', border: 'border' },
   ghost: { bg: 'transparent', text: 'textSecondary', border: 'transparent' },
 };

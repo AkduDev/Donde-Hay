@@ -44,6 +44,15 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - Eliminado `Button` (import sin uso) de `(tabs)/index.tsx`.
 - `npx tsc --noEmit` ✅.
 
+### FASE 5 — Search/Results: ProductCard agrupado (completada)
+- **Nueva variante `accent` en `Badge`** (`accentContainer`/`accent`) para la regla semántica "Accent = encontrado/disponible".
+- **`ProductCard` usa accent para disponibilidad**: el estado "Reciente" (encontrado/disponible) ahora renderiza con la variante `accent` (antes `success`); "Esta semana" = warning, "Antiguo" = default.
+- **Lista de ofertas agrupadas con identidad de fuente**: en lugar del `sourceId` crudo, cada oferta muestra su icono (`getSourceIcon`) + nombre ("Revolico", "1Cuba", "CholesLibres"...).
+- **Nuevo prop `showFavorite`** en `ProductCard` (default `true`, sin cambio de comportamiento en callers existentes) para ocultar el corazón cuando el contexto no lo maneja.
+- **Pestaña Search unificada al `ProductCard` agrupado**: se eliminó el card duplicado hecho a mano (imagen + minPrice + chips), que no mostraba agrupación de ofertas ni disponibilidad. Los resultados de `useMultiSourceSearch` ahora usan el `ProductCard` agrupado (`layout="list"`, `showFavorite={false}`) con min-precio, "en N ofertas", badges de disponibilidad accent y nombre real de fuente.
+- Limpieza: imports sin uso eliminados en `(tabs)/search.tsx` (`Image`, `SourceChip`, `getColors`) y en `ProductCard` (agrega `getSourceIcon`).
+- `npx tsc --noEmit` ✅.
+
 ## [1.1.0] - 2026-08-28
 
 ### Arreglado
