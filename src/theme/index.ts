@@ -5,7 +5,7 @@
 
 // Colors
 export * from './colors';
-export { Colors, type ColorMode, type ColorPalette, getColors, SemanticColors } from './colors';
+export { Colors, type ColorMode, type ColorPalette, getColors } from './colors';
 
 // Typography
 export * from './typography';

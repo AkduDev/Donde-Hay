@@ -16,6 +16,19 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - **Eliminado** el token muerto `LineHeights.loose`.
 - `npx tsc --noEmit` ✅. Verificación visual en Android (light/dark) pendiente de la FASE 2.
 
+### FASE 2 — Design System: dark mode centralizado + tokens (completada)
+- **Dark mode resuelto desde el store en todos los UI primitives**: `Text`, `Box`, `Badge`, `Avatar`, `Button`, `Input`, `Divider`, `Spinner`, `Card` (+ `CardHeader`/`CardContent`/`CardFooter`), `Modal`, `Sheet`, `Tooltip` y `Toast` ya no asumen `mode = 'light'`. Cada primitivo lee `useThemeStore().resolvedMode` y lo usa como default cuando no llega la prop `mode` (decisión aprobada: `resolved = mode ?? resolvedMode`). Los callers que pasaban `mode={resolvedMode}` explícito se conservan y siguen funcionando igual.
+- **`themeStore.initialize()` escucha cambios del sistema**: `Appearance.addChangeListener` (único, con guard `appearanceSubscription`) para reaccionar a light/dark del SO cuando `mode === 'system'`.
+- **zIndex 9999 → tokens `ZIndex`**: `Toast` (`ZIndex.toast`), `Tooltip` (`ZIndex.tooltip`) y overlay de `Spinner` (`ZIndex.loading`).
+- **Eliminado `SemanticColors`** (dead code ~45 líneas con referencias `{token}` que nunca se resolvieron): se exportaba en `colors.ts` y `theme/index.ts`.
+- **Regla semántica aprobada "Accent = encontrado/disponible"**: `statusAvailable` ahora usa el verde accent (`#00C896` light / `#00D9A5` dark) en vez de `#22C55E`; `statusOld` y `statusUnknown` se mantienen.
+- **`Box.bg` acepta token de paleta o valor crudo** (`isPaletteColor`), reemplazando la prop `bgColor` eliminada.
+- **`Toast` reescrito con tokens**: config `success/error/warning/info` mapea a `success/error/warning/primary` con fg `on*`, zIndex token y altura safe-area superior.
+- **Bordes hardcoded `#333/#e5e7eb` → `colors.divider`** en `SavedSellerCard`, `SavedSearchCard`, `(tabs)/saved.tsx`, `profile/preferences.tsx` y `profile/edit.tsx`.
+- **`#2563EB` duplicados → `colors.primary`**: underline del tab activo y `RefreshControl` en `(tabs)/saved.tsx`; `Switch.trackColor` en `profile/preferences.tsx`.
+- **Limpieza de `Spacing`**: eliminado `Spacing.radius` (los radios viven en `BorderRadius` de `radius.ts`) y movido `import { Platform }` al tope de `spacing.ts`.
+- `npx tsc --noEmit` ✅. Verificación visual Android (light/dark) pendiente.
+
 ## [1.1.0] - 2026-08-28
 
 ### Arreglado

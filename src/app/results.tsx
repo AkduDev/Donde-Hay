@@ -16,6 +16,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { ProductCard } from '@/components/product/ProductCard';
 import { useThemeStore } from '@/store/themeStore';
 import { useSearch } from '@/hooks/use-search';
+import { getColors } from '@/theme/colors';
 import type { ProductWithOffers, SearchQuery } from '@/types';
 
 const SOURCES = [
@@ -249,8 +250,4 @@ export default function SearchResultsScreen() {
       </Box>
     </SafeAreaView>
   );
-}
-
-function getColors(mode: string) {
-  return { divider: mode === 'dark' ? '#333' : '#e5e7eb' };
 }

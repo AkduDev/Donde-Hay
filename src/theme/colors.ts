@@ -60,7 +60,7 @@ export const Colors = {
     onErrorContainer: '#7F1D1D',
 
     // Status specific (para disponibilidad de productos)
-    statusAvailable: '#22C55E',      // 🟢 Publicación reciente
+    statusAvailable: '#00C896',      // 🟢 Encontrado/disponible (semántica accent)
     statusOld: '#F59E0B',            // 🟡 Publicación antigua
     statusUnknown: '#94A3B8',        // ⚪ Sin información reciente
 
@@ -139,7 +139,7 @@ export const Colors = {
     onErrorContainer: '#FEE2E2',
 
     // Status specific
-    statusAvailable: '#22C55E',
+    statusAvailable: '#00D9A5',
     statusOld: '#F59E0B',
     statusUnknown: '#64748B',
 
@@ -175,50 +175,4 @@ export function getColors(mode: ColorMode): ColorPalette {
 export const OpacityTokens = {
   pressed: 0.7,   // feedback al presionar
   disabled: 0.6,  // elementos deshabilitados
-} as const;
-
-// Tokens semánticos para uso directo en componentes
-export const SemanticColors = {
-  // Backgrounds
-  bg: {
-    primary: '{background}',
-    secondary: '{surface}',
-    tertiary: '{surfaceVariant}',
-    inverse: '{text}',
-  },
-  // Text
-  text: {
-    primary: '{text}',
-    secondary: '{textSecondary}',
-    tertiary: '{textTertiary}',
-    inverse: '{textInverse}',
-    onPrimary: '{onPrimary}',
-    onAccent: '{onAccent}',
-  },
-  // Borders
-  border: {
-    default: '{border}',
-    strong: '{borderStrong}',
-    focus: '{primary}',
-    error: '{error}',
-  },
-  // Interactive
-  interactive: {
-    primary: '{primary}',
-    primaryHover: '{primaryDark}',
-    primaryPressed: '{primaryDark}',
-    secondary: '{surfaceVariant}',
-    secondaryHover: '{surfaceContainerHigh}',
-    accent: '{accent}',
-    accentHover: '{accentDark}',
-  },
-  // Status
-  status: {
-    success: '{success}',
-    warning: '{warning}',
-    error: '{error}',
-    available: '{statusAvailable}',
-    old: '{statusOld}',
-    unknown: '{statusUnknown}',
-  },
 } as const;

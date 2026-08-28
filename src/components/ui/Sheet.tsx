@@ -20,6 +20,7 @@ import { Spacing } from '@/theme/spacing';
 import { BorderRadius } from '@/theme/radius';
 import { Shadows, getShadow } from '@/theme/shadows';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -74,12 +75,14 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
       style,
       contentStyle,
       headerStyle,
-      mode = 'light',
+      mode,
       testID,
     }: SheetProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
     const [currentSnap, setCurrentSnap] = useState(0);
 
@@ -191,7 +194,7 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
       backgroundColor: colors.surface,
       borderTopLeftRadius: BorderRadius['2xl'],
       borderTopRightRadius: BorderRadius['2xl'],
-      ...getShadow('xl', mode),
+      ...getShadow('xl', resolved),
       elevation: 16,
       overflow: 'hidden',
       maxHeight: snapValues[snapValues.length - 1],
@@ -218,12 +221,12 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
           <Box
             style={[containerStyle, style]}
             testID={`${testID}-container`}
-            mode={mode}
+            mode={resolved}
             {...panResponder.panHandlers}
           >
             {handleIndicator && (
-              <Box alignItems="center" testID={`${testID}-handle`} mode={mode}>
-                <Box style={handleStyle} mode={mode} />
+              <Box alignItems="center" testID={`${testID}-handle`} mode={resolved}>
+                <Box style={handleStyle} mode={resolved} />
               </Box>
             )}
 
@@ -233,16 +236,16 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
         pb="sm"
         style={[{ borderBottomWidth: 1, borderColor: colors.divider }, headerStyle as any]}
         testID={`${testID}-header`}
-        mode={mode}
+        mode={resolved}
       >
                 {title && (
-                  <Text variant="titleLarge" color="text" mode={mode} testID={`${testID}-title`}>
+                  <Text variant="titleLarge" color="text" mode={resolved} testID={`${testID}-title`}>
                     {title}
                   </Text>
                 )}
                 {subtitle && (
                   <Box mt="xxxs">
-                    <Text variant="bodyMedium" color="textSecondary" mode={mode} testID={`${testID}-subtitle`}>
+                    <Text variant="bodyMedium" color="textSecondary" mode={resolved} testID={`${testID}-subtitle`}>
                       {subtitle}
                     </Text>
                   </Box>
@@ -256,7 +259,7 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
               pb="md"
               style={contentStyle}
               testID={`${testID}-content`}
-              mode={mode}
+              mode={resolved}
             >
               {children}
             </Box>

@@ -9,6 +9,7 @@ import { Box } from './Box';
 import { Text as TextComponent } from './Text';
 import { Spacing } from '@/theme/spacing';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 export type DividerOrientation = 'horizontal' | 'vertical';
 export type DividerVariant = 'solid' | 'dashed' | 'dotted';
@@ -35,14 +36,16 @@ const Divider = forwardRef<View, DividerProps>(
       color,
       label,
       labelPosition = 'center',
-      mode = 'light',
+      mode,
       testID,
       style,
       labelStyle,
     }: DividerProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const dividerColor = color ? colors[color] : colors.divider;
 
     const containerStyle: ViewStyle = {
@@ -68,9 +71,9 @@ const Divider = forwardRef<View, DividerProps>(
           ref={ref}
           style={[containerStyle, style]}
           testID={testID}
-          mode={mode}
+          mode={resolved}
         >
-          <Box style={lineStyle} mode={mode} />
+          <Box style={lineStyle} mode={resolved} />
         </Box>
       );
     }
@@ -80,10 +83,10 @@ const Divider = forwardRef<View, DividerProps>(
         ref={ref}
         style={[containerStyle, style]}
         testID={testID}
-        mode={mode}
+        mode={resolved}
       >
         {labelPosition === 'start' && (
-          <TextComponent variant="labelSmall" color="textSecondary" mode={mode} style={labelStyle}>
+          <TextComponent variant="labelSmall" color="textSecondary" mode={resolved} style={labelStyle}>
             {label}
           </TextComponent>
         )}
@@ -92,15 +95,15 @@ const Divider = forwardRef<View, DividerProps>(
             lineStyle,
             labelPosition === 'center' && { flex: 1 },
           ]}
-          mode={mode}
+          mode={resolved}
         />
         {labelPosition === 'center' && (
-          <TextComponent variant="labelSmall" color="textSecondary" mode={mode} style={labelStyle}>
+          <TextComponent variant="labelSmall" color="textSecondary" mode={resolved} style={labelStyle}>
             {label}
           </TextComponent>
         )}
         {labelPosition === 'end' && (
-          <TextComponent variant="labelSmall" color="textSecondary" mode={mode} style={labelStyle}>
+          <TextComponent variant="labelSmall" color="textSecondary" mode={resolved} style={labelStyle}>
             {label}
           </TextComponent>
         )}

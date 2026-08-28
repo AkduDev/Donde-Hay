@@ -11,6 +11,7 @@ import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
 import { FontSizes } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 export type BadgeVariant =
   | 'default'
@@ -78,12 +79,14 @@ const Badge = forwardRef<View, BadgeProps>(
       dotColor,
       style,
       textStyle,
-      mode = 'light',
+      mode,
       testID,
     }: BadgeProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const vConfig = variantConfig[variant];
     const sConfig = sizeConfig[size];
 
@@ -104,16 +107,16 @@ const Badge = forwardRef<View, BadgeProps>(
         ref={ref}
         style={[badgeStyle, style]}
         testID={testID}
-        mode={mode}
+        mode={resolved}
       >
         {dot && (
           <Box
             width={sConfig.dotSize}
             height={sConfig.dotSize}
             borderRadius="full"
-            bgColor={dotColor || colors[vConfig.text]}
+            bg={dotColor || colors[vConfig.text]}
             testID={`${testID}-dot`}
-            mode={mode}
+            mode={resolved}
           />
         )}
         <TextComponent
@@ -123,7 +126,7 @@ const Badge = forwardRef<View, BadgeProps>(
             textStyle,
           ]}
           color={vConfig.text}
-          mode={mode}
+          mode={resolved}
           testID={`${testID}-text`}
         >
           {children}

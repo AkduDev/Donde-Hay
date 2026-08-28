@@ -8,6 +8,7 @@ import { TouchableOpacity, ViewStyle, StyleProp } from 'react-native';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { useThemeStore } from '@/store/themeStore';
+import { getColors } from '@/theme/colors';
 import type { SavedSearch } from '@/types';
 
 export interface SavedSearchCardProps {
@@ -67,7 +68,7 @@ export const SavedSearchCard = React.memo(function SavedSearchCard({
         mode={resolvedMode}
         style={{
           borderWidth: 1,
-          borderColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb',
+          borderColor: getColors(resolvedMode).divider,
         }}
       >
         {/* Header */}

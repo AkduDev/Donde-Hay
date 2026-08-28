@@ -13,12 +13,14 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
 import { useThemeStore } from '@/store/themeStore';
+import { getColors } from '@/theme/colors';
 import { useAuthStore } from '@/store/authStore';
 import { supabase } from '@/lib/supabase';
 
 export default function ProfileEditScreen() {
   const router = useRouter();
   const { resolvedMode } = useThemeStore();
+  const colors = getColors(resolvedMode);
   const { user, updateUser } = useAuthStore();
 
   const [name, setName] = useState(user?.name || '');
@@ -82,7 +84,7 @@ export default function ProfileEditScreen() {
           px="md"
           py="sm"
           mode={resolvedMode}
-          style={{ borderBottomWidth: 1, borderBottomColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb' }}
+          style={{ borderBottomWidth: 1, borderBottomColor: colors.divider }}
         >
           <Button
             variant="ghost"

@@ -3,6 +3,8 @@
  * Sistema de espaciado basado en 4px (base unit)
  */
 
+import { Platform } from 'react-native';
+
 export const Space = {
   // Base unit: 4px
   0: 0,
@@ -78,21 +80,7 @@ export const Spacing = {
   // Navigation
   tabBarHeight: 56 + (Platform.OS === 'ios' ? 20 : 0), // Aproximado, se ajusta con safe area
   headerHeight: 56,
-
-  // Border radius (referencia, ver radius.ts)
-  radius: {
-    none: 0,
-    xs: 4,
-    sm: 6,
-    md: 8,
-    lg: 12,
-    xl: 16,
-    '2xl': 24,
-    full: 9999,
-  },
 } as const;
-
-import { Platform } from 'react-native';
 
 // Helpers para crear valores de spacing consistentes
 export const spacing = {

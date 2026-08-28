@@ -10,6 +10,7 @@ import { Text } from '@/components/ui/Text';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { useThemeStore } from '@/store/themeStore';
+import { getColors } from '@/theme/colors';
 import type { Seller } from '@/types';
 
 export interface SavedSellerCardProps {
@@ -99,7 +100,7 @@ export const SavedSellerCard = React.memo(function SavedSellerCard({
         mode={resolvedMode}
         style={{
           borderWidth: 1,
-          borderColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb',
+          borderColor: getColors(resolvedMode).divider,
         }}
       >
         {/* Header */}
@@ -147,7 +148,7 @@ export const SavedSellerCard = React.memo(function SavedSellerCard({
           <Box
             mt="md"
             pt="md"
-            style={{ borderTopWidth: 1, borderTopColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb' }}
+            style={{ borderTopWidth: 1, borderTopColor: getColors(resolvedMode).divider }}
           >
             <Text variant="bodySmall" color="textSecondary">
               {seller.phone && `📱 ${seller.phone}`}

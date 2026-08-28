@@ -18,6 +18,8 @@ import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
 import { Shadows, getShadow } from '@/theme/shadows';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { ZIndex } from '@/theme/z-index';
+import { useThemeStore } from '@/store/themeStore';
 
 export type TooltipPlacement =
   | 'top'
@@ -57,7 +59,7 @@ const Tooltip = forwardRef<View, TooltipProps>(
       offset = 8,
       delay = 200,
       closeDelay = 100,
-      mode = 'light',
+      mode,
       testID,
       style,
       contentStyle,
@@ -66,7 +68,9 @@ const Tooltip = forwardRef<View, TooltipProps>(
     }: TooltipProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const [visible, setVisible] = useState(false);
     const [triggerLayout, setTriggerLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
     const [tooltipLayout, setTooltipLayout] = useState<{ width: number; height: number } | null>(null);
@@ -212,7 +216,7 @@ const Tooltip = forwardRef<View, TooltipProps>(
       position: 'absolute',
       left: tooltipX,
       top: tooltipY,
-      zIndex: 9999,
+      zIndex: ZIndex.tooltip,
       maxWidth: 280,
     };
 
@@ -221,7 +225,7 @@ const Tooltip = forwardRef<View, TooltipProps>(
       paddingVertical: Spacing.xs,
       borderRadius: BorderRadius.md,
       backgroundColor: colors.text,
-      ...getShadow('md', mode),
+      ...getShadow('md', resolved),
       elevation: 8,
     };
 
@@ -272,21 +276,21 @@ const Tooltip = forwardRef<View, TooltipProps>(
           <Box
             style={[tooltipStyle, contentStyle]}
             testID={`${testID}-tooltip`}
-            mode={mode}
+            mode={resolved}
             onLayout={handleTooltipLayout}
           >
-            <Box style={contentContainerStyle} mode={mode}>
+            <Box style={contentContainerStyle} mode={resolved}>
               <TextComponent
                 variant="bodySmall"
                 color="textInverse"
                 style={textStyle}
-                mode={mode}
+                mode={resolved}
                 testID={`${testID}-content`}
               >
                 {content}
               </TextComponent>
             </Box>
-            {arrow && <Box style={arrowStyle} mode={mode} testID={`${testID}-arrow`} />}
+            {arrow && <Box style={arrowStyle} mode={resolved} testID={`${testID}-arrow`} />}
           </Box>
         )}
       </Pressable>

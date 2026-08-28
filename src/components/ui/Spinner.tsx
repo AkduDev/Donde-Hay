@@ -9,6 +9,8 @@ import { Box } from './Box';
 import { Text } from './Text';
 import { Spacing } from '@/theme/spacing';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { ZIndex } from '@/theme/z-index';
+import { useThemeStore } from '@/store/themeStore';
 
 export type SpinnerSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 export type SpinnerVariant = 'default' | 'primary' | 'accent' | 'white' | 'inverse';
@@ -53,7 +55,7 @@ const Spinner = forwardRef<View, SpinnerProps>(
       label,
       labelPosition = 'bottom',
       overlay = false,
-      mode = 'light',
+      mode,
       testID,
       style,
       containerStyle,
@@ -61,7 +63,9 @@ const Spinner = forwardRef<View, SpinnerProps>(
     }: SpinnerProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const sConfig = sizeConfig[size];
     const spinnerColor = colors[variantColors[variant]];
 
@@ -77,7 +81,7 @@ const Spinner = forwardRef<View, SpinnerProps>(
         right: 0,
         bottom: 0,
         backgroundColor: colors.overlay,
-        zIndex: 9999,
+        zIndex: ZIndex.loading,
       }),
     };
 
@@ -86,7 +90,7 @@ const Spinner = forwardRef<View, SpinnerProps>(
         ref={ref}
         style={[containerStyleComputed, containerStyle]}
         testID={testID}
-        mode={mode}
+        mode={resolved}
       >
         <ActivityIndicator
           size={sConfig.rnSize}
@@ -102,9 +106,9 @@ const Spinner = forwardRef<View, SpinnerProps>(
               gap: Spacing.xxxs,
             }}
             testID={`${testID}-label-container`}
-            mode={mode}
+            mode={resolved}
           >
-            <Text variant="bodySmall" color="textSecondary" mode={mode} testID={`${testID}-label`}>
+            <Text variant="bodySmall" color="textSecondary" mode={resolved} testID={`${testID}-label`}>
               {label}
             </Text>
           </Box>

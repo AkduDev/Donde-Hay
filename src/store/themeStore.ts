@@ -60,6 +60,9 @@ const secureStorage = {
 // STORE
 // ============================================
 
+// Suscripción única al cambio de esquema del sistema (se adjunta en initialize)
+let appearanceSubscription: { remove: () => void } | null = null;
+
 export const useThemeStore = create<ThemeStore>()(
   persist(
     (set, get) => ({
@@ -84,10 +87,24 @@ export const useThemeStore = create<ThemeStore>()(
       },
 
       initialize: () => {
-        const systemScheme = Appearance.getColorScheme();
-        const { mode } = get();
-        const resolved: 'light' | 'dark' = mode === 'system' ? (systemScheme as 'light' | 'dark' ?? 'light') : mode;
-        set({ resolvedMode: resolved, isLoading: false });
+        const resolve = () => {
+          const systemScheme = Appearance.getColorScheme();
+          const { mode } = get();
+          const resolved: 'light' | 'dark' = mode === 'system' ? (systemScheme as 'light' | 'dark' ?? 'light') : mode;
+          set({ resolvedMode: resolved, isLoading: false });
+        };
+
+        resolve();
+
+        // Reaccionar en runtime a cambios de tema del sistema
+        if (!appearanceSubscription) {
+          appearanceSubscription = Appearance.addChangeListener(({ colorScheme }) => {
+            if (get().mode === 'system') {
+              const resolved: 'light' | 'dark' = (colorScheme as 'light' | 'dark' ?? 'light');
+              set({ resolvedMode: resolved });
+            }
+          });
+        }
       },
     }),
     {

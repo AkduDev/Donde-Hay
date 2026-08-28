@@ -9,6 +9,7 @@ import { Spacing } from '@/theme/spacing';
 import { BorderRadius } from '@/theme/radius';
 import { Shadows, getShadow } from '@/theme/shadows';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 export interface BoxProps extends React.ComponentPropsWithoutRef<typeof View> {
   flex?: number;
@@ -45,8 +46,7 @@ export interface BoxProps extends React.ComponentPropsWithoutRef<typeof View> {
   width?: string | number;
   height?: string | number;
 
-  bg?: keyof ColorPalette;
-  bgColor?: string;
+  bg?: keyof ColorPalette | string;
   borderRadius?: keyof typeof BorderRadius;
   borderWidth?: number;
   borderColor?: string;
@@ -102,7 +102,6 @@ const Box = forwardRef<View, BoxProps>(
       width,
       height,
       bg,
-      bgColor,
       borderRadius,
       borderWidth,
       borderColor,
@@ -116,7 +115,7 @@ const Box = forwardRef<View, BoxProps>(
       right,
       bottom,
       left,
-      mode = 'light',
+      mode,
       children,
       style,
       testID,
@@ -124,7 +123,12 @@ const Box = forwardRef<View, BoxProps>(
     }: BoxProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
+
+    // bg acepta un token de paleta o un valor css/hex directo
+    const isPaletteColor = (key: string): key is keyof ColorPalette => key in colors;
 
     const computedStyle: ViewStyle = {
       flex,
@@ -156,7 +160,7 @@ const Box = forwardRef<View, BoxProps>(
       minHeight: minH as ViewStyle['minHeight'],
       maxWidth: maxW as ViewStyle['maxWidth'],
       maxHeight: maxH as ViewStyle['maxHeight'],
-      backgroundColor: bg ? colors[bg] : bgColor,
+      backgroundColor: bg ? (isPaletteColor(bg) ? colors[bg] : bg) : undefined,
       borderRadius: borderRadius ? (BorderRadius[borderRadius] as number) : undefined,
       borderWidth,
       borderColor,
@@ -168,8 +172,8 @@ const Box = forwardRef<View, BoxProps>(
       bottom,
       left,
       zIndex,
-      ...(shadow ? getShadow(shadow, mode) : {}),
-      elevation: elevation ?? (shadow ? Shadows[mode][shadow].elevation : undefined),
+      ...(shadow ? getShadow(shadow, resolved) : {}),
+      elevation: elevation ?? (shadow ? Shadows[resolved][shadow].elevation : undefined),
     };
 
     Object.keys(computedStyle).forEach(

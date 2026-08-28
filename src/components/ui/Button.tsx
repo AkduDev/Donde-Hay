@@ -20,6 +20,7 @@ import { Spacing } from '@/theme/spacing';
 import { Shadows, getShadow } from '@/theme/shadows';
 import { FontSizes } from '@/theme/typography';
 import { ColorPalette, getColors, OpacityTokens } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 export type ButtonVariant =
   | 'primary'
@@ -204,7 +205,7 @@ const Button = forwardRef<View, ButtonProps>(
       style,
       textStyle,
       containerStyle,
-      mode = 'light',
+      mode,
       testID,
       accessibilityLabel,
       accessibilityHint,
@@ -216,7 +217,9 @@ const Button = forwardRef<View, ButtonProps>(
     }: ButtonProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const vConfig = variantConfig[variant];
     const sConfig = sizeConfig[size];
     const isDisabled = disabled || loading;
@@ -268,11 +271,11 @@ const Button = forwardRef<View, ButtonProps>(
       width: fullWidth ? '100%' : undefined,
       opacity: isDisabled ? OpacityTokens.disabled : 1,
       ...((variant === 'primary' || variant === 'danger' || variant === 'success' || variant === 'accent') && {
-        ...getShadow('sm', mode),
+        ...getShadow('sm', resolved),
         elevation: 2,
       }),
       ...(pressed && (variant === 'primary' || variant === 'danger' || variant === 'success' || variant === 'accent') && {
-        ...getShadow('xs', mode),
+        ...getShadow('xs', resolved),
         elevation: 1,
       }),
     };
@@ -292,7 +295,7 @@ const Button = forwardRef<View, ButtonProps>(
           color={getTextColor()}
           testID={`${testID}-loader`}
         />
-        <TextComponent variant="labelMedium" color={vConfig.textDisabled} mode={mode}>
+        <TextComponent variant="labelMedium" color={vConfig.textDisabled} mode={resolved}>
           {loadingText}
         </TextComponent>
       </>

@@ -18,6 +18,7 @@ import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
 import { FontSizes } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 export type InputSize = 'sm' | 'md' | 'lg';
 
@@ -109,7 +110,7 @@ const Input = forwardRef<TextInput, InputProps>(
       leftIcon,
       rightIcon,
       rightIconOnPress,
-      mode = 'light',
+      mode,
       testID,
       style,
       inputStyle,
@@ -129,7 +130,9 @@ const Input = forwardRef<TextInput, InputProps>(
     }: InputProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const sConfig = sizeConfig[size];
     const inputId = useId();
     const [focused, setFocused] = useState(false);
@@ -205,7 +208,7 @@ const Input = forwardRef<TextInput, InputProps>(
         testID={testID ? `${testID}-container` : undefined}
         style={containerStyle}
         gap="xs"
-        mode={mode}
+        mode={resolved}
       >
         {label && (
           <TextComponent
@@ -213,21 +216,21 @@ const Input = forwardRef<TextInput, InputProps>(
             color={hasError ? 'error' : focused ? 'primary' : 'textSecondary'}
             style={labelStyle}
             testID={testID ? `${testID}-label` : undefined}
-            mode={mode}
+            mode={resolved}
           >
-            {label} {required && <TextComponent color="error" mode={mode}>*</TextComponent>}
+            {label} {required && <TextComponent color="error" mode={resolved}>*</TextComponent>}
           </TextComponent>
         )}
 
         <Box
           style={inputContainerStyle}
           testID={testID ? `${testID}-input-wrapper` : undefined}
-          mode={mode}
+          mode={resolved}
         >
           {leftIcon && (
             <Box
               testID={testID ? `${testID}-left-icon` : undefined}
-              mode={mode}
+              mode={resolved}
             >
               {leftIcon}
             </Box>
@@ -268,7 +271,7 @@ const Input = forwardRef<TextInput, InputProps>(
               onPress={handleRightIconPress}
               testID={testID ? `${testID}-right-icon` : undefined}
             >
-              <Box mode={mode}>
+              <Box mode={resolved}>
                 {rightIcon}
               </Box>
             </Pressable>
@@ -281,7 +284,7 @@ const Input = forwardRef<TextInput, InputProps>(
             color={hasError ? 'error' : 'textSecondary'}
             style={hasError ? errorStyle : helperStyle}
             testID={testID ? `${testID}-${hasError ? 'error' : 'helper'}` : undefined}
-            mode={mode}
+            mode={resolved}
           >
             {hasError ? errorText : helperText}
           </TextComponent>

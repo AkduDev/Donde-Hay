@@ -7,6 +7,7 @@ import React, { forwardRef } from 'react';
 import { Text, TextStyle, StyleProp } from 'react-native';
 import { TypographyVariants, TypographyVariant, getLineHeight } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 export interface TextProps extends React.ComponentPropsWithoutRef<typeof Text> {
   // Variant del design system
@@ -46,7 +47,7 @@ const TextComponent = forwardRef<Text, TextProps>(
       variant = 'bodyMedium',
       color,
       mode,
-      colorMode = 'light',
+      colorMode,
       fontSize,
       fontWeight,
       lineHeight,
@@ -66,7 +67,9 @@ const TextComponent = forwardRef<Text, TextProps>(
     }: TextProps,
     ref
   ) => {
-    const resolvedColorMode = mode ?? colorMode;
+    const { resolvedMode } = useThemeStore();
+    // Si no llega un modo explícito, se resuelve desde el store (follows dark mode global)
+    const resolvedColorMode = mode ?? colorMode ?? resolvedMode;
     const colors = getColors(resolvedColorMode);
     const variantStyle = TypographyVariants[variant];
 

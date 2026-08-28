@@ -12,6 +12,7 @@ import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
 import { FontSizes } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
@@ -52,14 +53,16 @@ const Avatar = forwardRef<View, AvatarProps>(
       shape = 'circle',
       status = null,
       statusPosition = 'bottom-right',
-      mode = 'light',
+      mode,
       testID,
       style,
       onPress,
     }: AvatarProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const sConfig = sizeConfig[size];
     const borderRadius = shape === 'circle' ? BorderRadius.full : BorderRadius.md;
 
@@ -127,13 +130,13 @@ const Avatar = forwardRef<View, AvatarProps>(
             justifyContent="center"
             alignItems="center"
             testID={`${testID}-initials`}
-            mode={mode}
+            mode={resolved}
           >
             <TextComponent
               variant="titleMedium"
               color="textInverse"
               style={{ fontSize: sConfig.fontSize }}
-              mode={mode}
+              mode={resolved}
             >
               {initials}
             </TextComponent>
@@ -154,7 +157,7 @@ const Avatar = forwardRef<View, AvatarProps>(
               },
             ]}
             testID={`${testID}-status`}
-            mode={mode}
+            mode={resolved}
           />
         )}
       </>
@@ -166,7 +169,7 @@ const Avatar = forwardRef<View, AvatarProps>(
           <Box
             position="relative"
             style={[{ ...avatarStyle }, style]}
-            mode={mode}
+            mode={resolved}
           >
             {content}
           </Box>
@@ -180,7 +183,7 @@ const Avatar = forwardRef<View, AvatarProps>(
         position="relative"
         style={[{ ...avatarStyle }, style]}
         testID={testID}
-        mode={mode}
+        mode={resolved}
       >
         {content}
       </Box>

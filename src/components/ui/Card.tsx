@@ -11,6 +11,7 @@ import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
 import { Shadows, getShadow, ShadowLevel } from '@/theme/shadows';
 import { ColorPalette, getColors } from '@/theme/colors';
+import { useThemeStore } from '@/store/themeStore';
 
 export type CardVariant = 'elevated' | 'outlined' | 'filled' | 'ghost';
 
@@ -53,17 +54,19 @@ const Card = forwardRef<View, CardProps>(
       padding = 'md',
       children,
       style,
-      mode = 'light',
+      mode,
       testID,
       onPress,
       ...rest
     }: CardProps,
     ref
   ) => {
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
     const containerStyle: ViewStyle = {
       borderRadius: BorderRadius.lg,
       padding: Spacing[padding] as number,
-      ...variantStyles[variant](mode),
+      ...variantStyles[variant](resolved),
     };
 
     if (onPress) {
@@ -85,7 +88,7 @@ const Card = forwardRef<View, CardProps>(
         ref={ref}
         style={[containerStyle, style]}
         testID={testID}
-        mode={mode}
+        mode={resolved}
       >
         {children}
       </Box>
@@ -105,31 +108,35 @@ export interface CardHeaderProps {
 }
 
 const CardHeader = forwardRef<View, CardHeaderProps>(
-  ({ title, subtitle, action, mode = 'light', testID }, ref) => (
-    <Box
-      ref={ref}
-      flexDirection="row"
-      justifyContent="space-between"
-      alignItems="flex-start"
-      gap="sm"
-      mode={mode}
-      testID={testID}
-    >
-      <Box flex={1} mode={mode}>
-        <Text variant="titleMedium" color="text" mode={mode} testID={`${testID}-title`}>
-          {title}
-        </Text>
-        {subtitle && (
-          <Box mt="xs">
-            <Text variant="bodySmall" color="textSecondary" mode={mode} testID={`${testID}-subtitle`}>
-              {subtitle}
-            </Text>
-          </Box>
-        )}
+  ({ title, subtitle, action, mode, testID }, ref) => {
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    return (
+      <Box
+        ref={ref}
+        flexDirection="row"
+        justifyContent="space-between"
+        alignItems="flex-start"
+        gap="sm"
+        mode={resolved}
+        testID={testID}
+      >
+        <Box flex={1} mode={resolved}>
+          <Text variant="titleMedium" color="text" mode={resolved} testID={`${testID}-title`}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Box mt="xs">
+              <Text variant="bodySmall" color="textSecondary" mode={resolved} testID={`${testID}-subtitle`}>
+                {subtitle}
+              </Text>
+            </Box>
+          )}
+        </Box>
+        {action && <Box mode={resolved}>{action}</Box>}
       </Box>
-      {action && <Box mode={mode}>{action}</Box>}
-    </Box>
-  )
+    );
+  }
 );
 
 CardHeader.displayName = 'CardHeader';
@@ -141,11 +148,11 @@ export interface CardContentProps {
 }
 
 const CardContent = forwardRef<View, CardContentProps>(
-  ({ children, mode = 'light', testID }, ref) => (
-    <Box ref={ref} mode={mode} testID={testID}>
-      {children}
-    </Box>
-  )
+  ({ children, mode, testID }, ref) => {
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    return <Box ref={ref} mode={resolved} testID={testID}>{children}</Box>;
+  }
 );
 
 CardContent.displayName = 'CardContent';
@@ -158,26 +165,30 @@ export interface CardFooterProps {
 }
 
 const CardFooter = forwardRef<View, CardFooterProps>(
-  ({ children, divided = true, mode = 'light', testID }, ref) => (
-    <Box
-      ref={ref}
-      flexDirection="row"
-      justifyContent="flex-end"
-      gap="sm"
-      mode={mode}
-      testID={testID}
-    >
-      {divided && (
-        <Box
-          width="100%"
-          py="sm"
-          mode={mode}
-          style={{ borderTopWidth: 1, borderColor: getColors(mode).divider }}
-        />
-      )}
-      {children}
-    </Box>
-  )
+  ({ children, divided = true, mode, testID }, ref) => {
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    return (
+      <Box
+        ref={ref}
+        flexDirection="row"
+        justifyContent="flex-end"
+        gap="sm"
+        mode={resolved}
+        testID={testID}
+      >
+        {divided && (
+          <Box
+            width="100%"
+            py="sm"
+            mode={resolved}
+            style={{ borderTopWidth: 1, borderColor: getColors(resolved).divider }}
+          />
+        )}
+        {children}
+      </Box>
+    );
+  }
 );
 
 CardFooter.displayName = 'CardFooter';

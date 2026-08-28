@@ -15,7 +15,7 @@ import { Divider } from '@/components/ui/Divider';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import { supabase } from '@/lib/supabase';
-import { OpacityTokens } from '@/theme/colors';
+import { getColors, OpacityTokens } from '@/theme/colors';
 
 type ThemeOption = 'light' | 'dark' | 'system';
 type CurrencyOption = 'USD' | 'CUP' | 'MLC';
@@ -35,6 +35,7 @@ const CURRENCY_OPTIONS: { value: CurrencyOption; label: string; symbol: string }
 export default function PreferencesScreen() {
   const router = useRouter();
   const { resolvedMode, setMode } = useThemeStore();
+  const colors = getColors(resolvedMode);
   const { user, updatePreferences } = useAuthStore();
 
   const [selectedTheme, setSelectedTheme] = useState<ThemeOption>(
@@ -97,7 +98,7 @@ export default function PreferencesScreen() {
           px="md"
           py="sm"
           mode={resolvedMode}
-          style={{ borderBottomWidth: 1, borderBottomColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb' }}
+          style={{ borderBottomWidth: 1, borderBottomColor: colors.divider }}
         >
           <Button
             variant="ghost"
@@ -256,7 +257,7 @@ export default function PreferencesScreen() {
                 <Switch
                   value={notificationsEnabled}
                   onValueChange={setNotificationsEnabled}
-                  trackColor={{ false: '#767577', true: '#2563EB' }}
+                  trackColor={{ false: colors.textTertiary, true: colors.primary }}
                   thumbColor="#ffffff"
                 />
               </Box>

@@ -412,14 +412,14 @@ Plan aprobado para endurecer la UI. Reglas: sin funcionalidades nuevas hasta ter
 | Fase | Estado |
 |------|--------|
 | 1 — Tipografía | ✅ Completa |
-| 2 — Design System (dark mode centralizado, tokens) | 🔜 Pendiente |
+| 2 — Design System (dark mode centralizado, tokens) | ✅ Completa |
 | 3 — Navegación (5 tabs, Mapa fuera del tab bar) | 🔜 Pendiente |
 | 4 — Home (búsqueda protagonista) | 🔜 Pendiente |
 | 5 — Search/Results (ProductCard agrupado) | 🔜 Pendiente |
 | 6 — Product Detail (comparar ofertas) | 🔜 Pendiente |
 | 7 — Calidad (mocks DEV, Skeleton, ESLint+Jest) | 🔜 Pendiente |
 
-Decisiones aprobadas: dark mode se resuelve **desde el store** en los UI primitives (default `mode = useThemeStore().resolvedMode`); Mapa queda **fuera** del tab bar como contexto secundario (results + product detail); regla semántica **Accent = encontrado/disponible, Success = positivo general**; **arreglar ESLint flat + jest-expo** en Fase 7.
+Decisiones aprobadas: dark mode se resuelve **desde el store** en los UI primitives (default `mode = useThemeStore().resolvedMode`); Mapa queda **fuera** del tab bar como contexto secundario (results + product detail); regla semántica **Accent = encontrado/disponible**, Success = positivo general; **arreglar ESLint flat + jest-expo** en Fase 7.
 
 Detalles de cada fase completada en `CHANGELOG.md` bajo `[2.0.0-canary]`.
 

@@ -10,17 +10,21 @@ import { Box } from './Box';
 import { Text } from './Text';
 import { useToastStore, type ToastType } from '@/store/toastStore';
 import { useThemeStore } from '@/store/themeStore';
+import { getColors, type ColorPalette } from '@/theme/colors';
+import { ZIndex } from '@/theme/z-index';
 
-const TOAST_CONFIG: Record<ToastType, { icon: string; bg: string; color: string }> = {
-  success: { icon: '✓', bg: '#16a34a', color: '#ffffff' },
-  error: { icon: '✕', bg: '#dc2626', color: '#ffffff' },
-  warning: { icon: '⚠', bg: '#d97706', color: '#ffffff' },
-  info: { icon: 'ℹ', bg: '#2563eb', color: '#ffffff' },
+const TOAST_CONFIG: Record<ToastType, { icon: string; bg: keyof ColorPalette; fg: keyof ColorPalette }> = {
+  success: { icon: '✓', bg: 'success', fg: 'onSuccess' },
+  error: { icon: '✕', bg: 'error', fg: 'onError' },
+  warning: { icon: '⚠', bg: 'warning', fg: 'onWarning' },
+  info: { icon: 'ℹ', bg: 'primary', fg: 'onPrimary' },
 };
 
 export function ToastContainer() {
   const { toasts, hideToast } = useToastStore();
+  const { resolvedMode } = useThemeStore();
   const insets = useSafeAreaInsets();
+  const colors = getColors(resolvedMode);
 
   if (toasts.length === 0) return null;
 
@@ -39,7 +43,7 @@ export function ToastContainer() {
             accessibilityLabel={`${config.icon} ${toast.message}`}
           >
             <Box
-              style={[styles.toast, { backgroundColor: config.bg }]}
+              style={[styles.toast, { backgroundColor: colors[config.bg] }]}
               mx="md"
               mb="xs"
               borderRadius="md"
@@ -51,16 +55,18 @@ export function ToastContainer() {
               >
                 <Text
                   variant="bodyMedium"
-                  color="onPrimary"
+                  color={config.fg}
                   fontWeight="600"
+                  mode={resolvedMode}
                 >
                   {config.icon}
                 </Text>
                 <Text
                   variant="bodyMedium"
-                  color="onPrimary"
+                  color={config.fg}
                   numberOfLines={2}
                   style={{ flex: 1 }}
+                  mode={resolvedMode}
                 >
                   {toast.message}
                 </Text>
@@ -78,8 +84,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    zIndex: 9999,
-    elevation: 9999,
+    zIndex: ZIndex.toast,
+    elevation: ZIndex.toast,
   } as ViewStyle,
   toast: {
     paddingHorizontal: 16,

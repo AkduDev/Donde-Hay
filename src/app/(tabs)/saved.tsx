@@ -15,6 +15,7 @@ import { ProductCard } from '@/components/product/ProductCard';
 import { SavedSearchCard } from '@/components/saved/SavedSearchCard';
 import { SavedSellerCard } from '@/components/saved/SavedSellerCard';
 import { useThemeStore } from '@/store/themeStore';
+import { getColors } from '@/theme/colors';
 import { useFavoriteProducts, useFavoriteSellers, useSavedSearches, useRemoveFavorite, useDeleteSavedSearch, useToggleSearchNotification } from '@/hooks/use-favorites';
 import { useAuthStore } from '@/store/authStore';
 import type { ProductWithOffers, Seller, SavedSearch } from '@/types';
@@ -24,6 +25,7 @@ type TabType = 'products' | 'searches' | 'sellers';
 export default function SavedScreen() {
   const router = useRouter();
   const { resolvedMode } = useThemeStore();
+  const colors = getColors(resolvedMode);
   const { isAuthenticated } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabType>('products');
 
@@ -232,7 +234,7 @@ export default function SavedScreen() {
           px="md"
           py="sm"
           mode={resolvedMode}
-          style={{ borderBottomWidth: 1, borderBottomColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb' }}
+          style={{ borderBottomWidth: 1, borderBottomColor: colors.divider }}
         >
           <Text variant="titleLarge" color="text">
             ❤️ Guardados
@@ -245,7 +247,7 @@ export default function SavedScreen() {
           px="md"
           py="sm"
           mode={resolvedMode}
-          style={{ borderBottomWidth: 1, borderBottomColor: resolvedMode === 'dark' ? '#333' : '#e5e7eb' }}
+          style={{ borderBottomWidth: 1, borderBottomColor: colors.divider }}
         >
           {tabs.map((tab) => (
             <TouchableOpacity
@@ -259,7 +261,7 @@ export default function SavedScreen() {
                 paddingVertical: 8,
                 alignItems: 'center',
                 borderBottomWidth: activeTab === tab.key ? 2 : 0,
-                borderBottomColor: activeTab === tab.key ? '#2563EB' : 'transparent',
+                borderBottomColor: activeTab === tab.key ? colors.primary : 'transparent',
               }}
             >
               <Text
@@ -293,7 +295,7 @@ export default function SavedScreen() {
               <RefreshControl
                 refreshing={false}
                 onRefresh={handleRefresh}
-                tintColor="#2563EB"
+                tintColor={colors.primary}
               />
             }
           />

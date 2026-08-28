@@ -18,6 +18,7 @@ import { BorderRadius } from '@/theme/radius';
 import { Shadows, getShadow } from '@/theme/shadows';
 import { getColors } from '@/theme/colors';
 import { Text } from './Text';
+import { useThemeStore } from '@/store/themeStore';
 
 export type ModalSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
 export type ModalPosition = 'center' | 'bottom' | 'top';
@@ -79,13 +80,15 @@ const Modal = forwardRef<View, ModalBaseProps>(
       contentStyle,
       headerStyle,
       footerStyle,
-      mode = 'light',
+mode,
       testID,
-      presentationStyle = 'pageSheet',
+      presentationStyle,
     }: ModalBaseProps,
     ref
   ) => {
-    const colors = getColors(mode);
+    const { resolvedMode } = useThemeStore();
+    const resolved = mode ?? resolvedMode;
+    const colors = getColors(resolved);
     const sConfig = sizeConfig[size];
     const modalRef = useRef<RNModal>(null);
 
@@ -120,7 +123,7 @@ const Modal = forwardRef<View, ModalBaseProps>(
       maxHeight: sConfig.maxHeight as number,
       borderRadius: BorderRadius[sConfig.borderRadius] as number,
       backgroundColor: colors.surface,
-      ...getShadow('xl', mode),
+      ...getShadow('xl', resolved),
       elevation: 16,
       overflow: 'hidden',
     };
@@ -155,7 +158,7 @@ const Modal = forwardRef<View, ModalBaseProps>(
             ref={ref}
             style={[modalStyle, style]}
             testID={`${testID}-content`}
-            mode={mode}
+            mode={resolved}
           >
             {(title || !hideCloseButton) && (
               <Box
@@ -163,11 +166,11 @@ const Modal = forwardRef<View, ModalBaseProps>(
                 justifyContent="space-between"
                 alignItems="flex-start"
                 p={sConfig.padding}
-                mode={mode}
+                mode={resolved}
                 style={[{ borderBottomWidth: 1, borderBottomColor: colors.divider }, headerStyle]}
                 testID={`${testID}-header`}
               >
-                <Box flex={1} mode={mode}>
+                <Box flex={1} mode={resolved}>
                   {title && (
                     <Text variant="titleLarge" color="text" testID={`${testID}-title`}>
                       {title}
@@ -186,7 +189,7 @@ const Modal = forwardRef<View, ModalBaseProps>(
                     accessibilityLabel="Cerrar"
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Box p="xs" mode={mode}>
+                    <Box p="xs" mode={resolved}>
                       <Text variant="bodyLarge" color="textSecondary">✕</Text>
                     </Box>
                   </Pressable>
@@ -198,7 +201,7 @@ const Modal = forwardRef<View, ModalBaseProps>(
               p={size === 'full' ? 'none' : sConfig.padding}
               style={contentStyle}
               testID={`${testID}-body`}
-              mode={mode}
+              mode={resolved}
             >
               {children}
             </Box>
