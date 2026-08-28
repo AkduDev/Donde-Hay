@@ -189,7 +189,7 @@ export default function ProductDetailScreen() {
               <Image
                 source={{ uri: product.imageUrls[selectedImageIndex] }}
                 style={{ width: '100%', height: 300 }}
-                resizeMode="contain"
+                contentFit="contain"
               />
             ) : (
               <Box

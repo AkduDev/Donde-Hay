@@ -5,12 +5,14 @@
 
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeStore } from '@/store/themeStore';
 import { getColors } from '@/theme/colors';
 
 export default function TabsLayout() {
   const { resolvedMode } = useThemeStore();
   const colors = getColors(resolvedMode);
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -21,9 +23,9 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.divider,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
           paddingTop: 8,
-          height: 60,
+          paddingBottom: Math.max(insets.bottom, 8),
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -68,6 +70,16 @@ export default function TabsLayout() {
           tabBarAccessibilityLabel: 'Alertas de precio',
           tabBarIcon: ({ color, size, focused }) => (
             <TabIcon iconName={focused ? 'notifications' : 'notifications-outline'} color={color as string} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="nearby"
+        options={{
+          title: 'Mapa',
+          tabBarAccessibilityLabel: 'Productos cerca de ti',
+          tabBarIcon: ({ color, size, focused }) => (
+            <TabIcon iconName={focused ? 'map' : 'map-outline'} color={color as string} size={size} />
           ),
         }}
       />

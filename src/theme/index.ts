@@ -14,6 +14,7 @@ export {
   FontWeights,
   FontSizes,
   LineHeights,
+  getLineHeight,
   LetterSpacings,
   TypographyVariants,
   type TypographyVariant,

@@ -3,7 +3,9 @@
  * Multi-source search: Supabase DB products + Revolico scraped products
  */
 
+import { Platform } from 'react-native';
 import { httpClient } from '@/lib/api-client';
+import { supabase } from '@/lib/supabase';
 import { API_CONFIG } from '@/config';
 import type {
   SearchResult,
@@ -12,6 +14,7 @@ import type {
   ScrapedProduct,
   MultiSourceSearchResult,
   ProductWithOffers,
+  ProductOffer,
   SourceFilter,
 } from '@/types';
 
@@ -144,6 +147,64 @@ function buildSourceCounts(products: ProductWithOffers[]): Record<string, number
 }
 
 // ============================================
+// SUPABASE ROW NORMALIZERS (snake_case → camelCase)
+// ============================================
+
+function mapOfferRow(offer: any): ProductOffer {
+  return {
+    id: offer.id,
+    productId: offer.product_id,
+    sellerId: offer.seller_id ?? '',
+    sourceId: offer.source_id,
+    price: Number(offer.price),
+    currency: offer.currency,
+    locationId: offer.location_id ?? '',
+    sourceUrl: offer.source_url ?? '',
+    sourceExternalId: offer.source_external_id,
+    postedAt: offer.posted_at,
+    status: offer.status,
+    rawData: offer.raw_data,
+  };
+}
+
+function mapProductRow(row: any): ProductWithOffers {
+  const rows: any[] = row.offers ?? [];
+  const offers = rows.map((o: any) => mapOfferRow(o));
+  const prices = offers.map((o) => o.price).filter((p) => p != null);
+  const lastSeen = offers.length
+    ? new Date(Math.max(...offers.map((o) => new Date(o.postedAt).getTime()))).toISOString()
+    : row.created_at;
+  return {
+    id: row.id,
+    canonicalName: row.canonical_name,
+    brand: row.brand ?? '',
+    model: row.model ?? '',
+    categoryId: row.category_id ?? '',
+    description: row.description,
+    specifications: row.specifications,
+    imageUrls: row.image_urls ?? [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    offers,
+    averagePrice: prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : undefined,
+    minPrice: prices.length ? Math.min(...prices) : undefined,
+    maxPrice: prices.length ? Math.max(...prices) : undefined,
+    offerCount: offers.length,
+    availability: {
+      available: offers.some((o) => o.status === 'active'),
+      lastSeen,
+      status:
+        lastSeen && Date.now() - new Date(lastSeen).getTime() < 7 * 24 * 60 * 60 * 1000
+          ? 'recent'
+          : 'old',
+    },
+  };
+}
+
+const hasLocalBackend =
+  API_CONFIG.baseUrl.includes('localhost') || API_CONFIG.baseUrl.includes('127.0.0.1');
+
+// ============================================
 // SERVICE
 // ============================================
 
@@ -151,19 +212,81 @@ export const searchService = {
   /**
    * Full-text search across products and offers (DB only)
    */
-  search: (params: SearchParams) =>
-    httpClient.get<SearchResult>('/search', {
-      params: params as unknown as Record<string, unknown>,
-    }),
+  search: (params: SearchParams) => searchService.searchDB(params),
 
   /**
    * Search Supabase DB for products
    */
   searchDB: async (params: SearchParams): Promise<SearchResult> => {
-    const result = await httpClient.get<SearchResult>('/search', {
-      params: params as unknown as Record<string, unknown>,
-    });
-    return result;
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const term = (params.query ?? '').trim().replace(/%/g, '').replace(/,/g, ' ').slice(0, 120);
+
+    let query = supabase
+      .from('products')
+      .select('*, offers:product_offers(*, seller:sellers(*))', {
+        count: 'exact',
+      });
+
+    if (term) {
+      query = query.or(
+        [
+          `canonical_name.ilike.%${term}%`,
+          `brand.ilike.%${term}%`,
+          `model.ilike.%${term}%`,
+          `description.ilike.%${term}%`,
+        ].join(',')
+      );
+    }
+    if (params.categoryId) {
+      query = query.eq('category_id', params.categoryId);
+    }
+    if (params.locationId) {
+      query = query.eq('product_offers.location_id', params.locationId);
+    }
+    if (params.minPrice) {
+      query = query.gte('product_offers.price', params.minPrice);
+    }
+    if (params.maxPrice) {
+      query = query.lte('product_offers.price', params.maxPrice);
+    }
+    if (params.sourceIds && params.sourceIds.length > 0) {
+      query = query.in('product_offers.source_id', params.sourceIds);
+    }
+
+    switch (params.sortBy) {
+      case 'price-asc':
+        query = query.order('product_offers(price)', { ascending: true });
+        break;
+      case 'price-desc':
+        query = query.order('product_offers(price)', { ascending: false });
+        break;
+      case 'recent':
+      default:
+        query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error, count } = await query.range(from, to);
+
+    if (error) throw error;
+
+    const products = (data ?? []).map(mapProductRow);
+    const total = count ?? 0;
+
+    return {
+      products,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      hasNext: from + products.length < total,
+      hasPrev: page > 1,
+      query: term,
+      processingTimeMs: 0,
+      sources: [],
+    };
   },
 
   /**
@@ -173,6 +296,11 @@ export const searchService = {
     query: string,
     options?: { provinceId?: string; categoryId?: string; limit?: number }
   ): Promise<ScrapedProduct[]> => {
+    // Sin backend scraping configurado en el device (apunta a localhost del PC),
+    // devolvemos [] sin disparar un fetch que fallaría con ConnectException.
+    if (hasLocalBackend && Platform.OS !== 'web') {
+      return [];
+    }
     try {
       const response = await fetch(
         `${API_CONFIG.baseUrl}/search-revolico`,

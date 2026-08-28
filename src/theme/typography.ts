@@ -54,6 +54,9 @@ export const FontSizes = {
   '6xl': 60,   // 3.75rem
 } as const;
 
+// Ratios de line-height (multiplicadores de referencia para el design system).
+// React Native NO soporta estos valores como multiplicadores: lineHeight debe ser
+// un valor absoluto en dp/pt, por lo que siempre se convierten con getLineHeight().
 export const LineHeights = {
   none: 1,
   tight: 1.1,
@@ -62,6 +65,14 @@ export const LineHeights = {
   relaxed: 1.625,
   loose: 2,
 } as const;
+
+/**
+ * Convierte un ratio de line-height a un valor absoluto (dp/pt) para React Native.
+ * RN interpreta `lineHeight` como píxeles absolutos, no como multiplicador del fontSize;
+ * usar los ratios directamente aplasta/recorta el texto en Android.
+ */
+export const getLineHeight = (ratio: number, fontSize: number) =>
+  Math.round(fontSize * ratio);
 
 export const LetterSpacings = {
   tighter: -0.8,
@@ -73,27 +84,28 @@ export const LetterSpacings = {
 } as const;
 
 // Variants tipográficas predefinidas
+// Todos los lineHeight se calculan a valores absolutos con getLineHeight().
 export const TypographyVariants = {
   // Display / Headlines
   displayLarge: {
     fontFamily: FontFamilies.display,
     fontSize: FontSizes['5xl'],
     fontWeight: FontWeights.bold,
-    lineHeight: LineHeights.tight,
+    lineHeight: getLineHeight(LineHeights.tight, FontSizes['5xl']),
     letterSpacing: LetterSpacings.tight,
   },
   displayMedium: {
     fontFamily: FontFamilies.display,
     fontSize: FontSizes['4xl'],
     fontWeight: FontWeights.bold,
-    lineHeight: LineHeights.tight,
+    lineHeight: getLineHeight(LineHeights.tight, FontSizes['4xl']),
     letterSpacing: LetterSpacings.tight,
   },
   displaySmall: {
     fontFamily: FontFamilies.display,
     fontSize: FontSizes['3xl'],
     fontWeight: FontWeights.semiBold,
-    lineHeight: LineHeights.snug,
+    lineHeight: getLineHeight(LineHeights.snug, FontSizes['3xl']),
     letterSpacing: LetterSpacings.normal,
   },
 
@@ -102,21 +114,21 @@ export const TypographyVariants = {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes['2xl'],
     fontWeight: FontWeights.semiBold,
-    lineHeight: LineHeights.snug,
+    lineHeight: getLineHeight(LineHeights.snug, FontSizes['2xl']),
     letterSpacing: LetterSpacings.normal,
   },
   headlineMedium: {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.xl,
     fontWeight: FontWeights.semiBold,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.xl),
     letterSpacing: LetterSpacings.normal,
   },
   headlineSmall: {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.lg,
     fontWeight: FontWeights.medium,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.lg),
     letterSpacing: LetterSpacings.normal,
   },
 
@@ -125,21 +137,21 @@ export const TypographyVariants = {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.lg,
     fontWeight: FontWeights.medium,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.lg),
     letterSpacing: LetterSpacings.normal,
   },
   titleMedium: {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.base,
     fontWeight: FontWeights.medium,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.base),
     letterSpacing: LetterSpacings.wide,
   },
   titleSmall: {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.sm,
     fontWeight: FontWeights.medium,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.sm),
     letterSpacing: LetterSpacings.wide,
   },
 
@@ -148,21 +160,21 @@ export const TypographyVariants = {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.lg,
     fontWeight: FontWeights.regular,
-    lineHeight: LineHeights.relaxed,
+    lineHeight: getLineHeight(LineHeights.relaxed, FontSizes.lg),
     letterSpacing: LetterSpacings.normal,
   },
   bodyMedium: {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.base,
     fontWeight: FontWeights.regular,
-    lineHeight: LineHeights.relaxed,
+    lineHeight: getLineHeight(LineHeights.relaxed, FontSizes.base),
     letterSpacing: LetterSpacings.normal,
   },
   bodySmall: {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.sm,
     fontWeight: FontWeights.regular,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.sm),
     letterSpacing: LetterSpacings.normal,
   },
 
@@ -171,21 +183,21 @@ export const TypographyVariants = {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.base,
     fontWeight: FontWeights.medium,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.base),
     letterSpacing: LetterSpacings.wide,
   },
   labelMedium: {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.sm,
     fontWeight: FontWeights.medium,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.sm),
     letterSpacing: LetterSpacings.wide,
   },
   labelSmall: {
     fontFamily: FontFamilies.sans,
     fontSize: FontSizes.xs,
     fontWeight: FontWeights.medium,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.xs),
     letterSpacing: LetterSpacings.wider,
   },
 
@@ -194,21 +206,21 @@ export const TypographyVariants = {
     fontFamily: FontFamilies.mono,
     fontSize: FontSizes.xs,
     fontWeight: FontWeights.regular,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.xs),
     letterSpacing: LetterSpacings.normal,
   },
   codeMedium: {
     fontFamily: FontFamilies.mono,
     fontSize: FontSizes.sm,
     fontWeight: FontWeights.regular,
-    lineHeight: LineHeights.normal,
+    lineHeight: getLineHeight(LineHeights.normal, FontSizes.sm),
     letterSpacing: LetterSpacings.normal,
   },
   codeLarge: {
     fontFamily: FontFamilies.mono,
     fontSize: FontSizes.base,
     fontWeight: FontWeights.regular,
-    lineHeight: LineHeights.relaxed,
+    lineHeight: getLineHeight(LineHeights.relaxed, FontSizes.base),
     letterSpacing: LetterSpacings.normal,
   },
 } as const;

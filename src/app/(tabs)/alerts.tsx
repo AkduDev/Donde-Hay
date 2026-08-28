@@ -87,7 +87,7 @@ export default function AlertsScreen() {
                 Recibe notificaciones cuando los precios bajen
               </Text>
             </Box>
-            <Button variant="primary" onPress={() => router.push('/login' as any)}>
+            <Button variant="primary" onPress={() => router.push('/(auth)/login' as any)}>
               Iniciar sesión
             </Button>
           </Box>

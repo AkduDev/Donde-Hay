@@ -87,7 +87,7 @@ export default function SearchTabScreen() {
   const handleSuggestionPress = (suggestion: SearchSuggestion) => {
     if (suggestion.type === 'category') {
       router.push({
-        pathname: '/search',
+        pathname: '/results',
         params: { category: suggestion.text.toLowerCase() },
       });
     } else {
@@ -259,7 +259,7 @@ export default function SearchTabScreen() {
                               <Image
                                 source={{ uri: product.imageUrls[0] }}
                                 style={{ width: '100%', height: '100%' }}
-                                resizeMode="cover"
+                                contentFit="cover"
                               />
                             ) : (
                               <Box flex={1} alignItems="center" justifyContent="center" mode={resolvedMode}>

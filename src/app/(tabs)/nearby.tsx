@@ -185,7 +185,7 @@ export default function NearbyScreen() {
                           <Image
                             source={{ uri: product.imageUrls[0] }}
                             style={{ width: '100%', height: '100%' }}
-                            resizeMode="cover"
+                            contentFit="cover"
                           />
                         </Box>
                       ) : (

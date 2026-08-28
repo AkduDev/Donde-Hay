@@ -68,7 +68,51 @@ const DIVISIONS: { amount: number; unit: Intl.RelativeTimeFormatUnit }[] = [
   { amount: Infinity, unit: 'years' },
 ];
 
-const rtf = new Intl.RelativeTimeFormat('es-CU', { numeric: 'auto' });
+// Intl.RelativeTimeFormat no está disponible en el Hermes de RN.
+// Se usa si existe; si no, fallback manual en español.
+const hasRelativeTimeFormat =
+  typeof Intl !== 'undefined' &&
+  typeof Intl.RelativeTimeFormat === 'function';
+
+let rtf: Intl.RelativeTimeFormat | null = null;
+
+function getRtf(): Intl.RelativeTimeFormat | null {
+  if (!hasRelativeTimeFormat) return null;
+  if (!rtf) {
+    rtf = new Intl.RelativeTimeFormat('es-CU', { numeric: 'auto' });
+  }
+  return rtf;
+}
+
+const UNIT_LABELS: Record<Intl.RelativeTimeFormatUnit, (n: number) => string> = {
+  second: (n) => (n === 1 ? 'segundo' : 'segundos'),
+  seconds: (n) => (n === 1 ? 'segundo' : 'segundos'),
+  minute: (n) => (n === 1 ? 'minuto' : 'minutos'),
+  minutes: (n) => (n === 1 ? 'minuto' : 'minutos'),
+  hour: (n) => (n === 1 ? 'hora' : 'horas'),
+  hours: (n) => (n === 1 ? 'hora' : 'horas'),
+  day: (n) => (n === 1 ? 'día' : 'días'),
+  days: (n) => (n === 1 ? 'día' : 'días'),
+  week: (n) => (n === 1 ? 'semana' : 'semanas'),
+  weeks: (n) => (n === 1 ? 'semana' : 'semanas'),
+  month: (n) => (n === 1 ? 'mes' : 'meses'),
+  months: (n) => (n === 1 ? 'mes' : 'meses'),
+  quarter: (n) => (n === 1 ? 'trimestre' : 'trimestres'),
+  quarters: (n) => (n === 1 ? 'trimestre' : 'trimestres'),
+  year: (n) => (n === 1 ? 'año' : 'años'),
+  years: (n) => (n === 1 ? 'año' : 'años'),
+};
+
+function formatRelative(seconds: number, unit: Intl.RelativeTimeFormatUnit): string {
+  const rounded = Math.round(seconds);
+  const rtfInstance = getRtf();
+  if (rtfInstance) {
+    return rtfInstance.format(rounded, unit);
+  }
+  const abs = Math.abs(rounded);
+  const label = UNIT_LABELS[unit]?.(abs) ?? unit;
+  return rounded < 0 ? `hace ${abs} ${label}` : `en ${abs} ${label}`;
+}
 
 export function formatRelativeTime(date: string | Date): string {
   const now = new Date();
@@ -77,7 +121,7 @@ export function formatRelativeTime(date: string | Date): string {
 
   for (const division of DIVISIONS) {
     if (Math.abs(duration) < division.amount) {
-      return rtf.format(Math.round(duration), division.unit);
+      return formatRelative(duration, division.unit);
     }
     duration /= division.amount;
   }

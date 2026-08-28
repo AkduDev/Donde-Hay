@@ -6,7 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Appearance } from 'react-native';
 
 // ============================================
 // TIPOS
@@ -70,7 +70,7 @@ export const useThemeStore = create<ThemeStore>()(
 
       // Actions
       setMode: (mode) => {
-        const systemScheme = useColorScheme();
+        const systemScheme = Appearance.getColorScheme();
         const resolved: 'light' | 'dark' = mode === 'system' ? (systemScheme as 'light' | 'dark' ?? 'light') : mode;
         set({ mode, resolvedMode: resolved });
       },
@@ -84,7 +84,7 @@ export const useThemeStore = create<ThemeStore>()(
       },
 
       initialize: () => {
-        const systemScheme = useColorScheme();
+        const systemScheme = Appearance.getColorScheme();
         const { mode } = get();
         const resolved: 'light' | 'dark' = mode === 'system' ? (systemScheme as 'light' | 'dark' ?? 'light') : mode;
         set({ resolvedMode: resolved, isLoading: false });

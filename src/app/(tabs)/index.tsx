@@ -117,14 +117,14 @@ export default function HomeScreen() {
 
   const handleSearch = (query: string) => {
     router.push({
-      pathname: '/search' as any,
+      pathname: '/results' as any,
       params: { query },
     });
   };
 
   const handleCategoryPress = (categoryId: string) => {
     router.push({
-      pathname: '/search' as any,
+      pathname: '/results' as any,
       params: { category: categoryId },
     });
   };

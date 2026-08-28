@@ -70,7 +70,7 @@ export default function SavedScreen() {
 
   const handleSearchPress = (search: SavedSearch) => {
     router.push({
-      pathname: '/search' as any,
+      pathname: '/results' as any,
       params: { query: typeof search.query === 'string' ? search.query : JSON.stringify(search.query) },
     });
   };
