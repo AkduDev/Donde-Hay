@@ -127,7 +127,7 @@ export default function ProductDetailScreen() {
       (Date.now() - new Date(offer.postedAt).getTime()) / (1000 * 60 * 60);
 
     if (hoursSincePosted <= 24) {
-      return { label: 'Reciente', variant: 'success' as const, icon: '🟢' };
+      return { label: 'Reciente', variant: 'accent' as const, icon: '🟢' };
     } else if (hoursSincePosted <= 24 * 7) {
       return { label: 'Esta semana', variant: 'warning' as const, icon: '🟡' };
     } else {
@@ -285,6 +285,28 @@ export default function ProductDetailScreen() {
                     </Box>
                   )}
                 </Box>
+                <Box mt="sm" alignItems="flex-end">
+                  <Pressable
+                    onPress={() => router.push('/map' as never)}
+                    accessibilityLabel="Ver productos cerca en el mapa"
+                    accessibilityRole="button"
+                  >
+                    <Box
+                      flexDirection="row"
+                      alignItems="center"
+                      gap="xxs"
+                      px="xs"
+                      py="xxs"
+                      borderRadius="sm"
+                      mode={resolvedMode}
+                      style={{ borderWidth: 1, borderColor: colors.primary }}
+                    >
+                      <Text variant="labelMedium" color="primary">
+                        🗺️ Ver cerca en el mapa
+                      </Text>
+                    </Box>
+                  </Pressable>
+                </Box>
               </Card>
             )}
 
@@ -389,6 +411,11 @@ export default function ProductDetailScreen() {
                           >
                             {formatPrice(offer.price, offer.currency)}
                           </Text>
+                          {index > 0 && bestOffer && (
+                            <Text variant="labelSmall" color="textSecondary">
+                              +{formatPrice(offer.price - bestOffer.price, offer.currency)} vs menor
+                            </Text>
+                          )}
                           <Box mt="xs">
                             <Button
                               variant="outline"

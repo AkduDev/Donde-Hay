@@ -53,6 +53,12 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - Limpieza: imports sin uso eliminados en `(tabs)/search.tsx` (`Image`, `SourceChip`, `getColors`) y en `ProductCard` (agrega `getSourceIcon`).
 - `npx tsc --noEmit` ✅.
 
+### FASE 6 — Product Detail: comparar ofertas (completada)
+- **Disponibilidad con semántica accent**: el estado "Reciente" (encontrado/disponible) usa `accent` (regla approbada); "Esta semana" = warning, "Antiguo" = default.
+- **Delta de ahorro por oferta**: cada oferta que no es la menor muestra `+$X vs menor` bajo el precio, para dimensionar el diferencial al comparar (regla "Accent = encontrado/disponible, Success = positivo general": la menor oferta conserva `success`).
+- **Acceso al mapa desde el detail**: el card de mejor precio incluye la entrada "🗺️ Ver cerca en el mapa" (contexto secundario Mapa, como en results Fase 3) que navega a `/map`, con borde primary para no confundirse con la acción principal.
+- `npx tsc --noEmit` ✅.
+
 ## [1.1.0] - 2026-08-28
 
 ### Arreglado
