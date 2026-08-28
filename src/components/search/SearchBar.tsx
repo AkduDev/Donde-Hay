@@ -50,6 +50,7 @@ export interface SearchBarProps extends Omit<TextInputProps, 'style'> {
   showBackButton?: boolean;
 
   // Layout
+  size?: 'md' | 'lg';
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -71,6 +72,7 @@ const SearchBar = React.memo(forwardRef<TextInput, SearchBarProps>(
       rightIcon,
       onBackPress,
       showBackButton = false,
+      size = 'md',
       style,
       testID,
       ...rest
@@ -128,12 +130,12 @@ const SearchBar = React.memo(forwardRef<TextInput, SearchBarProps>(
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.xs,
       gap: Spacing.xs,
-      height: 48,
+      height: size === 'lg' ? 56 : 48,
     };
 
     const inputStyle = {
       flex: 1,
-      fontSize: FontSizes.lg,
+      fontSize: size === 'lg' ? FontSizes.xl : FontSizes.lg,
       color: colors.text,
       paddingVertical: 0,
       paddingHorizontal: 0,

@@ -37,6 +37,13 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - Nota: `.expo/types/router.d.ts` (typed routes) se regenera al correr `expo start`; está gitignored. Los `router.push` a `/map` usan cast para no depender de la generación.
 - `npx tsc --noEmit` ✅.
 
+### FASE 4 — Home: búsqueda protagonista (completada)
+- **`SearchBar` con prop `size` (`'md'` | `'lg'`)**: el Home usa la variante `lg` (56dp, tipografía `xl`) como elemento protagonista — primera interacción de la pantalla con placeholder "Encuentra lo que buscas hoy...".
+- **Tendencias convertidas en "buscan ahora"**: las búsquedas trending pasan a chips compactos en scroll horizontal, colocados inmediatamente bajo el buscador (refuerzan la acción de buscar), con `Pressable` + `OpacityTokens` en vez de botones `outline`.
+- **Categorías compactadas a pills horizontales** (icono + nombre, `borderRadius="full"` en scroll horizontal) en lugar de la cuadrícula `width: 23%` — libera espacio vertical para que el buscador quede sobre el fold.
+- Eliminado `Button` (import sin uso) de `(tabs)/index.tsx`.
+- `npx tsc --noEmit` ✅.
+
 ## [1.1.0] - 2026-08-28
 
 ### Arreglado

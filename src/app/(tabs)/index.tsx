@@ -10,7 +10,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
-import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { ProductCard } from '@/components/product/ProductCard';
@@ -195,69 +194,91 @@ export default function HomeScreen() {
             </Box>
           </Box>
 
-          {/* Search Bar */}
-          <Box px="md" mb="md" mode={resolvedMode}>
+          {/* Search Bar - protagonista */}
+          <Box px="md" mb="sm" mode={resolvedMode}>
             <SearchBar
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmit={handleSearch}
-              placeholder="iPhone 13, laptop, TV..."
+              placeholder="Encuentra lo que buscas hoy..."
               accessibilityLabel="Buscar productos"
+              size="lg"
+              autoFocus={false}
             />
           </Box>
 
-          {/* Categories */}
+          {/* Trending Searches - búsquedas rápidas */}
+          <Box px="md" mb="lg" mode={resolvedMode}>
+            <Box flexDirection="row" alignItems="center" gap="xxs" mb="xs">
+              <Text variant="labelMedium" color="textSecondary" mode={resolvedMode}>
+                🔥 Buscan ahora
+              </Text>
+            </Box>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <Box flexDirection="row" gap="xs" pr="md">
+                {trendingSearches.map((search, index) => (
+                  <Pressable
+                    key={index}
+                    onPress={() => handleSearch(search)}
+                    style={({ pressed }) => ({ opacity: pressed ? OpacityTokens.pressed : 1 })}
+                    accessibilityLabel={`Buscar: ${search}`}
+                    accessibilityRole="button"
+                  >
+                    <Box
+                      px="sm"
+                      py="xs"
+                      borderRadius="full"
+                      borderWidth={1}
+                      borderColor="border"
+                      mode={resolvedMode}
+                    >
+                      <Text variant="bodySmall" color="text" mode={resolvedMode}>
+                        {search}
+                      </Text>
+                    </Box>
+                  </Pressable>
+                ))}
+              </Box>
+            </ScrollView>
+          </Box>
+
+          {/* Categories - chips compactos */}
           <Box px="md" mb="lg" mode={resolvedMode}>
             {renderSectionHeader('Categorías', '📂')}
-            <Box flexDirection="row" flexWrap="wrap" gap="sm">
-              {categories.map((category) => (
-                <Pressable
-                  key={category.id}
-                  onPress={() => handleCategoryPress(category.slug)}
-                  style={({ pressed }) => ({ opacity: pressed ? OpacityTokens.pressed : 1 })}
-                  accessibilityLabel={`Categoría ${category.name}`}
-                  accessibilityRole="button"
-                >
-                  <Box
-                    width="23%"
-                    alignItems="center"
-                    justifyContent="center"
-                    p="sm"
-                    bg="surfaceVariant"
-                    borderRadius="md"
-                    mode={resolvedMode}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            >
+              <Box flexDirection="row" gap="xs" pr="md">
+                {categories.map((category) => (
+                  <Pressable
+                    key={category.id}
+                    onPress={() => handleCategoryPress(category.slug)}
+                    style={({ pressed }) => ({ opacity: pressed ? OpacityTokens.pressed : 1 })}
+                    accessibilityLabel={`Categoría ${category.name}`}
+                    accessibilityRole="button"
                   >
-                    <Text variant="headlineSmall">
-                      {category.icon}
-                    </Text>
-                    <Box mt="xxs" alignItems="center">
-                      <Text variant="bodySmall" color="textSecondary" textAlign="center">
+                    <Box
+                      flexDirection="row"
+                      alignItems="center"
+                      gap="xxs"
+                      px="sm"
+                      py="xs"
+                      bg="surfaceVariant"
+                      borderRadius="full"
+                      mode={resolvedMode}
+                    >
+                      <Text variant="bodyMedium" mode={resolvedMode}>
+                        {category.icon}
+                      </Text>
+                      <Text variant="bodySmall" color="textSecondary" mode={resolvedMode}>
                         {category.name}
                       </Text>
                     </Box>
-                  </Box>
-                </Pressable>
-              ))}
-            </Box>
-          </Box>
-
-          {/* Trending Searches */}
-          <Box px="md" mb="lg" mode={resolvedMode}>
-            {renderSectionHeader('Tendencias', '🔥')}
-            <Box flexDirection="row" flexWrap="wrap" gap="xs">
-              {trendingSearches.map((search, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onPress={() => handleSearch(search)}
-                  mode={resolvedMode}
-                  accessibilityLabel={`Buscar: ${search}`}
-                >
-                  {search}
-                </Button>
-              ))}
-            </Box>
+                  </Pressable>
+                ))}
+              </Box>
+            </ScrollView>
           </Box>
 
           {/* Featured Products */}
