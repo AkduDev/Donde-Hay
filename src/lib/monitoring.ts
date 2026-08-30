@@ -1,9 +1,13 @@
 /**
  * Dónde Hay - Monitoring
- * Simple console-based performance monitoring for the mobile app.
- * No external service dependency — logs locally in development,
- * can be swapped for Sentry/Datadog later.
+ * Performance monitoring y reporte de errores.
+ * Logs por consola en dev + bridge hacia Sentry (crash reporting real)
+ * y hacia el proveedor de analytics cuando están activos.
  */
+
+import { FEATURES } from '@/config';
+import { sentry } from '@/lib/sentry';
+import { trackError } from '@/lib/analytics';
 
 // ============================================
 // TYPES
@@ -116,6 +120,44 @@ export function logEvent(
       `[Monitor] ${prefix} ${name}`,
       metadata ? JSON.stringify(metadata) : ""
     );
+  }
+
+  // Breadcrumbs hacia Sentry (contexto para reportes de error)
+  if (severity !== 'info') {
+    sentry.addBreadcrumb({
+      message: `[event] ${name}`,
+      level: severity === 'error' ? 'error' : 'warning',
+      category: 'monitoring',
+      data: metadata,
+    });
+  }
+}
+
+/**
+ * Reportar un error de forma centralizada: log, breadcrumb, Sentry y analytics.
+ */
+export function reportError(error: unknown, context?: Record<string, unknown>): void {
+  const name = error instanceof Error ? error.name : 'UnknownError';
+  const message = error instanceof Error ? error.message : String(error);
+
+  logEvent(name, 'error', context);
+
+  sentry.addBreadcrumb({
+    message: `[error] ${name}: ${message}`,
+    level: 'error',
+    category: 'monitoring',
+    data: context,
+  });
+
+  if (FEATURES.crashReporting) {
+    sentry.captureException(error, { contexts: { monitoring: context } });
+  }
+
+  if (FEATURES.analytics) {
+    // La cola de analytics nunca debe bloquear el reporte de errores
+    Promise.resolve().then(() => {
+      trackError(name, message, context ? JSON.stringify(context) : undefined);
+    });
   }
 }
 

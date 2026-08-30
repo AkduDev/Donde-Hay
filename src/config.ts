@@ -44,6 +44,27 @@ export const FEATURES = {
   // Mocks DEV: usa dataset tipado (src/mocks/) cuando no hay backend en development.
   // https://www.npmjs.com/package/dotenv Pattern: EXPO_PUBLIC_USE_MOCKS=true
   useMocks: getEnvVar('EXPO_PUBLIC_USE_MOCKS', 'false') === 'true',
+  // Crash reporting real (Sentry): activo solo si hay DSN configurado (EXPO_PUBLIC_SENTRY_DSN).
+  crashReporting: getEnvVar('EXPO_PUBLIC_SENTRY_DSN', '') !== '',
+} as const;
+
+// ============================================
+// SENTRY (CRASH REPORTING)
+// ============================================
+
+export const SENTRY_CONFIG = {
+  dsn: getEnvVar('EXPO_PUBLIC_SENTRY_DSN'),
+  tracesSampleRate: APP_CONFIG.isProduction ? 0.2 : 0.0,
+} as const;
+
+// ============================================
+// ANALYTICS
+// ============================================
+
+export const ANALYTICS_CONFIG = {
+  // Endpoint real de batch de eventos (POST JSON { events, sessionId, ... }).
+  // Proveedor pluggable: herramienta propia, Supabase, or Vendor SDK.
+  endpoint: getEnvVar('EXPO_PUBLIC_ANALYTICS_ENDPOINT'),
 } as const;
 
 // ============================================

@@ -55,3 +55,19 @@ export function useReverseGeocode(latitude: number | null, longitude: number | n
     enabled: !!latitude && !!longitude,
   });
 }
+
+/**
+ * Get coordinates (lat/lng) for a batch of location ids — usado por el mapa.
+ */
+export function useLocationsByIds(
+  ids: string[]
+): { data: Record<string, { name: string; latitude: number; longitude: number }> | undefined; isLoading: boolean } {
+  const query = useQuery({
+    queryKey: ['locations', 'by-ids', ids],
+    queryFn: () => locationsService.byIds(ids),
+    enabled: ids.length > 0,
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  return { data: query.data, isLoading: query.isLoading };
+}

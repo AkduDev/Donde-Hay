@@ -79,6 +79,23 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - **Grupo C — react-hooks (React Compiler)**: `set-state-in-effect` resueltos con patrones válidos — `alerts/[id].tsx` usa el patrón oficial "ajustar estado al cambiar props" (guard `prevAlert` + setState en render, eliminado el useEffect); `use-color-scheme.web.ts` reemplaza el flag de hidratación por `useSyncExternalStore`; `use-realtime-alerts`/`use-realtime-product` devuelven estado derivado (`activeAlerts`/`activeOffers`) en vez de `setAlerts([])` en efecto. `exhaustive-deps` resueltos con deps reales (`use-device-location` con `{ silent: true }` en el fetch de montaje; `use-notifications` con `[registerForPushToken]`, además `savePushToken` movido antes de su uso —fix de `immutability`—). `preserve-manual-memoization` en `CategoryPicker` eliminado (useMemo reemplazado por helper módulo `groupCategories`). Quedan 3 `eslint-disable` justificados (orquestación de animación/escucha en `Sheet` ×1 bloque y efectos asíncronos en `use-device-location`/`use-notifications`).
 - **Verificación**: `npm run lint` exit 0, `npx tsc --noEmit` limpio, `npx jest --ci` → 54 tests en verde.
 
+### Pendientes post-fases implementados (sesión 30-ago-2026)
+
+- **Mapa interactivo** (`react-native-maps@1.27.2` + plugin `react-native-maps` en app.json):
+  - Nuevo `src/lib/map.ts`: utilidades puras (`haversineKm`, `buildClusters` por grilla, `directionsUrl`/`mapsLinkUrl`) con tests `map.test.ts` (9 cases).
+  - Nuevo `src/components/map/ProductMap.tsx`: `MapView` con `initialRegion` controlado, `showsUserLocation`, **marcadores** por producto (coordenadas resueltas desde `locations` vía `locationsService.byIds` + `useLocationsByIds`), **clusters** (celda con 2+ puntos → marcador circular con count que hace zoom al centroide al pulsar), callout de producto y **routing** ("Cómo llegar" → Google/Apple Maps). Card inferior con "Ver producto" / "Cómo llegar".
+  - **Carga segura del módulo nativo**: `require('react-native-maps')` perezoso en try/catch — si el APK actual no lo tiene linkado (rebuild pendiente) o es web, muestra fallback con botón "Abrir en Google Maps" y estadística de marcadores (nunca crashea el bundle).
+  - `src/app/map.tsx`: toggle **Mapa / Lista**, resolución de coordenadas sobre las ofertas (productos sin coordenadas quedan notificados para ver en Lista).
+  - ⚠️ Precisará **rebuild nativo** (dev-client/APK) y Google Play Services en el dispositivo para renderizar el mapa.
+- **Crash reporting real (Sentry)** (`@sentry/react-native@~7.11.0`, plugin con `useNativeInit: false`):
+  - Nuevo `src/lib/sentry.ts`: wrapper seguro — init JS con `EXPO_PUBLIC_SENTRY_DSN` (gated por `FEATURES.crashReporting`), require perezoso en try/catch y capturas nunca bloqueantes. Sin DSN o sin módulo nativo → no-op.
+  - `src/lib/monitoring.ts`: breadcrumbs a Sentry en eventos warn/error + nuevo `reportError()` que encadena log + breadcrumb + `captureException` y analytics.
+  - `src/app/_layout.tsx`: el ErrorBoundary del root reporta vía `reportError` (Sentry + analytics).
+- **Analytics con proveedor real** (`src/lib/analytics.ts`): `flush()` ahora envía batches por HTTP (POST JSON `{ app, version, sessionId, platform, events }`) a `EXPO_PUBLIC_ANALYTICS_ENDPOINT`, con timeout (8s) y **solo limpia la cola si el envío tiene éxito** (reintenta en fallos). `Platform.OS` real y `appRelease` en cada evento.
+- **RTL real en Tooltip** (`src/components/ui/Tooltip.tsx`): `isRTL` ya no está hardcodeado a `false` — usa `I18nManager.isRTL` para invertir `start/end` en placements `top`/`bottom`. Resuelve el TODO de Fase 9.3.
+- **Accesibilidad**: labels sin fricción en toggle Mapa/Lista, marcadores y card del mapa. Test manual de TalkBack/VoiceOver sigue pendiente (requiere dispositivo físico).
+- **Verificación**: `npm run lint` **0 errores / 0 warnings**, `npx tsc --noEmit` limpio, `npx jest --ci` → **63 tests** en verde (54 + 9 de mapa).
+
 ## [1.1.0] - 2026-08-28
 
 ### Arreglado

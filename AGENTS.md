@@ -436,6 +436,14 @@ Detalles de cada fase completada en `CHANGELOG.md` bajo `[2.0.0-canary]`.
 
 Los 3 ignores de `metro.config.js` (dirs corruptos NTFS) siguen vigentes. `npx tsc --noEmit` limpio.
 
+### Pendientes post-fases implementados (sesión 30-ago-2026, 2ª)
+
+- **Mapa interactivo**: `react-native-maps@1.27.2` (plugin en app.json). `src/components/map/ProductMap.tsx` con marcadores, clusters por grilla (`src/lib/map.ts`) y routing externo; **carga perezosa del módulo nativo con fallback** (APK sin rebuild o web → card "Abrir en Google Maps", nunca crashea). Coordenadas vía `locationsService.byIds` + `useLocationsByIds`. Pantalla `src/app/map.tsx` con toggle Mapa/Lista. ⚠️ Requiere **rebuild del APK** + Google Play Services para verse.
+- **Sentry**: `@sentry/react-native@~7.11.0` (plugin `useNativeInit: false`). `src/lib/sentry.ts` init JS gated por `EXPO_PUBLIC_SENTRY_DSN` (require perezoso en try/catch; sin DSN o sin módulo nativo → no-op). `reportError()` en `monitoring.ts` encadena breadcrumb + `captureException` + analytics; el ErrorBoundary del root lo usa.
+- **Analytics real**: `analytics.ts` `flush()` envía batches HTTP (POST JSON) a `EXPO_PUBLIC_ANALYTICS_ENDPOINT`; solo limpia cola si hay éxito. `Platform.OS` + `appRelease` en cada evento.
+- **RTL en Tooltip**: `I18nManager.isRTL` reemplaza el `isRTL = false` hardcodeado (resuelto TODO Fase 9.3). Test TalkBack/VoiceOver sigue pendiente (dispositivo físico).
+- **Verificación**: lint 0/0, tsc limpio, **63 tests** en verde (54 + 9 de `map.test.ts`).
+
 ## Soluciones pendientes (Cuba)
 
 - **VPN**: Conectar VPN antes de `npx expo run:android` o `eas build`

@@ -128,6 +128,42 @@ export const locationsService = {
   },
 
   /**
+   * Get coordinates for a batch of location ids (para marcadores del mapa).
+   */
+  byIds: async (
+    ids: string[]
+  ): Promise<Record<string, { name: string; latitude: number; longitude: number }>> => {
+    if (ids.length === 0) return {};
+
+    const { data, error } = await supabase
+      .from('locations')
+      .select('id, name, latitude, longitude')
+      .in('id', ids);
+
+    if (error) throw error;
+
+    const coordinates: Record<string, { name: string; latitude: number; longitude: number }> = {};
+
+    for (const row of data ?? []) {
+      const item = row as {
+        id: string;
+        name: string | null;
+        latitude: number | null;
+        longitude: number | null;
+      };
+      if (item && typeof item.latitude === 'number' && typeof item.longitude === 'number') {
+        coordinates[item.id] = {
+          name: item.name ?? '',
+          latitude: item.latitude,
+          longitude: item.longitude,
+        };
+      }
+    }
+
+    return coordinates;
+  },
+
+  /**
    * Reverse geocode coordinates to location
    */
   reverseGeocode: async (latitude: number, longitude: number): Promise<Location | null> => {

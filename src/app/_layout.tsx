@@ -13,6 +13,7 @@ import { ToastContainer } from '@/components/ui/Toast';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuthStore } from '@/store/authStore';
 import { getColors } from '@/theme/colors';
+import { reportError } from '@/lib/monitoring';
 
 setAuthTokenGetter(async () => {
   const state = useAuthStore.getState();
@@ -39,6 +40,7 @@ export default function RootLayout() {
         <ErrorBoundary
           onError={(error, errorInfo) => {
             console.error('[ErrorBoundary]', error, errorInfo);
+            reportError(error, { source: 'ErrorBoundary', componentStack: errorInfo });
           }}
         >
           <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />

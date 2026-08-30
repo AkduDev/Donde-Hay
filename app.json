@@ -58,6 +58,15 @@
           "photosPermission": "Permitir a Dónde Hay acceder a tus fotos para publicar productos.",
           "cameraPermission": "Permitir a Dónde Hay acceder a tu cámara para tomar fotos de productos."
         }
+      ],
+      [
+        "react-native-maps"
+      ],
+      [
+        "@sentry/react-native",
+        {
+          "useNativeInit": false
+        }
       ]
     ],
     "experiments": {

@@ -11,6 +11,7 @@ import {
   TextStyle,
   Pressable,
   LayoutChangeEvent,
+  I18nManager,
 } from 'react-native';
 import { Box } from './Box';
 import { Text as TextComponent } from './Text';
@@ -135,7 +136,7 @@ const Tooltip = forwardRef<View, TooltipProps>(
     const getTooltipPosition = () => {
       const { x, y, width: triggerWidth, height: triggerHeight } = triggerLayout;
       const { width: tooltipWidth, height: tooltipHeight } = tooltipLayout;
-      const isRTL = false;
+      const isRTL = I18nManager.isRTL;
 
       let tooltipX = 0;
       let tooltipY = 0;

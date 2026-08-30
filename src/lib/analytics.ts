@@ -1,11 +1,14 @@
 /**
  * Dónde Hay - Analytics
- * Simple event tracking using local storage.
- * No external analytics service yet — events are stored locally
- * and can be synced to Supabase or an analytics provider later.
+ * Event tracking con proveedor real: los eventos se encolan en AsyncStorage
+ * y se envían por HTTP en batches al endpoint configurado
+ * (EXPO_PUBLIC_ANALYTICS_ENDPOINT). Si no hay endpoint, quedan en cola local
+ * para debug en dev.
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+import { ANALYTICS_CONFIG, APP_CONFIG } from "@/config";
 
 // ============================================
 // TYPES
@@ -83,9 +86,9 @@ export async function track(
     const event: AnalyticsEvent = {
       name: eventName,
       timestamp: Date.now(),
-      properties,
+      properties: { appRelease: APP_CONFIG.version, ...properties },
       sessionId: sid,
-      platform: "mobile",
+      platform: Platform.OS,
     };
 
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -110,9 +113,8 @@ export async function track(
 }
 
 /**
- * Flush queued events to the server.
- * Currently a no-op stub — logs events to console in dev.
- * TODO: Send to Supabase analytics table or external provider.
+ * Flush de eventos encolados al endpoint real (POST JSON en batch).
+ * Solo limpia la cola cuando el envío tiene éxito; si falla, retiene para reintentar.
  */
 export async function flush(): Promise<void> {
   if (!config.enabled) return;
@@ -131,13 +133,41 @@ export async function flush(): Promise<void> {
       }
     }
 
-    // TODO: Send batch to Supabase
-    // await supabase.from('analytics_events').insert(queue);
+    const endpoint = ANALYTICS_CONFIG.endpoint;
 
-    // Clear the queue
+    if (endpoint) {
+      const insession = await ensureSession();
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          app: APP_CONFIG.name,
+          version: APP_CONFIG.version,
+          sessionId: insession,
+          platform: Platform.OS,
+          events: queue,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        // Mantener la cola para el siguiente intento
+        console.warn(`[Analytics] Flush rechazado (${response.status}) — se reintentará`);
+        return;
+      }
+    }
+
     await AsyncStorage.removeItem(STORAGE_KEY);
   } catch {
-    // Don't crash on analytics failure
+    // No crashar nunca por analytics; la cola se conserva y se reintentará
   }
 }
 

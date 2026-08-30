@@ -33,19 +33,21 @@ El usuario puede **filtrar por fuente**, ver de **qué sitio viene cada oferta**
 | Services Layer (9 services) | ✅ Completo |
 | Auth screens (login, register, forgot/reset) | ✅ Completo |
 | Product Detail screen | ✅ Completo |
-| Geolocation (Phase 6) | ✅ Completo |
+| Geolocation (Phase 6) | ✅ Completo (incluye mapa interactivo; fallback sin módulo nativo) |
 | Alerts + Push (Phase 7) | ✅ Completo |
 | WebSocket/Real-time (Phase 7.3) | ✅ Completo |
 | Publish Product (Phase 8) | ✅ Completo |
 | Saved (Phase 4) | ✅ Completo |
 | Profile (Phase 5) | ✅ Completo |
-| Testing (Phase 9.1) | ✅ Completo |
+| Testing (Phase 9.1) | ✅ Completo (63 tests en verde) |
 | Performance (Phase 9.2) | ✅ Completo |
-| Accessibility (Phase 9.3) | ✅ Completo |
+| Accessibility (Phase 9.3) | ⏸️ Parcial (RTL ✅; TalkBack/VoiceOver pendiente de test físico) |
 | Error Handling (Phase 9.4) | ✅ Completo |
-| EAS Build + Submit (Phase 10) | ✅ Completo |
+| EAS Build + Submit (Phase 10) | ⏸️ Bloqueado (EAS cloud 403 desde Cuba; APK debug local ✅) |
 | Edge Functions (Phase 10) | ✅ Completo |
-| Monitoring + Analytics (Phase 10) | ✅ Completo |
+| Monitoring + Analytics (Phase 10) | ✅ Completo (Sentry + proveedor HTTP) |
+| UI/UX Hardening (plan 7 fases) | ✅ Completo (ver detalle abajo) |
+| ESLint cleanup (136 warnings → 0) | ✅ Completo (30-ago-2026) |
 
 ---
 
@@ -253,11 +255,13 @@ src/app/(tabs)/profile/
 - [x] Lista de productos cercanos con distancia
 - [x] Filtro por radio de búsqueda (5km, 10km, 25km, 50km)
 
-### 6.3 Mapa interactivo (fase futura)
-- [x] Instalar `react-native-maps`
-- [x] Marcadores de productos en mapa
-- [x] Cluster para zonas densas
-- [x] Routing a ubicación del vendedor
+### 6.3 Mapa interactivo
+- [x] Instalar `react-native-maps` (1.27.2, instalado)
+- [x] Marcadores de productos en mapa (coordenadas resueltas desde `locations` vía `byIds`)
+- [x] Cluster para zonas densas (grilla por región; zoom al cluster)
+- [x] Routing a ubicación del vendedor (Google/Apple Maps externo + card "Cómo llegar")
+
+> Estado real: `src/components/map/ProductMap.tsx` integra `MapView` con fallback seguro cuando el módulo nativo no está linkado (rebuild pendiente) o es web. Requiere **rebuild del APK** y Google Play Services en el dispositivo para verse.
 
 ---
 
@@ -322,8 +326,8 @@ src/app/(seller)/
 
 ### 9.3 Accesibilidad
 - [x] Review de `accessibilityLabel` en todos los componentes
-- [x] Soporte RTL (TODO en Tooltip)
-- [x] Test con TalkBack / VoiceOver
+- [x] Soporte RTL — Tooltip usa `I18nManager.isRTL` (resuelto)
+- [ ] Test con TalkBack / VoiceOver (pendiente, requiere dispositivo físico)
 
 ### 9.4 Error Handling
 - [x] Error boundary global
@@ -332,9 +336,9 @@ src/app/(seller)/
 - [x] Retry automático en errores de red
 
 ### 9.5 Analytics + Monitoring
-- [x] Integrar analytics (Expo Analytics, Mixpanel, o similar)
-- [x] Crash reporting (Sentry)
-- [x] Performance monitoring
+- [x] Integrar analytics — `src/lib/analytics.ts` con proveedor real HTTP (batches a `EXPO_PUBLIC_ANALYTICS_ENDPOINT`)
+- [x] Crash reporting — `@sentry/react-native` vía `src/lib/sentry.ts` + `reportError()` (gated por `EXPO_PUBLIC_SENTRY_DSN`)
+- [x] Performance monitoring — `src/lib/monitoring.ts` (console en dev + breadcrumbs a Sentry)
 
 ---
 
@@ -342,21 +346,50 @@ src/app/(seller)/
 > Objetivo: Lanzar a producción
 
 ### 10.1 Build
-- [x] Configurar EAS Build
-- [x] Signing certificates (iOS/Android)
+- [x] Configurar EAS Build (config en `eas.json`; cloud build bloqueado con 403 desde Cuba)
+- [ ] Signing certificates (iOS/Android) — pendiente (EAS cloud inaccesible)
 - [x] Splash screen y iconos finales
-- [x] App Store screenshots
+- [ ] App Store screenshots — pendiente
+
+> **Estado real**: APK debug local **✅ COMPLETADO** (27-ago-2026, `android/app/build/outputs/apk/debug/app-debug.apk`, 92.7MB, arm64-v8a, BUILD SUCCESSFUL 47m51s). **EAS Build cloud falla con 403** (restricción geográfica o permisos de cuenta). Ver `AGENTS.md` → "Build Android — Estado Actual".
 
 ### 10.2 Deploy
-- [x] Configurar EAS Submit
-- [x] App Store (iOS) listing
-- [x] Google Play Store listing
-- [x] Deploy backend API a producción
+- [ ] Configurar EAS Submit — pendiente (bloqueado por EAS cloud 403)
+- [ ] App Store (iOS) listing — pendiente
+- [ ] Google Play Store listing — pendiente
+- [x] Deploy backend API a producción — Supabase cloud configurado (Edge Functions + migraciones depoyadas)
 
 ### 10.3 Post-launch
 - [x] Monitoreo de crashes
 - [x] Feedback loop
 - [x] Iteración según métricas de uso
+
+---
+
+## Trabajo reciente (post-fases 0-10)
+
+### UI/UX Hardening — plan de 7 fases (28-ago-2026, completo)
+Endurecimiento de la interfaz sin funcionalidades nuevas, sin cambios de servicios/API y sin cambiar la identidad visual:
+
+| Fase | Contenido | Estado |
+|------|-----------|--------|
+| 1 — Tipografía | `lineHeight` absoluto con `getLineHeight()`, recálculo al sobreescribir `fontSize` | ✅ |
+| 2 — Design System | dark mode centralizado en UI primitives, tokens, `OpacityTokens` | ✅ |
+| 3 — Navegación | 5 tabs; Mapa queda fuera del tab bar (contexto secundario) | ✅ |
+| 4 — Home | búsqueda protagonista | ✅ |
+| 5 — Search/Results | ProductCard agrupado | ✅ |
+| 6 — Product Detail | comparar ofertas | ✅ |
+| 7 — Calidad | mocks DEV (`FEATURES.useMocks`), `Skeleton`, ESLint flat + Jest | ✅ |
+
+Reglas acordadas: dark mode se resuelve **desde el store** en los UI primitives; **Accent = encontrado/disponible**, Success = positivo general; detalle completo en `CHANGELOG.md` bajo `[2.0.0-canary]`.
+
+### ESLint cleanup: 136 warnings → 0 (30-ago-2026, completo)
+Limpió los warnings pre-existentes de `expo lint` por grupos:
+- **A — mecánico**: `no-unused-vars` + `array-type` en ~38 archivos (imports/bindings muertos, `Array<T>` → `T[]`).
+- **B — `no-explicit-any` (44→0)**: casts `router.push(... as any)` eliminados (Href permisivo con `typedRoutes: false`), tipado real en `SavedListItem`, `Favorite[]`, `TabIcon`, `GestureResponderEvent`, normalizers Supabase (`OfferRow`/`ProductRow`).
+- **C — react-hooks (React Compiler, reglas `warn`)**: patrón prev-state en `alerts/[id]`, `useSyncExternalStore` en `use-color-scheme.web`, estado derivado en hooks realtime, deps reales en `use-device-location`/`use-notifications` (fix `immutability`), helper módulo en `CategoryPicker`. Quedan 3 `eslint-disable` justificados.
+
+Verificación: `npm run lint` **0 errores / 0 warnings**, `npx tsc --noEmit` limpio, `npx jest --ci` 54 tests en verde. Commit `595db2f`.
 
 ---
 
@@ -373,8 +406,8 @@ src/app/(seller)/
 | 6 | `expo-location`, `react-native-maps` |
 | 7 | `expo-notifications` |
 | 8 | `expo-image-picker` |
-| 9 | `jest`, `@testing-library/react-native`, `@shopify/flash-list` |
-| 10 | `eas-cli`, `sentry` |
+| 9 | `jest`, `jest-expo`, `@testing-library/react-native`, `@shopify/flash-list`, `test-renderer` |
+| 10 | `eas-cli`, `@sentry/react-native` |
 
 ---
 
@@ -387,7 +420,7 @@ Fase 0 (1-2 días) → Fase 1 (2-3 días) → Fase 2 (2 días)
 → Fase 9 (2-3 días) → Fase 10 (1-2 días)
 ```
 
-**Estado: ✅ PROYECTO COMPLETADO — Todas las 11 fases (0-10) terminadas.**
+**Estado: ✅ Fases 0-10 terminadas + UI/UX hardening (7 fases), ESLint 136→0, mapa interactivo, Sentry + analytics HTTP y RTL en Tooltip completados. Pendientes: rebuild nativo para ver el mapa (APK con módulos), Google Play Services en el dispositivo, EAS cloud (403 desde Cuba), signing/App Store/Play Store, update de Expo Go en dispositivo y test manual de TalkBack/VoiceOver.**
 
 ---
 
