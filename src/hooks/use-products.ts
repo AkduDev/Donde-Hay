@@ -3,7 +3,7 @@
  * Hooks de productos con TanStack Query
  */
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation } from '@tanstack/react-query';
 import { productsService } from '@/services/products.service';
 import { queryKeys } from '@/lib/api-client';
 import type { ProductListParams } from '@/services/products.service';
@@ -115,7 +115,6 @@ export function useRelatedProducts(productId: string, limit?: number) {
  * Report product mutation
  */
 export function useReportProduct() {
-  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ productId, reason, description }: {

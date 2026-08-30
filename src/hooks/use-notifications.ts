@@ -59,26 +59,6 @@ export function useNotifications() {
     }
   }, []);
 
-  const registerForPushToken = useCallback(async () => {
-    try {
-      const hasPermission = await requestPermission();
-      if (!hasPermission) return null;
-
-      const tokenData = await Notifications.getExpoPushTokenAsync();
-      const token = tokenData.data;
-      setExpoPushToken(token);
-
-      if (user?.id) {
-        await savePushToken(user.id, token);
-      }
-
-      return token;
-    } catch (error) {
-      console.error('Error getting push token:', error);
-      return null;
-    }
-  }, [user?.id, requestPermission]);
-
   const savePushToken = async (userId: string, token: string) => {
     try {
       const { error } = await supabase
@@ -100,6 +80,26 @@ export function useNotifications() {
     }
   };
 
+  const registerForPushToken = useCallback(async () => {
+    try {
+      const hasPermission = await requestPermission();
+      if (!hasPermission) return null;
+
+      const tokenData = await Notifications.getExpoPushTokenAsync();
+      const token = tokenData.data;
+      setExpoPushToken(token);
+
+      if (user?.id) {
+        await savePushToken(user.id, token);
+      }
+
+      return token;
+    } catch (error) {
+      console.error('Error getting push token:', error);
+      return null;
+    }
+  }, [user?.id, requestPermission]);
+
   const removePushToken = useCallback(async () => {
     if (!expoPushToken) return;
 
@@ -118,7 +118,8 @@ export function useNotifications() {
   }, [expoPushToken]);
 
   useEffect(() => {
-    registerForPushToken();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- registro asíncrono de push en montaje/login (regla heurística)
+    void registerForPushToken();
 
     const notifSub = Notifications.addNotificationReceivedListener(
       (notification) => {
@@ -141,7 +142,7 @@ export function useNotifications() {
       notificationListener.current?.remove();
       responseListener.current?.remove();
     };
-  }, []);
+  }, [registerForPushToken]);
 
   return {
     expoPushToken,

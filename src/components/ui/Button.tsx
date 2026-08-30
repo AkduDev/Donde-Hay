@@ -10,6 +10,7 @@ import {
   View,
   TextStyle,
   ViewStyle,
+  GestureResponderEvent,
   StyleProp,
   ActivityIndicator,
 } from 'react-native';
@@ -17,7 +18,7 @@ import { Box } from './Box';
 import { Text as TextComponent } from './Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
-import { Shadows, getShadow } from '@/theme/shadows';
+import { getShadow } from '@/theme/shadows';
 import { FontSizes } from '@/theme/typography';
 import { ColorPalette, getColors, OpacityTokens } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
@@ -226,18 +227,18 @@ const Button = forwardRef<View, ButtonProps>(
 
     const [pressed, setPressed] = React.useState(false);
 
-    const handlePressIn = (event: any) => {
+    const handlePressIn = (event: GestureResponderEvent) => {
       if (!isDisabled) setPressed(true);
-      onPressIn?.(event as any);
+      onPressIn?.(event);
     };
 
-    const handlePressOut = (event: any) => {
+    const handlePressOut = (event: GestureResponderEvent) => {
       setPressed(false);
-      onPressOut?.(event as any);
+      onPressOut?.(event);
     };
 
-    const handlePress = (event: any) => {
-      if (!isDisabled) onPress?.(event as any);
+    const handlePress = (event: GestureResponderEvent) => {
+      if (!isDisabled) onPress?.(event);
     };
 
     const getBackgroundColor = () => {
@@ -315,7 +316,7 @@ const Button = forwardRef<View, ButtonProps>(
 
     return (
       <Pressable
-        ref={ref as any}
+        ref={ref}
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}

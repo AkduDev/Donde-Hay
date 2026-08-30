@@ -26,7 +26,7 @@ export default function AlertCreateScreen() {
     currentPrice?: string;
   }>();
 
-  const [targetPrice, setTargetPrice] = useState(params.currentPrice || '');
+  const [targetPrice] = useState(params.currentPrice || '');
   const [currency, setCurrency] = useState<'USD' | 'CUP' | 'MLC'>('USD');
   const [direction, setDirection] = useState<'below' | 'above'>('below');
 
@@ -57,7 +57,7 @@ export default function AlertCreateScreen() {
             { text: 'OK', onPress: () => router.back() },
           ]);
         },
-        onError: (error) => {
+        onError: () => {
           AlertRN.alert('Error', 'No se pudo crear la alerta');
         },
       }

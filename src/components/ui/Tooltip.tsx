@@ -16,8 +16,8 @@ import { Box } from './Box';
 import { Text as TextComponent } from './Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
-import { Shadows, getShadow } from '@/theme/shadows';
-import { ColorPalette, getColors } from '@/theme/colors';
+import { getShadow } from '@/theme/shadows';
+import { getColors } from '@/theme/colors';
 import { ZIndex } from '@/theme/z-index';
 import { useThemeStore } from '@/store/themeStore';
 
@@ -117,7 +117,7 @@ const Tooltip = forwardRef<View, TooltipProps>(
     if (!triggerLayout || !tooltipLayout) {
       return (
         <Pressable
-          ref={ref as any}
+          ref={ref}
           onPressIn={show}
           onPressOut={hide}
           onHoverIn={show}
@@ -125,7 +125,7 @@ const Tooltip = forwardRef<View, TooltipProps>(
           onLongPress={show}
           testID={testID}
         >
-          {React.cloneElement(children as React.ReactElement<any>, {
+          {React.cloneElement(children as React.ReactElement<{ onLayout?: (event: LayoutChangeEvent) => void }>, {
             onLayout: handleTriggerLayout,
           })}
         </Pressable>
@@ -259,7 +259,7 @@ const Tooltip = forwardRef<View, TooltipProps>(
 
     return (
       <Pressable
-        ref={ref as any}
+        ref={ref}
         onPressIn={show}
         onPressOut={hide}
         onHoverIn={show}
@@ -268,7 +268,7 @@ const Tooltip = forwardRef<View, TooltipProps>(
         testID={testID}
         style={style}
       >
-        {React.cloneElement(children as React.ReactElement<any>, {
+        {React.cloneElement(children as React.ReactElement<{ onLayout?: (event: LayoutChangeEvent) => void }>, {
           onLayout: handleTriggerLayout,
         })}
 

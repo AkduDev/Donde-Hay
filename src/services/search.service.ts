@@ -150,26 +150,54 @@ function buildSourceCounts(products: ProductWithOffers[]): Record<string, number
 // SUPABASE ROW NORMALIZERS (snake_case → camelCase)
 // ============================================
 
-function mapOfferRow(offer: any): ProductOffer {
+interface OfferRow {
+  id: string;
+  product_id: string;
+  seller_id?: string | null;
+  source_id: string;
+  price: number | string;
+  currency: string;
+  location_id?: string | null;
+  source_url?: string | null;
+  source_external_id?: string | null;
+  posted_at: string;
+  status: string;
+  raw_data?: Record<string, unknown> | null;
+}
+
+interface ProductRow {
+  id: string;
+  canonical_name: string;
+  brand?: string | null;
+  model?: string | null;
+  category_id?: string | null;
+  description?: string | null;
+  specifications?: Record<string, string> | null;
+  image_urls?: string[] | null;
+  created_at: string;
+  updated_at: string;
+  offers?: OfferRow[] | null;
+}
+
+function mapOfferRow(offer: OfferRow): ProductOffer {
   return {
     id: offer.id,
     productId: offer.product_id,
     sellerId: offer.seller_id ?? '',
     sourceId: offer.source_id,
     price: Number(offer.price),
-    currency: offer.currency,
+    currency: offer.currency as ProductOffer['currency'],
     locationId: offer.location_id ?? '',
     sourceUrl: offer.source_url ?? '',
-    sourceExternalId: offer.source_external_id,
+    sourceExternalId: offer.source_external_id ?? undefined,
     postedAt: offer.posted_at,
-    status: offer.status,
-    rawData: offer.raw_data,
+    status: offer.status as ProductOffer['status'],
+    rawData: offer.raw_data ?? undefined,
   };
 }
 
-function mapProductRow(row: any): ProductWithOffers {
-  const rows: any[] = row.offers ?? [];
-  const offers = rows.map((o: any) => mapOfferRow(o));
+function mapProductRow(row: ProductRow): ProductWithOffers {
+  const offers = (row.offers ?? []).map((o) => mapOfferRow(o));
   const prices = offers.map((o) => o.price).filter((p) => p != null);
   const lastSeen = offers.length
     ? new Date(Math.max(...offers.map((o) => new Date(o.postedAt).getTime()))).toISOString()
@@ -180,8 +208,8 @@ function mapProductRow(row: any): ProductWithOffers {
     brand: row.brand ?? '',
     model: row.model ?? '',
     categoryId: row.category_id ?? '',
-    description: row.description,
-    specifications: row.specifications,
+    description: row.description ?? undefined,
+    specifications: row.specifications ?? undefined,
     imageUrls: row.image_urls ?? [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,

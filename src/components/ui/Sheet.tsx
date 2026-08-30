@@ -3,14 +3,13 @@
  * Bottom Sheet con snap points, backdrop y handle
  */
 
-import React, { forwardRef, useRef, useEffect, useState, useImperativeHandle } from 'react';
+import React, { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
 import {
   Animated,
   PanResponder,
   ViewStyle,
   StyleProp,
   Dimensions,
-  Keyboard,
   Pressable,
   Platform,
 } from 'react-native';
@@ -18,8 +17,8 @@ import { Box } from './Box';
 import { Text } from './Text';
 import { Spacing } from '@/theme/spacing';
 import { BorderRadius } from '@/theme/radius';
-import { Shadows, getShadow } from '@/theme/shadows';
-import { ColorPalette, getColors } from '@/theme/colors';
+import { getShadow } from '@/theme/shadows';
+import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -71,7 +70,6 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
       handleIndicator = true,
       closeOnOverlayPress = true,
       closeOnEscape = true,
-      keyboardBehavior = 'extend',
       style,
       contentStyle,
       headerStyle,
@@ -84,7 +82,6 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
     const resolved = mode ?? resolvedMode;
     const colors = getColors(resolved);
     const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-    const [currentSnap, setCurrentSnap] = useState(0);
 
     const snapValues = snapPoints.map((p) =>
       typeof p === 'number' ? p : snapPointValues[p]
@@ -97,7 +94,6 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
         duration: 250,
         useNativeDriver: true,
       }).start();
-      setCurrentSnap(index);
     };
 
     const close = () => {
@@ -136,7 +132,7 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: () => {
-          translateY.setOffset((translateY as any)._value || 0);
+          translateY.setOffset((translateY as unknown as { _value: number })._value || 0);
           translateY.setValue(0);
         },
         onPanResponderMove: Animated.event(
@@ -146,7 +142,10 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
         onPanResponderRelease: (_, gesture) => {
           translateY.flattenOffset();
           const velocity = gesture.vy;
-          const currentY = ((translateY as any)._value || 0) + SCREEN_HEIGHT - (snapPointValues[initialSnap as string] ?? 0);
+          const currentY =
+            ((translateY as unknown as { _value: number })._value || 0) +
+            SCREEN_HEIGHT -
+            (snapPointValues[initialSnap as string] ?? 0);
           handleRelease(currentY, velocity);
         },
       })
@@ -157,6 +156,7 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
       close,
     }));
 
+    /* eslint-disable react-hooks/exhaustive-deps -- snapTo/close cambian de identidad por render; los efectos solo reaccionan a 'visible' */
     useEffect(() => {
       if (visible) {
         const initialIndex = snapPoints.indexOf(initialSnap);
@@ -168,15 +168,19 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
 
     useEffect(() => {
       if (!visible || !closeOnEscape || Platform.OS !== 'web') return;
-      const handleKeyDown = (event: any) => {
+      const handleKeyDown = (event: { key?: string }) => {
         if (event?.key === 'Escape') close();
       };
-      const win = globalThis as any;
+      const win = globalThis as {
+        addEventListener?: (type: string, listener: (event: { key?: string }) => void) => void;
+        removeEventListener?: (type: string, listener: (event: { key?: string }) => void) => void;
+      };
       if (win?.addEventListener) {
         win.addEventListener('keydown', handleKeyDown);
-        return () => win.removeEventListener('keydown', handleKeyDown);
+        return () => win.removeEventListener?.('keydown', handleKeyDown);
       }
     }, [visible, closeOnEscape]);
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     if (!visible) return null;
 
@@ -231,13 +235,13 @@ const Sheet = forwardRef<SheetRef, SheetProps>(
             )}
 
             {(title || subtitle) && (
-      <Box
-        px="md"
-        pb="sm"
-        style={[{ borderBottomWidth: 1, borderColor: colors.divider }, headerStyle as any]}
-        testID={`${testID}-header`}
-        mode={resolved}
-      >
+              <Box
+                px="md"
+                pb="sm"
+                style={[{ borderBottomWidth: 1, borderColor: colors.divider }, headerStyle]}
+                testID={`${testID}-header`}
+                mode={resolved}
+              >
                 {title && (
                   <Text variant="titleLarge" color="text" mode={resolved} testID={`${testID}-title`}>
                     {title}

@@ -3,7 +3,7 @@
  * Barra de búsqueda con sugerencias, historial y acciones
  */
 
-import React, { forwardRef, useState, useEffect } from 'react';
+import React, { forwardRef, useState } from 'react';
 import {
   TextInput,
   TextInputProps,
@@ -63,7 +63,6 @@ const SearchBar = React.memo(forwardRef<TextInput, SearchBarProps>(
       onSubmit,
       onClear,
       suggestions = [],
-      onSuggestionPress,
       showSuggestions = true,
       isLoadingSuggestions = false,
       autoFocus = false,

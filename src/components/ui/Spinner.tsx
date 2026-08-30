@@ -88,7 +88,7 @@ const Spinner = forwardRef<View, SpinnerProps>(
     return (
       <Box
         ref={ref}
-        style={[containerStyleComputed, containerStyle]}
+        style={[containerStyleComputed, style, containerStyle]}
         testID={testID}
         mode={resolved}
       >

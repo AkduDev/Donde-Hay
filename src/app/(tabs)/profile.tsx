@@ -54,7 +54,7 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               await clearAuth();
-              router.replace('/(auth)/login' as any);
+              router.replace('/(auth)/login');
             } catch (error) {
               console.error('Logout error:', error);
             }
@@ -73,21 +73,21 @@ export default function ProfileScreen() {
           icon: '🕐', 
           label: 'Historial de búsquedas', 
           description: 'Tus búsquedas recientes',
-          onPress: () => router.push('/(tabs)/search' as any)
+          onPress: () => router.push('/(tabs)/search')
         },
         { 
           id: 'alerts', 
           icon: '🔔', 
           label: 'Mis alertas', 
           description: 'Gestiona tus alertas de precio',
-          onPress: () => router.push('/(tabs)/alerts' as any)
+          onPress: () => router.push('/(tabs)/alerts')
         },
         { 
           id: 'favorites', 
           icon: '❤️', 
           label: 'Guardados', 
           description: 'Productos y búsquedas guardadas',
-          onPress: () => router.push('/(tabs)/saved' as any)
+          onPress: () => router.push('/(tabs)/saved')
         },
       ],
     },
@@ -99,28 +99,28 @@ export default function ProfileScreen() {
           icon: '🎨', 
           label: 'Apariencia', 
           description: 'Modo claro, oscuro o sistema',
-          onPress: () => router.push('/profile/preferences' as any)
+          onPress: () => router.push('/profile/preferences')
         },
         { 
           id: 'currency', 
           icon: '💱', 
           label: 'Moneda preferida', 
           description: 'USD, CUP o MLC',
-          onPress: () => router.push('/profile/preferences' as any)
+          onPress: () => router.push('/profile/preferences')
         },
         { 
           id: 'location', 
           icon: '📍', 
           label: 'Ubicación por defecto', 
           description: 'Tu provincia',
-          onPress: () => router.push('/profile/preferences' as any)
+          onPress: () => router.push('/profile/preferences')
         },
         { 
           id: 'notifications', 
           icon: '📢', 
           label: 'Notificaciones', 
           description: 'Push, email, alertas',
-          onPress: () => router.push('/profile/preferences' as any)
+          onPress: () => router.push('/profile/preferences')
         },
       ],
     },
@@ -132,7 +132,7 @@ export default function ProfileScreen() {
           icon: '✏️', 
           label: 'Editar perfil', 
           description: 'Nombre, teléfono, avatar',
-          onPress: () => router.push('/profile/edit' as any)
+          onPress: () => router.push('/profile/edit')
         },
         { 
           id: 'help', 
@@ -175,7 +175,7 @@ export default function ProfileScreen() {
               />
               {isAuthenticated && (
                 <Pressable
-                  onPress={() => router.push('/profile/edit' as any)}
+                  onPress={() => router.push('/profile/edit')}
                   style={{
                     position: 'absolute',
                     bottom: 0,
@@ -214,7 +214,7 @@ export default function ProfileScreen() {
 
             {!isAuthenticated && (
               <Box mt="md">
-                <Pressable onPress={() => router.push('/(auth)/login' as any)}>
+                <Pressable onPress={() => router.push('/(auth)/login')}>
                   <Badge variant="primary" size="md">
                     Iniciar sesión
                   </Badge>

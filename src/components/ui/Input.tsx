@@ -17,7 +17,7 @@ import { Text as TextComponent } from './Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
 import { FontSizes } from '@/theme/typography';
-import { ColorPalette, getColors } from '@/theme/colors';
+import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
 
 export type InputSize = 'sm' | 'md' | 'lg';
@@ -206,7 +206,7 @@ const Input = forwardRef<TextInput, InputProps>(
     return (
       <Box
         testID={testID ? `${testID}-container` : undefined}
-        style={containerStyle}
+        style={[style, containerStyle]}
         gap="xs"
         mode={resolved}
       >

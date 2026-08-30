@@ -47,16 +47,18 @@ export function useDeviceLocation(options: UseDeviceLocationOptions = {}) {
       const { status } = await Location.requestForegroundPermissionsAsync();
       setPermission(status);
       return status === Location.PermissionStatus.GRANTED;
-    } catch (err) {
+    } catch {
       setError('Error al solicitar permisos de ubicación');
       return false;
     }
   }, []);
 
-  const getCurrentLocation = useCallback(async () => {
+  const getCurrentLocation = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (!opts?.silent) {
+        setLoading(true);
+        setError(null);
+      }
 
       const hasPermission = await requestPermission();
       if (!hasPermission) {
@@ -88,7 +90,7 @@ export function useDeviceLocation(options: UseDeviceLocationOptions = {}) {
       });
 
       return deviceLocation;
-    } catch (err) {
+    } catch {
       setError('Error al obtener ubicación');
       return null;
     } finally {
@@ -126,7 +128,7 @@ export function useDeviceLocation(options: UseDeviceLocationOptions = {}) {
           });
         }
       );
-    } catch (err) {
+    } catch {
       setError('Error al observar ubicación');
     }
   }, [enableHighAccuracy, distanceInterval, timeInterval, requestPermission, setUserLocation]);
@@ -139,16 +141,17 @@ export function useDeviceLocation(options: UseDeviceLocationOptions = {}) {
   }, []);
 
   useEffect(() => {
-    getCurrentLocation();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch y suscripción de ubicación en montaje (regla heurística)
+    void getCurrentLocation({ silent: true });
 
     if (watchPosition) {
-      startWatching();
+      void startWatching();
     }
 
     return () => {
       stopWatching();
     };
-  }, []);
+  }, [getCurrentLocation, startWatching, stopWatching, watchPosition]);
 
   return {
     location,

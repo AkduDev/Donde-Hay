@@ -51,7 +51,7 @@ export default function LoginScreen() {
       { email: email.trim(), password },
       {
         onSuccess: () => {
-          router.replace('/(tabs)' as any);
+          router.replace('/(tabs)');
         },
         onError: (error: { message?: string }) => {
           setErrors({ general: error.message || 'Credenciales incorrectas' });

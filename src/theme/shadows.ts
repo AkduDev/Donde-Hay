@@ -4,7 +4,6 @@
  * Basado en Material Design 3 elevation system
  */
 
-import { Platform } from 'react-native';
 
 export interface Shadow {
   shadowColor: string;

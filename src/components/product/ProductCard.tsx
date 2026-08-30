@@ -5,14 +5,13 @@
  */
 
 import React from 'react';
-import { Pressable, ViewStyle, StyleProp, Linking } from 'react-native';
+import { Pressable, ViewStyle, StyleProp } from 'react-native';
 import { Image } from 'expo-image';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { SourceChip } from '@/components/product/SourceChip';
-import { BorderRadius } from '@/theme/radius';
 import { getColors } from '@/theme/colors';
 import { getSourceIcon } from '@/utils/format';
 import { useThemeStore } from '@/store/themeStore';

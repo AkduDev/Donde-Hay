@@ -36,7 +36,7 @@ export function LocationPicker({
   const { data: municipalities, isLoading: municipalitiesLoading } =
     useMunicipalities(selectedProvince?.id || '');
 
-  const { location: deviceLocation, loading: deviceLoading, getCurrentLocation } =
+  const { loading: deviceLoading, getCurrentLocation } =
     useDeviceLocation({ enableHighAccuracy: true });
 
   const handleUseDeviceLocation = async () => {

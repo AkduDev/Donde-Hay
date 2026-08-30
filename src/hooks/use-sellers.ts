@@ -5,7 +5,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { sellersService } from '@/services/sellers.service';
-import { queryKeys } from '@/lib/api-client';
 import type { SellerProductsParams } from '@/services/sellers.service';
 
 // ============================================

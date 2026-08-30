@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { ScrollView, Pressable, Linking } from 'react-native';
+import { ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -13,23 +13,8 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
-import { Spinner } from '@/components/ui/Spinner';
 import { useThemeStore } from '@/store/themeStore';
 import { getColors } from '@/theme/colors';
-
-const SOURCE_NAMES: Record<string, string> = {
-  revolico: 'Revolico',
-  facebook: 'Facebook',
-  instagram: 'Instagram',
-  telegram: 'Telegram',
-};
-
-const SOURCE_ICONS: Record<string, string> = {
-  revolico: '🛒',
-  facebook: '👤',
-  instagram: '📸',
-  telegram: '💬',
-};
 
 export default function SellerDetailScreen() {
   const router = useRouter();

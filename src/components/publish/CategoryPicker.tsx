@@ -3,7 +3,7 @@
  * Selector de categorías con búsqueda y subcategorías
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Pressable, FlatList } from 'react-native';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
@@ -20,6 +20,29 @@ export interface CategoryPickerProps {
   mode?: 'light' | 'dark';
 }
 
+type PickerCategory = Category & { children?: Category[] };
+
+function groupCategories(categories: Category[], searchQuery: string): PickerCategory[] {
+  const q = searchQuery.trim().toLowerCase();
+
+  if (q) {
+    return categories
+      .filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.slug.toLowerCase().includes(q)
+      )
+      .map((c) => ({ ...c }));
+  }
+
+  return categories
+    .filter((c) => !c.parentId)
+    .map((parent) => ({
+      ...parent,
+      children: categories.filter((c) => c.parentId === parent.id),
+    }));
+}
+
 export function CategoryPicker({
   selectedCategoryId,
   onSelect,
@@ -34,26 +57,7 @@ export function CategoryPicker({
   const [expandedParent, setExpandedParent] = useState<string | null>(null);
 
   // Group categories: parents with children
-  const groupedCategories = useMemo(() => {
-    if (!categories) return [];
-
-    const parents = categories.filter((c) => !c.parentId);
-    const children = categories.filter((c) => !!c.parentId);
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return categories.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.slug.toLowerCase().includes(q)
-      );
-    }
-
-    return parents.map((parent) => ({
-      ...parent,
-      children: children.filter((c) => c.parentId === parent.id),
-    }));
-  }, [categories, searchQuery]);
+  const groupedCategories = groupCategories(categories ?? [], searchQuery);
 
   const handleSelect = (categoryId: string) => {
     onSelect(categoryId);
@@ -90,7 +94,7 @@ export function CategoryPicker({
           mode={mode}
         />
         <FlatList
-          data={groupedCategories as Category[]}
+          data={groupedCategories}
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
           renderItem={({ item }) => (
@@ -146,9 +150,9 @@ export function CategoryPicker({
 
       <FlatList
         data={groupedCategories}
-        keyExtractor={(item: any) => item.id}
+        keyExtractor={(item) => item.id}
         scrollEnabled={false}
-        renderItem={({ item: parent }: any) => {
+        renderItem={({ item: parent }) => {
           const hasChildren = parent.children && parent.children.length > 0;
           const isExpanded = expandedParent === parent.id;
           const isSelected = selectedCategoryId === parent.id;
@@ -196,7 +200,7 @@ export function CategoryPicker({
               {/* Subcategories */}
               {hasChildren && isExpanded && (
                 <Box ml="md" mt="xs" gap="xs" mode={mode}>
-                  {parent.children.map((child: any) => {
+                  {parent.children?.map((child) => {
                     const isChildSelected = selectedCategoryId === child.id;
                     return (
                       <Pressable

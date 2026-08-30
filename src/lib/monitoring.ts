@@ -5,8 +5,6 @@
  * can be swapped for Sentry/Datadog later.
  */
 
-import { Platform } from "react-native";
-
 // ============================================
 // TYPES
 // ============================================
@@ -144,8 +142,6 @@ interface HealthCheckResult {
  */
 export async function healthCheck(): Promise<HealthCheckResult> {
   const checks: Record<string, { ok: boolean; durationMs?: number; error?: string }> = {};
-  const start = Date.now();
-
   // Check: Network connectivity
   try {
     const netStart = Date.now();

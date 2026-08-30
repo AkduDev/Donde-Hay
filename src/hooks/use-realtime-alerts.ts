@@ -87,7 +87,6 @@ export function useRealtimeAlerts() {
   // Subscribe on mount / auth change
   useEffect(() => {
     if (!isAuthenticated || !user) {
-      setAlerts([]);
       return;
     }
 
@@ -115,8 +114,10 @@ export function useRealtimeAlerts() {
     queryClient.invalidateQueries({ queryKey: queryKeys.alerts.list() });
   }, [queryClient]);
 
+  const activeAlerts = isAuthenticated && user ? alerts : [];
+
   return {
-    alerts,
+    alerts: activeAlerts,
     connectionStatus,
     lastEvent,
     refetch,

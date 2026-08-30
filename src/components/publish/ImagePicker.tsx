@@ -3,7 +3,7 @@
  * Selector de imágenes con cámara y galería
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Pressable, Alert, ScrollView } from 'react-native';
 import * as ImagePickerExpo from 'expo-image-picker';
 import { Image } from 'expo-image';
@@ -31,7 +31,6 @@ export function ImagePicker({
   const { resolvedMode } = useThemeStore();
   const mode = propMode ?? resolvedMode;
   const colors = getColors(mode);
-  const [loading, setLoading] = useState(false);
 
   const remainingSlots = maxImages - images.length;
 

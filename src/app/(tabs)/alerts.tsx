@@ -28,11 +28,11 @@ export default function AlertsScreen() {
   const toggleAlert = useToggleAlert();
 
   const handleCreateAlert = () => {
-    router.push('/alerts/create' as any);
+    router.push('/alerts/create');
   };
 
   const handleEditAlert = (alertId: string) => {
-    router.push(`/alerts/${alertId}` as any);
+    router.push(`/alerts/${alertId}`);
   };
 
   const handleToggleAlert = (alertId: string, isActive: boolean) => {
@@ -87,7 +87,7 @@ export default function AlertsScreen() {
                 Recibe notificaciones cuando los precios bajen
               </Text>
             </Box>
-            <Button variant="primary" onPress={() => router.push('/(auth)/login' as any)}>
+            <Button variant="primary" onPress={() => router.push('/(auth)/login')}>
               Iniciar sesión
             </Button>
           </Box>

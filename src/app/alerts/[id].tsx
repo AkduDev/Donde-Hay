@@ -3,7 +3,7 @@
  * Editar alerta de precio existente
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, Pressable, Alert as AlertRN, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -33,13 +33,15 @@ export default function AlertEditScreen() {
   const [currency, setCurrency] = useState<'USD' | 'CUP' | 'MLC'>(alert?.currency || 'USD');
   const [direction, setDirection] = useState<'below' | 'above'>(alert?.direction || 'below');
 
-  useEffect(() => {
+  const [prevAlert, setPrevAlert] = useState(alert);
+  if (alert !== prevAlert) {
+    setPrevAlert(alert);
     if (alert) {
       setTargetPrice(alert.targetPrice.toString());
       setCurrency(alert.currency);
       setDirection(alert.direction);
     }
-  }, [alert]);
+  }
 
   const handleUpdate = () => {
     if (!params.id) return;

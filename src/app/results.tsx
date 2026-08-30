@@ -92,7 +92,7 @@ export default function SearchResultsScreen() {
         </Text>
         <Box flexDirection="row" alignItems="center" gap="md">
           <Pressable
-            onPress={() => router.push('/map' as any)}
+            onPress={() => router.push('/map')}
             accessibilityLabel="Ver productos en el mapa"
             accessibilityRole="button"
           >

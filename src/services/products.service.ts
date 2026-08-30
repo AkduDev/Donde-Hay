@@ -5,7 +5,6 @@
 
 import { supabase } from '@/lib/supabase';
 import type {
-  Product,
   ProductWithOffers,
   ProductOffer,
 } from '@/types';
@@ -151,7 +150,7 @@ export const productsService = {
   /**
    * Get price history for a product (requires price_history table)
    */
-  priceHistory: async (productId: string, params?: { period?: '7d' | '30d' | '90d' }): Promise<PriceHistory[]> => {
+  priceHistory: async (productId: string, _params?: { period?: '7d' | '30d' | '90d' }): Promise<PriceHistory[]> => {
     // For now, return offers as price history points
     const { data, error } = await supabase
       .from('product_offers')

@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeStore } from '@/store/themeStore';
 import { getColors } from '@/theme/colors';
+import type { ComponentProps } from 'react';
 
 export default function TabsLayout() {
   const { resolvedMode } = useThemeStore();
@@ -92,9 +93,9 @@ function TabIcon({
   color,
   size,
 }: {
-  iconName: string;
+  iconName: ComponentProps<typeof Ionicons>['name'];
   color: string;
   size: number;
 }) {
-  return <Ionicons name={iconName as any} size={size} color={color} />;
+  return <Ionicons name={iconName} size={size} color={color} />;
 }

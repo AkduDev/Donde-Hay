@@ -5,7 +5,6 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/store/authStore';
 import { queryKeys } from '@/lib/api-client';
 
 // ============================================
@@ -34,7 +33,6 @@ export interface PublishResult {
 // SERVICE
 // ============================================
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const BUCKET_NAME = 'product-images';
 
 async function uploadImages(
@@ -143,11 +141,10 @@ async function publishProduct(data: PublishProductData): Promise<PublishResult> 
 
 export function usePublish() {
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuthStore();
 
   return useMutation({
     mutationFn: publishProduct,
-    onSuccess: (result) => {
+    onSuccess: () => {
       // Invalidate product queries
       queryClient.invalidateQueries({ queryKey: queryKeys.products.list() });
       queryClient.invalidateQueries({ queryKey: queryKeys.products.trending() });

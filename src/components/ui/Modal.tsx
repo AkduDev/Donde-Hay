@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Box } from './Box';
 import { BorderRadius } from '@/theme/radius';
-import { Shadows, getShadow } from '@/theme/shadows';
+import { getShadow } from '@/theme/shadows';
 import { getColors } from '@/theme/colors';
 import { Text } from './Text';
 import { useThemeStore } from '@/store/themeStore';
@@ -79,8 +79,7 @@ const Modal = forwardRef<View, ModalBaseProps>(
       style,
       contentStyle,
       headerStyle,
-      footerStyle,
-mode,
+      mode,
       testID,
       presentationStyle,
     }: ModalBaseProps,
@@ -95,16 +94,19 @@ mode,
     useEffect(() => {
       if (!visible || !closeOnEscape || Platform.OS !== 'web') return;
 
-      const handleKeyDown = (event: any) => {
+      const handleKeyDown = (event: { key?: string }) => {
         if (event?.key === 'Escape') {
           onClose();
         }
       };
 
-      const win = globalThis as any;
+      const win = globalThis as {
+        addEventListener?: (type: string, listener: (event: { key?: string }) => void) => void;
+        removeEventListener?: (type: string, listener: (event: { key?: string }) => void) => void;
+      };
       if (win?.addEventListener) {
         win.addEventListener('keydown', handleKeyDown);
-        return () => win.removeEventListener('keydown', handleKeyDown);
+        return () => win.removeEventListener?.('keydown', handleKeyDown);
       }
 
       return () => {};

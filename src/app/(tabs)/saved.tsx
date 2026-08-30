@@ -21,6 +21,7 @@ import { useAuthStore } from '@/store/authStore';
 import type { ProductWithOffers, Seller, SavedSearch } from '@/types';
 
 type TabType = 'products' | 'searches' | 'sellers';
+type SavedListItem = ProductWithOffers | SavedSearch | Seller;
 
 export default function SavedScreen() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function SavedScreen() {
   // Handlers
   const handleProductPress = (product: ProductWithOffers) => {
     router.push({
-      pathname: '/product/[id]' as any,
+      pathname: '/product/[id]',
       params: { id: product.id },
     });
   };
@@ -72,7 +73,7 @@ export default function SavedScreen() {
 
   const handleSearchPress = (search: SavedSearch) => {
     router.push({
-      pathname: '/results' as any,
+      pathname: '/results',
       params: { query: typeof search.query === 'string' ? search.query : JSON.stringify(search.query) },
     });
   };
@@ -87,7 +88,7 @@ export default function SavedScreen() {
 
   const handleSellerPress = (seller: Seller) => {
     router.push({
-      pathname: '/seller/[id]' as any,
+      pathname: '/seller/[id]',
       params: { id: seller.id },
     });
   };
@@ -127,7 +128,7 @@ export default function SavedScreen() {
             <Button
               variant="primary"
               size="md"
-              onPress={() => router.push('/' as any)}
+              onPress={() => router.push('/')}
               accessibilityLabel={activeTab === 'products' ? 'Explorar productos' : 'Buscar productos'}
             >
           {activeTab === 'products' ? 'Explorar productos' : 'Buscar ahora'}
@@ -186,14 +187,14 @@ export default function SavedScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: any }) => {
+  const renderItem = ({ item }: { item: SavedListItem }) => {
     switch (activeTab) {
       case 'products':
-        return renderProductItem({ item });
+        return renderProductItem({ item: item as ProductWithOffers });
       case 'searches':
-        return renderSearchItem({ item });
+        return renderSearchItem({ item: item as SavedSearch });
       case 'sellers':
-        return renderSellerItem({ item });
+        return renderSellerItem({ item: item as Seller });
       default:
         return null;
     }
@@ -215,7 +216,7 @@ export default function SavedScreen() {
             <Button
               variant="primary"
               size="md"
-              onPress={() => router.push('/(auth)/login' as any)}
+              onPress={() => router.push('/(auth)/login')}
               accessibilityLabel="Iniciar sesión para ver guardados"
             >
               Iniciar sesión

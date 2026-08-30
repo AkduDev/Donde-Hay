@@ -265,7 +265,7 @@ export function unsubscribeFromSavedSearches(channel?: RealtimeChannel) {
 // ============================================
 
 export function unsubscribeAll() {
-  activeChannels.forEach((channel, name) => {
+  activeChannels.forEach((channel, _name) => {
     supabase.removeChannel(channel);
   });
   activeChannels.clear();

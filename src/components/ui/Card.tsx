@@ -9,8 +9,8 @@ import { Box } from './Box';
 import { Text } from './Text';
 import { BorderRadius } from '@/theme/radius';
 import { Spacing } from '@/theme/spacing';
-import { Shadows, getShadow, ShadowLevel } from '@/theme/shadows';
-import { ColorPalette, getColors } from '@/theme/colors';
+import { getShadow } from '@/theme/shadows';
+import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
 
 export type CardVariant = 'elevated' | 'outlined' | 'filled' | 'ghost';
@@ -41,7 +41,7 @@ const variantStyles: Record<CardVariant, (mode: 'light' | 'dark') => ViewStyle> 
     backgroundColor: getColors(mode).surfaceVariant,
     borderWidth: 0,
   }),
-  ghost: (mode) => ({
+  ghost: () => ({
     backgroundColor: 'transparent',
     borderWidth: 0,
   }),
@@ -72,7 +72,7 @@ const Card = forwardRef<View, CardProps>(
     if (onPress) {
       return (
         <Pressable
-          ref={ref as any}
+          ref={ref}
           onPress={onPress}
           style={[containerStyle, style]}
           testID={testID}

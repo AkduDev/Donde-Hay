@@ -4,7 +4,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { Text, TextStyle, StyleProp } from 'react-native';
+import { Text, TextStyle } from 'react-native';
 import { TypographyVariants, TypographyVariant, getLineHeight } from '@/theme/typography';
 import { ColorPalette, getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';

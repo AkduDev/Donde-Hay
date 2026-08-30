@@ -21,7 +21,7 @@ import { useProducts } from '@/hooks/use-products';
 import { useCategories } from '@/hooks/use-categories';
 import { useFavorites, useAddFavorite, useRemoveFavorite } from '@/hooks/use-favorites';
 import { useTrendingSearches } from '@/hooks/use-search';
-import type { ProductWithOffers } from '@/types';
+import type { Favorite, ProductWithOffers } from '@/types';
 import { OpacityTokens } from '@/theme/colors';
 
 const LOGO = require('../../../assets/images/DondeHay3.jpeg');
@@ -41,16 +41,16 @@ export default function HomeScreen() {
   const removeFavorite = useRemoveFavorite();
 
   const favoriteProductIds = new Set(
-    (favoritesData as any[] | undefined)?.map((f: any) => f.targetId) ?? []
+    (favoritesData as Favorite[] | undefined)?.map((f) => f.targetId) ?? []
   );
 
   const handleFavoritePress = (product: ProductWithOffers) => {
     if (!user) {
-      router.push('/(auth)/login' as any);
+      router.push('/(auth)/login');
       return;
     }
     if (favoriteProductIds.has(product.id)) {
-      const fav = (favoritesData as any[])?.find((f: any) => f.targetId === product.id);
+      const fav = (favoritesData as Favorite[])?.find((f) => f.targetId === product.id);
       if (fav) removeFavorite.mutate(fav.id);
     } else {
       addFavorite.mutate({ type: 'product', targetId: product.id });
@@ -65,21 +65,21 @@ export default function HomeScreen() {
 
   const handleSearch = (query: string) => {
     router.push({
-      pathname: '/results' as any,
+      pathname: '/results',
       params: { query },
     });
   };
 
   const handleCategoryPress = (categoryId: string) => {
     router.push({
-      pathname: '/results' as any,
+      pathname: '/results',
       params: { category: categoryId },
     });
   };
 
   const handleProductPress = (product: ProductWithOffers) => {
     router.push({
-      pathname: '/product/[id]' as any,
+      pathname: '/product/[id]',
       params: { id: product.id },
     });
   };

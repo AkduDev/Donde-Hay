@@ -52,14 +52,7 @@ export default function NearbyScreen() {
   };
 
   const handleProductPress = (productId: string) => {
-    router.push(`/product/${productId}` as any);
-  };
-
-  const formatDistance = (distance: number) => {
-    if (distance < 1) {
-      return `${Math.round(distance * 1000)}m`;
-    }
-    return `${distance.toFixed(1)}km`;
+    router.push(`/product/${productId}`);
   };
 
   return (

@@ -41,10 +41,10 @@ export interface RevolicoAd {
 }
 
 export interface RevolicoAdConnection {
-  edges: Array<{
+  edges: {
     node: RevolicoAd;
     cursor: string;
-  }>;
+  }[];
   pageInfo: {
     hasNextPage: boolean;
     endCursor: string | null;
@@ -255,7 +255,7 @@ async function gqlRequest<T>(
 
     const json = (await response.json()) as {
       data?: T;
-      errors?: Array<{ message: string }>;
+      errors?: { message: string }[];
     };
 
     if (json.errors && json.errors.length > 0) {

@@ -4,7 +4,6 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/store/authStore';
 import { queryKeys } from '@/lib/api-client';

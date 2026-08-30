@@ -81,7 +81,6 @@ export function useRealtimeProduct(productId: string | null) {
   // Subscribe when productId is provided
   useEffect(() => {
     if (!productId) {
-      setOffers([]);
       return;
     }
 
@@ -113,8 +112,10 @@ export function useRealtimeProduct(productId: string | null) {
     }
   }, [productId, queryClient]);
 
+  const activeOffers = productId ? offers : [];
+
   return {
-    offers,
+    offers: activeOffers,
     connectionStatus,
     lastEvent,
     refetch,

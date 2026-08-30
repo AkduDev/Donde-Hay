@@ -101,7 +101,7 @@ interface UseRevolicoSearchOptions {
  * Search products from both DB and Revolico
  */
 export function useRevolicoSearch(options: UseRevolicoSearchOptions = {}) {
-  const { query, categoryId, enabled = true, autoScrape = false, limit = 20, sortBy = 'recent' } = options;
+  const { query, categoryId, enabled = true, limit = 20, sortBy = 'recent' } = options;
   const queryClient = useQueryClient();
 
   // 1. Fetch DB products

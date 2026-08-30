@@ -12,7 +12,6 @@ import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-import { Spinner } from '@/components/ui/Spinner';
 import { ImagePicker } from '@/components/publish/ImagePicker';
 import { CategoryPicker } from '@/components/publish/CategoryPicker';
 import { LocationPicker } from '@/components/publish/LocationPicker';
@@ -165,7 +164,7 @@ export default function PublishScreen() {
             ]
           );
         },
-        onError: (error) => {
+        onError: () => {
           Alert.alert('Error', 'No se pudo publicar el producto. Intenta de nuevo.');
         },
       }

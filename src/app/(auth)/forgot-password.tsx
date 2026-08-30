@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, Link } from 'expo-router';
+import { Link } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
@@ -16,7 +16,6 @@ import { useForgotPassword } from '@/hooks/use-auth';
 import { validateEmail } from '@/utils/validation';
 
 export default function ForgotPasswordScreen() {
-  const router = useRouter();
   const { resolvedMode } = useThemeStore();
   const forgotPasswordMutation = useForgotPassword();
 

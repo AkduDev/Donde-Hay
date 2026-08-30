@@ -17,12 +17,12 @@ export interface UserLocation {
 interface LocationState {
   userLocation: UserLocation | null;
   selectedRadius: number;
-  recentSearches: Array<{
+  recentSearches: {
     latitude: number;
     longitude: number;
     label: string;
     timestamp: number;
-  }>;
+  }[];
 
   setUserLocation: (location: UserLocation | null) => void;
   setSelectedRadius: (radius: number) => void;

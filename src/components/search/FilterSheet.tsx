@@ -10,7 +10,6 @@ import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Sheet, SheetProps } from '@/components/ui/Sheet';
 import { Divider } from '@/components/ui/Divider';
-import { getColors } from '@/theme/colors';
 import { useThemeStore } from '@/store/themeStore';
 
 export interface FilterState {
@@ -63,6 +62,14 @@ const POSTED_WITHIN: { id: FilterState['postedWithin']; label: string }[] = [
 
 const PRICE_PRESETS = [50, 100, 200, 500, 1000, 2000];
 
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <Box mb="sm">
+    <Text variant="titleMedium" color="text">
+      {children}
+    </Text>
+  </Box>
+);
+
 const FilterSheet = ({
   visible,
   onClose,
@@ -72,20 +79,20 @@ const FilterSheet = ({
   provinces = [],
   municipalities = [],
   sources = [],
-  categories = [],
   testID,
   ...rest
 }: FilterSheetProps) => {
   const { resolvedMode } = useThemeStore();
-  const colors = getColors(resolvedMode);
 
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
 
-  React.useEffect(() => {
-    if (visible) {
-      setLocalFilters(filters);
-    }
-  }, [visible, filters]);
+  const [prevVisible, setPrevVisible] = useState(visible);
+  const [prevFilters, setPrevFilters] = useState(filters);
+  if (visible && (visible !== prevVisible || filters !== prevFilters)) {
+    setPrevVisible(visible);
+    setPrevFilters(filters);
+    setLocalFilters(filters);
+  }
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -134,14 +141,6 @@ const FilterSheet = ({
     setLocalFilters(resetFilters);
     onReset();
   };
-
-  const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-    <Box mb="sm">
-      <Text variant="titleMedium" color="text">
-        {children}
-      </Text>
-    </Box>
-  );
 
   const ChipButton = ({
     label,
