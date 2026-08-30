@@ -12,8 +12,7 @@ import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Spinner } from '@/components/ui/Spinner';
-import { ProductCard } from '@/components/product/ProductCard';
+import { ProductCard, ProductCardSkeleton } from '@/components/product';
 import { useThemeStore } from '@/store/themeStore';
 import { useSearch } from '@/hooks/use-search';
 import { getColors } from '@/theme/colors';
@@ -246,8 +245,8 @@ export default function SearchResultsScreen() {
 
         {/* Content */}
         {isLoading ? (
-          <Box flex={1} alignItems="center" justifyContent="center">
-            <Spinner size="lg" mode={resolvedMode} />
+          <Box flex={1} p="md" mode={resolvedMode}>
+            <ProductCardSkeleton layout="list" count={6} testID="results-skeleton" />
           </Box>
         ) : (
           <FlashList

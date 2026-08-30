@@ -59,6 +59,18 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - **Acceso al mapa desde el detail**: el card de mejor precio incluye la entrada "🗺️ Ver cerca en el mapa" (contexto secundario Mapa, como en results Fase 3) que navega a `/map`, con borde primary para no confundirse con la acción principal.
 - `npx tsc --noEmit` ✅.
 
+### FASE 7 — Calidad: mocks DEV, Skeleton, ESLint flat + Jest (completada 30-ago-2026)
+
+- **Skeleton** (`src/components/ui/Skeleton.tsx`): esqueleto con pulso Animated, bg `surfaceVariant`, mediante tokens del theme (getColors/spacing/radius). Acompañado de `ProductCardSkeleton` (`src/components/product/`) con layouts `list`/`grid` y prop `count`.
+- **Loading states con skeletons**: Home (3 bloques: list + 2 grids horizontales), Results (count=6), Search tab (count=4 + hint "Buscando en todas las fuentes..."), Product detail (imagen 300h + líneas de detalle). Spinners remanentes sin uso eliminados.
+- **Mocks DEV**: flag `FEATURES.useMocks` en `src/config.ts` (env `EXPO_PUBLIC_USE_MOCKS`, default false) + dataset tipado `MOCK_PRODUCTS` en `src/mocks/products.ts` (5 productos con ofertas). Home muestra: `productsResponse?.data ?? (FEATURES.useMocks ? MOCK_PRODUCTS : [])`.
+- **ESLint flat**: nuevo `eslint.config.js` (eslint-config-expo/flat, reglas react-hooks de React Compiler a `warn`), `.eslintrc.js` legacy eliminado. **eslint bajado a 9.39.5** (10.8.1 crasheaba con eslint-plugin-react 7.37.5: `contextOrFilename.getFilename is not a function`). `npm run lint`: **0 errores** (136 warnings pre-existentes).
+- **Jest funcionando**: `jest-expo@57.0.5`, `jest@30.5.0`, `@react-native/jest-preset@0.86.2` (versionado con RN 0.86.2, jamás @latest — el 0.87.1 rompía `react-native/setup-env`), `@testing-library/react-native@14.0.1` (API async: `await render()` + `screen`) y `test-renderer@^1.0.0` (nuevo renderer peer de RNTL v14, reemplaza a react-test-renderer). Corregido typo `setupFilesAfterSetup` → `setupFilesAfterEnv`.
+- **`jest.setup.js` despojado**: ya NO hace `require('expo-router/entry')` — bootstrappea la app y crashea en Node (`window.location` null).
+- **Tests (54 en verde)**: `format` (sanitizado contra la API real), `validation` (cobertura completa de funciones) y smoke de UI primitives (`Text`, `Badge`, `Box` con RNTL).
+- **Cleanups**: `src/theme/index.ts` sin re-exports duplicados; `search.tsx` sin entidades sin escapar; purity en `product/[id].tsx` (`useState(() => Date.now())`).
+- `npx tsc --noEmit` ✅.
+
 ## [1.1.0] - 2026-08-28
 
 ### Arreglado

@@ -13,7 +13,7 @@ import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Spinner } from '@/components/ui/Spinner';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { SourceChip } from '@/components/product/SourceChip';
 import { useThemeStore } from '@/store/themeStore';
 import { useProduct } from '@/hooks/use-products';
@@ -62,12 +62,21 @@ export default function ProductDetailScreen() {
   const removeFavorite = useRemoveFavorite();
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [mountedAt] = useState(() => Date.now());
 
   if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-        <Box flex={1} alignItems="center" justifyContent="center">
-          <Spinner size="lg" mode={resolvedMode} />
+        <Box flex={1} bg="background" mode={resolvedMode}>
+          <Skeleton width="100%" height={300} borderRadius="none" testID="product-detail-skeleton-image" />
+          <Box p="md" gap="md">
+            <Skeleton width="70%" height={28} borderRadius="xs" />
+            <Skeleton width="40%" height={18} borderRadius="xs" />
+            <Skeleton width="100%" height={120} borderRadius="lg" />
+            <Skeleton width="60%" height={20} borderRadius="xs" />
+            <Skeleton width="100%" height={90} borderRadius="lg" />
+            <Skeleton width="100%" height={90} borderRadius="lg" />
+          </Box>
         </Box>
       </SafeAreaView>
     );
@@ -124,7 +133,7 @@ export default function ProductDetailScreen() {
 
   const getAvailabilityStatus = (offer: ProductOffer) => {
     const hoursSincePosted =
-      (Date.now() - new Date(offer.postedAt).getTime()) / (1000 * 60 * 60);
+      (mountedAt - new Date(offer.postedAt).getTime()) / (1000 * 60 * 60);
 
     if (hoursSincePosted <= 24) {
       return { label: 'Reciente', variant: 'accent' as const, icon: '🟢' };

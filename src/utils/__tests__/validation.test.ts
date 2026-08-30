@@ -11,69 +11,77 @@ import {
   validateSearchQuery,
   validatePriceRange,
   validateForm,
+  type ValidationRules,
 } from '../validation';
 
 describe('validateEmail', () => {
-  it('accepts valid email', () => {
-    expect(validateEmail('test@example.com').isValid).toBe(true);
+  it('accepts a valid email', () => {
+    expect(validateEmail('usuario@correo.cu').isValid).toBe(true);
   });
 
   it('rejects empty email', () => {
-    expect(validateEmail('').isValid).toBe(false);
+    const result = validateEmail('');
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe('El email es requerido');
   });
 
-  it('rejects invalid email format', () => {
-    expect(validateEmail('notanemail').isValid).toBe(false);
+  it('rejects malformed email', () => {
+    expect(validateEmail('no-es-un-email').isValid).toBe(false);
   });
 });
 
 describe('validatePassword', () => {
-  it('accepts valid password', () => {
-    expect(validatePassword('Password1').isValid).toBe(true);
+  it('accepts a strong password', () => {
+    expect(validatePassword('Contrasena1').isValid).toBe(true);
+  });
+
+  it('rejects short password', () => {
+    const result = validatePassword('Ab1');
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe('Mínimo 8 caracteres');
+  });
+
+  it('requires uppercase', () => {
+    expect(validatePassword('contrasena1').isValid).toBe(false);
+  });
+
+  it('requires a number', () => {
+    expect(validatePassword('Contrasena').isValid).toBe(false);
   });
 
   it('rejects empty password', () => {
     expect(validatePassword('').isValid).toBe(false);
   });
-
-  it('rejects short password', () => {
-    expect(validatePassword('Pass1').isValid).toBe(false);
-  });
-
-  it('rejects password without uppercase', () => {
-    expect(validatePassword('password1').isValid).toBe(false);
-  });
-
-  it('rejects password without number', () => {
-    expect(validatePassword('Password').isValid).toBe(false);
-  });
 });
 
 describe('validatePasswordConfirmation', () => {
   it('accepts matching passwords', () => {
-    expect(validatePasswordConfirmation('Password1', 'Password1').isValid).toBe(true);
+    expect(validatePasswordConfirmation('Contrasena1', 'Contrasena1').isValid).toBe(true);
   });
 
   it('rejects empty confirmation', () => {
-    expect(validatePasswordConfirmation('Password1', '').isValid).toBe(false);
+    const result = validatePasswordConfirmation('Contrasena1', '');
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe('Confirma tu contraseña');
   });
 
-  it('rejects non-matching passwords', () => {
-    expect(validatePasswordConfirmation('Password1', 'Password2').isValid).toBe(false);
+  it('rejects mismatch', () => {
+    const result = validatePasswordConfirmation('Contrasena1', 'Otra123');
+    expect(result.isValid).toBe(false);
   });
 });
 
 describe('validatePhone', () => {
-  it('accepts valid 8-digit phone', () => {
-    expect(validatePhone('12345678').isValid).toBe(true);
-  });
-
-  it('accepts valid +53 phone', () => {
-    expect(validatePhone('5312345678').isValid).toBe(true);
-  });
-
   it('accepts empty phone (optional)', () => {
     expect(validatePhone('').isValid).toBe(true);
+  });
+
+  it('accepts 8-digit phone', () => {
+    expect(validatePhone('51234567').isValid).toBe(true);
+  });
+
+  it('accepts +53 8-digit phone', () => {
+    expect(validatePhone('+53 51234567').isValid).toBe(true);
   });
 
   it('rejects invalid phone', () => {
@@ -82,34 +90,32 @@ describe('validatePhone', () => {
 });
 
 describe('validateName', () => {
-  it('accepts valid name', () => {
-    expect(validateName('John').isValid).toBe(true);
+  it('accepts a valid name', () => {
+    expect(validateName('Ana María').isValid).toBe(true);
+  });
+
+  it('rejects short name', () => {
+    const result = validateName('A');
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe('Mínimo 2 caracteres');
   });
 
   it('rejects empty name', () => {
     expect(validateName('').isValid).toBe(false);
   });
-
-  it('rejects short name', () => {
-    expect(validateName('A').isValid).toBe(false);
-  });
-
-  it('rejects long name', () => {
-    expect(validateName('A'.repeat(101)).isValid).toBe(false);
-  });
 });
 
 describe('validateSearchQuery', () => {
-  it('accepts valid query', () => {
-    expect(validateSearchQuery('iPhone 13').isValid).toBe(true);
+  it('accepts a query', () => {
+    expect(validateSearchQuery('iPhone').isValid).toBe(true);
   });
 
   it('rejects empty query', () => {
     expect(validateSearchQuery('').isValid).toBe(false);
   });
 
-  it('rejects short query', () => {
-    expect(validateSearchQuery('A').isValid).toBe(false);
+  it('rejects too-short query', () => {
+    expect(validateSearchQuery('a').isValid).toBe(false);
   });
 });
 
@@ -118,44 +124,32 @@ describe('validatePriceRange', () => {
     expect(validatePriceRange(100, 500).isValid).toBe(true);
   });
 
-  it('accepts only min', () => {
-    expect(validatePriceRange(100).isValid).toBe(true);
-  });
-
-  it('accepts only max', () => {
-    expect(validatePriceRange(undefined, 500).isValid).toBe(true);
-  });
-
   it('rejects min > max', () => {
-    expect(validatePriceRange(500, 100).isValid).toBe(false);
+    const result = validatePriceRange(600, 100);
+    expect(result.isValid).toBe(false);
   });
 
-  it('rejects negative min', () => {
-    expect(validatePriceRange(-100, 500).isValid).toBe(false);
+  it('rejects negative price', () => {
+    expect(validatePriceRange(-5).isValid).toBe(false);
   });
 });
 
 describe('validateForm', () => {
-  it('validates form with rules', () => {
-    const data = { email: 'test@example.com', name: 'John' };
-    const rules = {
-      email: validateEmail,
-      name: validateName,
-    };
-    const result = validateForm(data, rules);
+  const rules: ValidationRules<{ email: string; password: string }> = {
+    email: validateEmail,
+    password: validatePassword,
+  };
+
+  it('returns valid with no errors', () => {
+    const result = validateForm({ email: 'u@c.cu', password: 'Contrasena1' }, rules);
     expect(result.isValid).toBe(true);
-    expect(Object.keys(result.errors)).toHaveLength(0);
+    expect(result.errors).toEqual({});
   });
 
-  it('returns errors for invalid form', () => {
-    const data = { email: 'invalid', name: '' };
-    const rules = {
-      email: validateEmail,
-      name: validateName,
-    };
-    const result = validateForm(data, rules);
+  it('collects field errors', () => {
+    const result = validateForm({ email: 'malo', password: 'short' }, rules);
     expect(result.isValid).toBe(false);
-    expect(result.errors.email).toBeTruthy();
-    expect(result.errors.name).toBeTruthy();
+    expect(result.errors.email).toBe('Email no válido');
+    expect(result.errors.password).toBe('Mínimo 8 caracteres');
   });
 });

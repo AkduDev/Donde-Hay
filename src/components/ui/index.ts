@@ -22,6 +22,7 @@ export { Divider, type DividerProps, type DividerOrientation, type DividerVarian
 
 // Feedback
 export { Spinner, type SpinnerProps, type SpinnerSize, type SpinnerVariant } from './Spinner';
+export { Skeleton, type SkeletonProps } from './Skeleton';
 export { Modal, type ModalBaseProps as ModalProps, type ModalSize, type ModalPosition } from './Modal';
 export { Sheet, type SheetProps, type SheetSize, type SheetSnapPoint } from './Sheet';
 export { Tooltip, type TooltipProps, type TooltipPlacement } from './Tooltip';

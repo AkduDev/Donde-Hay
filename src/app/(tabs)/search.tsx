@@ -9,9 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
-import { Spinner } from '@/components/ui/Spinner';
 import { SearchBar, SearchSuggestion } from '@/components/search/SearchBar';
-import { ProductCard } from '@/components/product/ProductCard';
+import { ProductCard, ProductCardSkeleton } from '@/components/product';
 import { useThemeStore } from '@/store/themeStore';
 import { useCategories } from '@/hooks/use-categories';
 import { useSavedSearches } from '@/hooks/use-favorites';
@@ -194,9 +193,9 @@ export default function SearchTabScreen() {
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Loading State */}
             {isSearchLoading && (
-              <Box alignItems="center" py="xl" mode={resolvedMode}>
-                <Spinner size="md" mode={resolvedMode} />
-                <Box mt="sm">
+              <Box p="md" mode={resolvedMode}>
+                <ProductCardSkeleton layout="list" count={4} testID="search-skeleton" />
+                <Box mt="sm" alignItems="center">
                   <Text variant="bodySmall" color="textSecondary">
                     Buscando en todas las fuentes...
                   </Text>
@@ -252,7 +251,9 @@ export default function SearchTabScreen() {
                   </Text>
                   <Box mt="xs">
                     <Text variant="bodySmall" color="textSecondary" textAlign="center">
-                      No se encontraron productos para "{activeQuery}"
+                      {'No se encontraron productos para "'}
+                      {activeQuery}
+                      {'"'}
                     </Text>
                   </Box>
                 </Box>

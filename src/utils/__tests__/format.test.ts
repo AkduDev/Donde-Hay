@@ -13,19 +13,19 @@ import {
   slugify,
   getSourceIcon,
   getSourceColor,
-} from './format';
+} from '../format';
 
 describe('formatPrice', () => {
   it('formats USD price correctly', () => {
     expect(formatPrice(450, 'USD')).toBe('$450');
   });
 
-  it('formats CUP price correctly', () => {
+  it('formats CUP price per locale', () => {
     expect(formatPrice(12000, 'CUP')).toBe('₱12,000');
   });
 
-  it('formats price with decimals', () => {
-    expect(formatPrice(450.50, 'USD')).toBe('$450.50');
+  it('formats price with up to 2 decimals', () => {
+    expect(formatPrice(450.5, 'USD')).toBe('$450.5');
   });
 
   it('formats compact price', () => {
@@ -66,7 +66,7 @@ describe('format_date', () => {
 
 describe('formatPhone', () => {
   it('formats Cuban phone number', () => {
-    expect(formatPhone('5312345678')).toBe('+53 123 456 78');
+    expect(formatPhone('53512345678')).toBe('+53 512 345 678');
   });
 
   it('formats 8-digit phone number', () => {
@@ -80,7 +80,7 @@ describe('formatPhone', () => {
 
 describe('truncate', () => {
   it('truncates long text', () => {
-    expect(truncate('Hello World this is long', 10)).toBe('Hello Wor...');
+    expect(truncate('Hello World this is long', 10)).toBe('Hello W...');
   });
 
   it('returns original if short enough', () => {

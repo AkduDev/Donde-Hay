@@ -41,6 +41,9 @@ export const APP_CONFIG = {
 export const FEATURES = {
   analytics: getEnvVar('EXPO_PUBLIC_ENABLE_ANALYTICS', 'false') === 'true',
   notifications: getEnvVar('EXPO_PUBLIC_ENABLE_NOTIFICATIONS', 'false') === 'true',
+  // Mocks DEV: usa dataset tipado (src/mocks/) cuando no hay backend en development.
+  // https://www.npmjs.com/package/dotenv Pattern: EXPO_PUBLIC_USE_MOCKS=true
+  useMocks: getEnvVar('EXPO_PUBLIC_USE_MOCKS', 'false') === 'true',
 } as const;
 
 // ============================================

@@ -3,70 +3,25 @@
  * Export barrel para todos los tokens de diseño
  */
 
-// Colors
-export * from './colors';
-export { Colors, type ColorMode, type ColorPalette, getColors } from './colors';
-
-// Typography
-export * from './typography';
-export {
-  FontFamilies,
-  FontWeights,
-  FontSizes,
-  LineHeights,
-  getLineHeight,
-  LetterSpacings,
-  TypographyVariants,
-  type TypographyVariant,
-  getTypographyVariant,
-} from './typography';
-
-// Spacing
-export * from './spacing';
-export { Space, type SpaceToken, Spacing, spacing, responsiveSpacing } from './spacing';
-
-// Radius
-export * from './radius';
-export { Radius, type RadiusToken, BorderRadius } from './radius';
-
-// Shadows
-export * from './shadows';
-export {
-  Shadows,
-  type Shadow,
-  type ShadowLevel,
-  getShadow,
-  Elevation,
-  BoxShadows,
-  getBoxShadow,
-} from './shadows';
-
-// Breakpoints
-export * from './breakpoints';
-export {
-  Breakpoints,
-  type Breakpoint,
-  MediaQueries,
-  ContainerMaxWidth,
-  GridColumns,
-  GridGutter,
-  getResponsiveValue,
-} from './breakpoints';
-
-// Z-Index
-export * from './z-index';
-export { ZIndex, type ZIndexToken, ZLayers, getZIndex } from './z-index';
-
-// ============================================
-// THEME FACTORY & HOOKS
-// ============================================
-
 import { Colors, type ColorMode, type ColorPalette, getColors } from './colors';
 import { TypographyVariants } from './typography';
 import { Spacing } from './spacing';
 import { BorderRadius } from './radius';
 import { Shadows, type ShadowLevel, getShadow } from './shadows';
 import { ZLayers } from './z-index';
+
+// Re-export todos los tokens (incluye types)
+export * from './colors';
+export * from './typography';
+export * from './spacing';
+export * from './radius';
+export * from './shadows';
+export * from './breakpoints';
+export * from './z-index';
+
+// ============================================
+// THEME FACTORY & HOOKS
+// ============================================
 
 export interface Theme {
   colors: ColorPalette;

@@ -400,7 +400,7 @@ npx expo start --dev-client
 - **Búsqueda rota en device**: `search.service.ts` consultaba un backend en `localhost:3000` (inexistente) → `ConnectException` y resultados vacíos en el teléfono. `search()`/`searchDB()` ahora consultan **Supabase directamente** (ILIKE en nombre/marca/modelo/descripción + filtros y normalización snake_case→camelCase); `searchRevolico` se omite silenciosamente cuando `API_CONFIG.baseUrl` apunta a localhost fuera de web
 - **`resizeMode` deprecado en expo-image**: Reemplazado por `contentFit` (solo en imágenes expo-image; los `Image` de react-native conservan `resizeMode`)
 - **`lineHeight` como ratio (texto aplastado en Android)**: React Native exige `lineHeight` absoluto en dp. Todos los `TypographyVariants` ahora calculan `lineHeight` absoluto con `getLineHeight(ratio, fontSize)` en `src/theme/typography.ts` (los ratios `LineHeights` quedan como referencia)
-- **`npm test` y `npm run lint` no corren**: `jest` no está en devDeps y ESLint 10.x requiere `eslint.config.js` (solo existe `.eslintrc` legacy). `npx tsc --noEmit` es el check fiable
+- **`npm test` y `npm run lint` no corren** (parcial, RESUELTO en Fase 7): `jest`/`jest-expo` no estaban en devDeps y ESLint 10.x era incompatible. Ahora con `eslint.config.js` (flat) + eslint 9.39.5 y devDeps de testing instaladas, `npm run lint` da 0 errores y `npm test` corre 54 tests (utils + UI primitives). Ver detalle abajo
 - **TypeScript errors UI**: Errores de tipos en componentes UI pre-existentes (Card, Button, Input, Modal, Sheet, Tooltip, Spinner, Text). Requieren refactor de tipos
 - **`lineHeight` no se recalculaba al sobreescribir `fontSize`** (`Text.tsx`): Badge/Avatar/Button/Input pasaban `fontSize` por prop (10-28) con el `lineHeight` del variant fijo → texto recortado. Ahora `Text` deriva el ratio del variant y aplica `getLineHeight(ratio, newSize)`; `lineHeight` prop explícito tiene prioridad
 - **`OpacityTokens`** (`pressed: 0.7`, `disabled: 0.6`, en `colors.ts`) reemplaza el patrón `pressed ? 0.7 : 1` suelto y el `0.6` de disabled (SortSelector, preferences, profile, Home, Button)
@@ -417,11 +417,23 @@ Plan aprobado para endurecer la UI. Reglas: sin funcionalidades nuevas hasta ter
 | 4 — Home (búsqueda protagonista) | ✅ Completa |
 | 5 — Search/Results (ProductCard agrupado) | ✅ Completa |
 | 6 — Product Detail (comparar ofertas) | ✅ Completa |
-| 7 — Calidad (mocks DEV, Skeleton, ESLint+Jest) | 🔜 Pendiente |
+| 7 — Calidad (mocks DEV, Skeleton, ESLint+Jest) | ✅ Completa |
 
 Decisiones aprobadas: dark mode se resuelve **desde el store** en los UI primitives (default `mode = useThemeStore().resolvedMode`); Mapa queda **fuera** del tab bar como contexto secundario (results + product detail); regla semántica **Accent = encontrado/disponible**, Success = positivo general; **arreglar ESLint flat + jest-expo** en Fase 7.
 
 Detalles de cada fase completada en `CHANGELOG.md` bajo `[2.0.0-canary]`.
+
+### Fase 7 — Calidad (completada 30-ago-2026)
+
+- **Skeleton**: componente `Skeleton` en `src/components/ui/` (pulso Animated, bg `surfaceVariant`, tokens getColors/spacing/radius) + `ProductCardSkeleton` (`src/components/product/`) con layouts 'list'/'grid'. Integrado en loading states de Home (3 bloques), Results (count=6), Search tab (count=4 + hint "Buscando en todas las fuentes...") y Product detail (imagen+detalle).
+- **Mocks DEV**: flag `FEATURES.useMocks` en `src/config.ts` (env `EXPO_PUBLIC_USE_MOCKS`, default false) + dataset tipado `MOCK_PRODUCTS` en `src/mocks/products.ts`. Home: `productsResponse?.data ?? (FEATURES.useMocks ? MOCK_PRODUCTS : [])`.
+- **ESLint flat**: `eslint.config.js` (eslint-config-expo/flat). `.eslintrc.js` legacy borrado. Se bajó eslint a **9.39.5** (10.x crasheaba con eslint-plugin-react 7.37.5: `contextOrFilename.getFilename is not a function`). Reglas de React Compiler (`react-hooks/purity|immutability|set-state-in-effect|static-components|preserve-manual-memoization`) a `warn` (el código no corre el compiler pero queda visible). 0 errores / 136 warnings pre-existentes.
+- **Jest funcionando**: `jest-expo@57.0.5` + `jest@30.5.0` + `@react-native/jest-preset@0.86.2` (⚠ versionada con RN, NO @latest) + `@testing-library/react-native@14.0.1` + `test-renderer@^1.0.0` (peer dep de RNTL v14; la v14 es async: `await render(...)` + `screen`). `jest.config.js` con `setupFilesAfterEnv` (corregido el typo `setupFilesAfterSetup`).
+- **Tests (54, todos en verde)**: utils `format` (sanitizado contra la API real: CUP usa separador ',', phone cubano de 11 dígitos, truncate `slice(maxLen-3)+'...'`) y `validation` (nuevo, 100% de funciones); smoke de UI primitives (`Text`, `Badge`, `Box` con RNTL).
+- **Cleanups**: barrel `src/theme/index.ts` sin duplicados (`export *` solo, imports al tope); `search.tsx` sin entidades sin escapar; `product/[id].tsx` usa snapshot `useState(() => Date.now())` (purity React Compiler).
+- **Importante**: `jest.setup.js` NO debe hacer `require('expo-router/entry')` (bootstrappea la app → crash en Node: `window.location` null). Se eliminó `react-test-renderer` (v14 usa `test-renderer`).
+
+Los 3 ignores de `metro.config.js` (dirs corruptos NTFS) siguen vigentes. `npx tsc --noEmit` limpio.
 
 ## Soluciones pendientes (Cuba)
 

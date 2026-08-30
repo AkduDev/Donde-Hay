@@ -11,9 +11,10 @@ import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
 import { Text } from '@/components/ui/Text';
 import { Card } from '@/components/ui/Card';
-import { Spinner } from '@/components/ui/Spinner';
-import { ProductCard } from '@/components/product/ProductCard';
+import { ProductCard, ProductCardSkeleton } from '@/components/product';
 import { SearchBar } from '@/components/search/SearchBar';
+import { FEATURES } from '@/config';
+import { MOCK_PRODUCTS } from '@/mocks/products';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useProducts } from '@/hooks/use-products';
@@ -24,59 +25,6 @@ import type { ProductWithOffers } from '@/types';
 import { OpacityTokens } from '@/theme/colors';
 
 const LOGO = require('../../../assets/images/DondeHay3.jpeg');
-
-const MOCK_PRODUCTS: ProductWithOffers[] = [
-  {
-    id: '1',
-    canonicalName: 'iPhone 13',
-    brand: 'Apple',
-    model: '13',
-    categoryId: 'electronics',
-    imageUrls: ['https://example.com/iphone13.jpg'],
-    offers: [
-      { id: 'o1', productId: '1', sellerId: 's1', sourceId: 'revolico', price: 450, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://revolico.com/1', locationId: 'habana', status: 'active' },
-      { id: 'o2', productId: '1', sellerId: 's2', sourceId: 'instagram', price: 480, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://instagram.com/1', locationId: 'santiago', status: 'active' },
-    ],
-    offerCount: 2,
-    availability: { available: true, lastSeen: new Date().toISOString(), status: 'recent' },
-    isFavorite: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    canonicalName: 'Laptop HP',
-    brand: 'HP',
-    model: 'Pavilion',
-    categoryId: 'computing',
-    imageUrls: ['https://example.com/hp-laptop.jpg'],
-    offers: [
-      { id: 'o3', productId: '2', sellerId: 's3', sourceId: 'revolico', price: 350, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://revolico.com/2', locationId: 'habana', status: 'active' },
-    ],
-    offerCount: 1,
-    availability: { available: true, lastSeen: new Date().toISOString(), status: 'recent' },
-    isFavorite: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    canonicalName: 'PS5',
-    brand: 'Sony',
-    model: 'PlayStation 5',
-    categoryId: 'gaming',
-    imageUrls: ['https://example.com/ps5.jpg'],
-    offers: [
-      { id: 'o4', productId: '3', sellerId: 's4', sourceId: '1cuba', price: 500, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://1cuba.cu/1', locationId: 'habana', status: 'active' },
-      { id: 'o5', productId: '3', sellerId: 's5', sourceId: 'choleslibres', price: 520, currency: 'USD', postedAt: new Date().toISOString(), sourceUrl: 'https://choleslibres.com/1', locationId: 'santiago', status: 'active' },
-    ],
-    offerCount: 2,
-    availability: { available: true, lastSeen: new Date().toISOString(), status: 'recent' },
-    isFavorite: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -157,7 +105,8 @@ export default function HomeScreen() {
     </Box>
   );
 
-  const displayProducts = productsResponse?.data ?? MOCK_PRODUCTS;
+  const displayProducts =
+    productsResponse?.data ?? (FEATURES.useMocks ? MOCK_PRODUCTS : []);
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
@@ -289,9 +238,7 @@ export default function HomeScreen() {
               () => handleSearch('')
             )}
             {isLoading ? (
-              <Box alignItems="center" py="lg">
-                <Spinner size="md" mode={resolvedMode} />
-              </Box>
+              <ProductCardSkeleton layout="list" count={3} testID="home-featured-skeleton" />
             ) : displayProducts.length > 0 ? (
               <Box gap="sm">
                 {displayProducts.slice(0, 5).map((product) => (
@@ -327,8 +274,12 @@ export default function HomeScreen() {
               () => handleCategoryPress('electronics')
             )}
             {isLoading ? (
-              <Box alignItems="center" py="lg">
-                <Spinner size="md" mode={resolvedMode} />
+              <Box flexDirection="row" gap="sm" mode={resolvedMode}>
+                {[0, 1, 2].map((i) => (
+                  <Box key={i} width={160}>
+                    <ProductCardSkeleton layout="grid" count={1} testID={`home-tech-skeleton-${i}`} />
+                  </Box>
+                ))}
               </Box>
             ) : (
               <FlashList
@@ -359,8 +310,12 @@ export default function HomeScreen() {
               () => handleCategoryPress('vehicles')
             )}
             {isLoading ? (
-              <Box alignItems="center" py="lg">
-                <Spinner size="md" mode={resolvedMode} />
+              <Box flexDirection="row" gap="sm" mode={resolvedMode}>
+                {[0, 1, 2].map((i) => (
+                  <Box key={i} width={160}>
+                    <ProductCardSkeleton layout="grid" count={1} testID={`home-vehicles-skeleton-${i}`} />
+                  </Box>
+                ))}
               </Box>
             ) : (
               <FlashList
