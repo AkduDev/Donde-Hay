@@ -379,6 +379,16 @@ npx expo start --dev-client
 
 ## Errores Conocidos
 
+### Fase 2 — Contrato de dominio (en curso, 01-sep-2026)
+
+Exploración completada, implementación pendiente. Detalle del plan en `IMPLEMENTATION_PLAN.md` → Fase 2 (`<details>` "Fase 2 — Exploración").
+
+- Objetivo: types `Category`, `SearchRequest`, `SearchResponse`, `OfferListItem` + lógica pura en `src/lib/normalize.ts` (títulos, stopwords es-CU, brand/model, canonicalName) y `src/lib/matching.ts` (productKey/sameProduct/similarity, `aggregateOffers`, `deriveAvailability`, `mergeByKey`, `buildOfferList`) + tests (~30 → 110 total).
+- Refactor `search.service.ts`: delegar agregación/merge inline (`mapProductRow` 199-230, `mergeProducts` 94-137) a la lib pura; conservar solo el mapeo snake→camel en el servicio.
+- Discriminantes de matching: variantes (`pro`/`max`/`plus`/`mini`/`lite`/`se`) y capacidad (`128gb`) como señal; stopwords de mercado (`vendo`, `nuevo`, `usado`, `seminuevo`, `negociable`, `por motivo de viaje`, `cuc`, `mlc`, `usd`) eliminadas.
+- La lib se reutilizará en la Edge Function `match-products` (Fase 3).
+- Verificación al retomar: `npx tsc --noEmit`, `npm run lint`, `npx jest`; actualizar CHANGELOG + tracker; commit + push.
+
 - **403 pre-existentes**: Archivos legacy no modificados, no afecta nuevo código
 - **ESLint 10.x**: Configuración en parent `eslint.config.mjs` causa conflictos, ignorado
 - **Typed routes**: Requiere regenerar `.expo/types/router.d.ts` al agregar nuevas rutas

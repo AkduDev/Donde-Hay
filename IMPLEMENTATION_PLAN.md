@@ -190,6 +190,30 @@ Fase 7 — Otras fuentes        · Maps · Ranking · Analytics · Performance
 - [ ] Normalización/matching como funciones puras en `src/lib/` (o contracto para Edge Function) con tests
 - [ ] Shapes del contrato de búsqueda (Prioridad 5) tipados
 
+**Estado / dónde nos quedamos (01-sep-2026)**: exploración completada, implementación pendiente. Ver "Fase 2 — Exploración" más abajo.
+
+<details>
+<summary>Fase 2 — Exploración y plan de implementación (01-sep-2026)</summary>
+
+**Hallazgos de la exploración**
+
+- `src/types/index.ts` (291 líneas, barrel único) ya tiene `Product`, `ProductOffer`, `Seller`, `Source`, `Location`, `SearchResult`, `SourceSummary`, `ProductWithOffers`, `ScrapedProduct`, `SearchQuery`, `MultiSourceSearchResult`, User/Favorites/Alerts. **Falta `Category`** y los shapes del contrato de búsqueda PRIORIDAD 5 (`SearchRequest`, `SearchResponse` límite RPC/EF, `OfferListItem`) y de matching.
+- La **agregación/merge está duplicada e inline** en `search.service.ts`: `mapProductRow()` (líneas 199-230) y `mergeProducts()` (94-137) recalculan min/avg/max/offerCount/availability por su cuenta, igual que `products.service.ts` (trending/nearby). La normalización snake_case→camelCase (`mapOfferRow`/`mapProductRow`) vive en el servicio (frontera, no dominio puro).
+- Patrón de módulos puros unit-testables ya existente: `src/lib/map.ts` (haversine, clusters) + `src/utils/__tests__/map.test.ts` (estilo describe/it plano). `jest.config.js`: `testMatch` = `**/__tests__/**`; coverage EXCLUYE `src/types/**` y `src/theme/**`.
+- Ejemplo de matching exigido (Prioridad 8): "iPhone 13" ≠ "iPhone 13 Pro" ≠ "iPhone 13 Pro Max" → las variantes (`pro`, `max`, `plus`, `mini`, `lite`, `se`) y la capacidad (`128gb`) deben ser **señales discriminantes**, mientras que palabras de mercado es-CU (`vendo`, `nuevo`, `usado`, `seminuevo`, `se vende`, `negociable`, `por motivo de viaje`, `cuc`, `usd`, `mlc`, `costo`) se eliminan como stopwords.
+
+**Plan de implementación (pendiente de ejecutar)**
+
+1. **Types** (modificar `src/types/index.ts`): añadir `Category`; contrato Prioridad 5 → `SearchRequest` (input RPC `search_products`/EF: query, categoryId, locationId, sourceIds, minPrice, maxPrice, condition, sortBy, page, limit), `SearchResponse` (output RPC/EF alineado a `SearchResult`), `OfferListItem` (lista de ofertas del detail: `{ price, currency, sourceId, sourceName, sourceUrl, sellerName?, postedAt, status }`).
+2. **`src/lib/normalize.ts`** (NUEVO, puro): `normalizeTitle()` (unicode fold acentos, minúsculas, signos, whitespace), `CATALOG_STOPWORDS` (es-CU, palabra exacta y lemmatizada), `extractBrand()` (diccionario de marcas), `extractModel()`, `buildCanonicalName()`.
+3. **`src/lib/matching.ts`** (NUEVO, puro): `modelKey()` / `productKey(título)` (tokens discriminantes: variantes + capacidad), `sameProduct(a, b)`, `similarityScore()` (Jaccard), `aggregateOffers(offers)` → min/avg/max/offerCount/sourceCounts/availability/lastSeen (DERIVA `deriveAvailability`), `mergeByKey(arrays)`, `buildOfferList(product)` → `OfferListItem[]` ordenado por precio asc (contrato detail).
+4. **Refactor `src/services/search.service.ts`**: delegar a `aggregateOffers`/`deriveAvailability`/`mergeByKey` (eliminar el cálculo inline duplicado); conservar en el servicio solo el mapeo snake_case→camelCase (frontera).
+5. **Tests nuevos** `src/lib/__tests__/normalize.test.ts` + `matching.test.ts` (discriminantes iPhone, stopwords es-CU, agregación, merge, offer list).
+6. **Verificación**: `npx tsc --noEmit`, `npm run lint`, `npx jest` (esperado 80 + ~30 = ~110); actualizar CHANGELOG + este tracker; commit + push (husky corre `npm test`).
+
+**Nota**: la misma lógica de `normalize.ts`/`matching.ts` se reutilizará en la Edge Function `match-products` (Fase 3) — por eso va en `src/lib/` con tests y sin I/O.
+</details>
+
 ### Fase 3 — Backend Supabase
 > Objetivo: base de datos + endpoints vía Supabase.
 ```
