@@ -1,436 +1,296 @@
-# Dónde Hay — Plan de Implementación
+# Dónde Hay — Plan de Implementación (v2)
+
+> **Stack fijado (30-ago-2026)** — Este plan está ajustado a las tecnologías reales del proyecto. **No hay API intermedia (sin Next.js)**. El backend y la base de datos viven en **Supabase** (PostgreSQL + Auth + Realtime + Edge Functions) y la app los consume **directamente**: PostgREST + RPC para datos, Edge Functions solo para lógica pesada/background. Los "endpoints" están dentro del proyecto.
 
 ## Contexto del Proyecto
 
-**Dónde Hay** es un agregador de productos para el mercado cubano. La app busca y compara precios en **sitios y redes sociales utilizados por cubanos**:
+**Dónde Hay** es un agregador de productos para el mercado cubano. La app busca y compara precios en sitios y redes usadas por cubanos:
 
-| Fuente | Tipo | Descripción |
-|--------|------|-------------|
-| **Revolico** | marketplace | Clasificados cubanos principal |
-| **1Cuba** | marketplace | Otro portal de clasificados |
-| **CholesLibres** | marketplace | Marketplace alternativo |
-| **Facebook Marketplace** | social | Red social / grupos de compra-venta |
-| **Instagram** | social | Vendedores en Instagram |
-| **Telegram** | social | Canales de venta en Telegram |
-| **Comunidad Dónde Hay** | community | Vendedores verificados propios |
+| Fuente | Tipo | Estado |
+|--------|------|--------|
+| **Revolico** | marketplace | 🔴 Pendiente (primera fuente a implementar) |
+| **1Cuba** | marketplace | 🔴 Pendiente |
+| **CholesLibres** | marketplace | 🔴 Pendiente |
+| **Facebook Marketplace** | social | 🔴 Pendiente |
+| **Instagram** | social | 🔴 Pendiente |
+| **Telegram** | social | 🔴 Pendiente |
+| **Comunidad Dónde Hay** | community | ✅ Users verificados (publish flow) |
 
-El usuario puede **filtrar por fuente**, ver de **qué sitio viene cada oferta**, y comparar precios entre plataformas.
+El usuario **filtra por fuente**, ve **de qué sitio viene cada oferta** y **compara precios entre plataformas**.
 
 ---
 
-## Estado Actual (v1.0.0)
+## Arquitectura fijada (single source of truth)
+
+```
+                DÓNDE HAY
+                   │
+            React Native + Expo
+                   │  HTTPS
+                   ▼
+    ┌──────────────────────────────────┐
+    │            SUPABASE              │
+    ├──────────────────────────────────┤
+    │  PostgreSQL (datos + RLS + FTS)  │
+    │  Auth (login/registro/session)   │
+    │  Realtime (WebSocket, sincronía) │
+    │  Edge Functions:                 │
+    │    · search-products (RPC/FTS)   │
+    │    · match-products (matching)   │
+    │    · scrape-sources (adapters)   │
+    │    · check-price-alerts (cron)   │
+    └──────────────────────────────────┘
+                   │
+        ┌──────────┼──────────┐
+        ▼          ▼          ▼
+    Revolico    Telegram   otras fuentes
+```
+
+Decisiones congeladas:
+- **UI**: única fuente de verdad = **Design System propio** (`src/theme/` + components `src/components/ui/`). Tamagui **NO** se usa en runtime (0 imports). No más UI libraries.
+- **Datos de negocio** → Supabase PostgreSQL (los servicios `src/services/*` consultan PostgREST/RPC).
+- **Lógica pesada/background** → Edge Functions (scraping, matching, alertas). Retorna JSON normalizado que la app tipa.
+- **Búsqueda** → full-text con `pg_trgm` vía RPC `search_products` (sin servicio de búsqueda externo).
+- **No Redis/workers propios** → Realtime + funciones agendadas de Supabase (pg_cron).
+- **Seguridad** → `anon key` pública (RLS es la frontera), secrets solo en Edge Functions (nunca en el APK), tokens de sesión en SecureStore.
+
+---
+
+## Prioridades 0-12 (roadmap desde HOY)
+
+> Este es el plan maestro. Las prioridades 🔴 van antes que las 🟠/🟡. El orden operativo está en "Fases 1-7" más abajo.
+
+### 🔴 Prioridad 0 — Dejar estable el frontend
+- [ ] Auditoría visual completa en **dispositivo Android real** (11 flujos × 8 variantes)
+- [ ] Corregir hallazgos de la auditoría
+
+**Flujos**: Home, Buscar, Resultados, Detalle de producto, Guardados, Alertas, Perfil, Login, Registro, Publicar, Seller, Mapa.
+
+**Variantes** (checklist por flujo):
+
+| ☀️ Light | 🌙 Dark | 📱 pantalla pequeña | 📱 pantalla grande |
+|---|---|---|---|
+| ⌨️ teclado abierto | ↕️ scroll | 🔄 loading | ❌ error | ∅ sin resultados |
+
+Regla: **no agregar pantallas** nuevas durante esta fase. Solo estabilizar.
+
+### 🔴 Prioridad 1 — Unificar el Design System
+- [ ] Auditar código: `StyleSheet.create`, estilos inline sueltos, tokens incorrectos, imports de librerías UI externas
+- [ ] Barrido final de estilos inline → tokens (`Spacing`, `colors`, `radius`)
+- [ ] Garantizar que los UI primitives (Box, Text, Button, Input, Card, Badge, Avatar, Divider, Spinner, Modal, Sheet, Tooltip, Skeleton) cubren el uso real
+- [ ] Verificar 0 imports de Tamagui / otras UI libs en `src/`
+- [ ] Documentar dónde se permiten estilos inline (casos legítimos: posicionamiento absoluto, transforms)
+
+Estado actual (01-sep): Fase 2 DS (28-ago) ✅ centralizó dark mode + tokens. Auditoría ✅ (01-sep): `grep tamagui` → **0 resultados** en `src/`; **1 solo** `StyleSheet.create` (uno en el primitive Toast); ~85 `style={{}}` inline, patrón dominante = divisor de header `borderBottomWidth:1 + borderColor: colors.divider` (~14 sitios) con colores resueltos del tema → **aceptable, no requiere churn**; no detectada ninguna otra UI lib en runtime. Los casos legítimos de inline (posicionamiento absoluto/transform) quedan documentados en `src/theme/` y los primitives cubren el uso real.
+
+### 🔴 Prioridad 2 — Revisar Text y tipografía en dispositivo real
+- [ ] Probar `displayLarge` (60px) → `labelSmall` sin **clipping** en Android
+- [ ] Verificar fuentes de sistema: Android `sans-serif` / `sans-serif-medium`; iOS San Francisco; web system-ui
+- [ ] Verificar `getLineHeight()` en sobreescrituras de `fontSize` (Badge/Avatar/Button/Input)
+- [ ] Revisar `accessibilityRole="header"` en títulos de pantalla
+
+### 🟠 Prioridad 3 — Simplificar la navegación
+- [x] 5 tabs principales: **Inicio, Buscar, Guardados, Alertas, Perfil** (✅ hecho)
+- [x] Mapa, Producto, Seller, Publicar = **flujos internos** (✅ mapa fuera del tab bar)
+- [ ] Verificar transiciones y back behavior en flujos internos (device)
+
+### 🟠 Prioridad 4 — Home (reducción)
+- [x] Jerarquía única: **Dónde Hay → ¿Qué estás buscando? → [Buscar] → Tendencias → Cerca de ti → Últimos descubrimientos** (✅ 01-sep)
+- [x] Eliminar/blindar bloques superfluos (categorías como fila, destacados largos, Tecnología, Vehículos removidos)
+- [x] No convertirla en marketplace lleno de bloques
+
+Estado actual: `(tabs)/index.tsx` ✅ reducido a la jerarquía del asesor (01-sep). "Cerca de ti" usa `userLocation` persistido de `useLocationStore` sin pedir permiso en Home; sin ubicación → CTA Card → `/map`.
+
+### 🟠 Prioridad 5 — Search (contrato conceptual)
+- [x] Definir contrato: `Query → Search → Productos agrupados → Offers → Sources` (✅ verificado 01-sep: product/[id].tsx ya tiene "Comparar precios (N)" + lista de ofertas + botón "Ver en {fuente}")
+- [x] Card: nombre + "🟢 N lugares" + "Desde $X" + chips de fuentes (✅ ProductCard)
+- [x] Detail: "N ofertas" → lista [$precio Fuente [Ver]] por oferta (✅)
+- [ ] Definir shapes TS en `src/types/` (`SearchResult`, `OfferListItem`) — disponible, concretar en Fase 2
+
+Ejemplo de destino:
+```
+iPhone 13
+🟢 8 lugares · Desde $420
+[Revolico] [Instagram] [Facebook] [Telegram]  +4
+```
+```
+iPhone 13 — 8 ofertas
+$420  Revolico   [Ver]
+$435  Instagram  [Ver]
+$450  Facebook   [Ver]
+```
+
+### 🔴 Prioridad 6 — Revisar arquitectura de datos (ajustada a Supabase)
+- [x] **Decisión tomada**: sin API intermedia. Backend = **Supabase** (PostgreSQL + Auth + Realtime + FTS). No Next.js/Redis/search service externo.
+- [ ] Definir **frontera de lógica**: app = UI + estado + orquestación ligera; Edge Functions = scraping + matching + alertas.
+- [ ] Mover lógica de negocio fuera del móvil cuando sea pesada/requiera secrets.
+- [ ] Mantener Supabase Auth para sesiones (el móvil ya lo usa vía `src/lib/supabase.ts`).
+
+### 🔴 Prioridad 7 — Diseñar el modelo de datos
+- [ ] **Product** (canonical, agrupa ofertas) ↔ **Offer** (1..n por fuente/seller)
+- [ ] **Source**, **Seller**, **Category**, **Location**
+- [ ] **User** (profiles), **Favorite**, **SavedSearch**, **Alert**
+- [ ] Migraciones SQL en `supabase/migrations/` + **RLS** en todas las tablas
+
+Clave: la experiencia definida en Prioridad 5 depende de `Product → Offer[]` (una fila agrupada por producto, múltiples ofertas con `source_id` + `price` + `source_url`).
+
+### 🔴 Prioridad 8 — Resolver Product Matching
+- [ ] Normalización de títulos ("iPhone 13 128GB" / "Apple iPhone 13 128 GB" → mismo producto)
+- [ ] Distinción de modelos ("iPhone 13" ≠ "iPhone 13 Pro" ≠ "iPhone 13 Pro Max")
+- [ ] Lógica implementada en Edge Function `match-products` (o función SQL) + tests
+- [ ] Diseñarla **antes** del scraper
+
+### 🟠 Prioridad 9 — Fuentes (SourceAdapter)
+- [ ] Contrato compartido: `SourceAdapter { search(), normalize(), getProduct() }`
+- [ ] Implementar **Revolico** primero (Edge Function `scrape-sources`)
+- [ ] Luego Fuente 2, Fuente 3, Fuente 4 (mismo contrato, aisladas del dominio)
+- [ ] No contaminar el dominio con lógica específica de cada sitio
+
+### 🟡 Prioridad 10 — Seguridad
+- [ ] Review de `.env` / `.env.*` y `EXPO_PUBLIC_*` (todo lo prefijado `EXPO_PUBLIC_` va dentro del APK)
+- [ ] Secrets (scraper creds, service role key) SOLO en Edge Functions
+- [ ] RLS verificada en todas las tablas sensibles
+- [ ] Verificar que Sentry/analytics no loguean datos sensibles
+
+### 🟡 Prioridad 11 — Testing
+- [x] Componentes críticos: Text, Button, Input, ProductCard, OfferCard, SearchBar (✅ 01-sep: controls Button/Input, searchbar, product-card añadidos)
+- [ ] Flujos: Search, Authentication, Favorites, Alerts
+- [ ] E2E (Playwright web / detector) — después
+- [x] Meta: **tests de las piezas críticas**, no 500 tests ✅
+
+Estado actual: **80 tests** ✅ (01-sep) — utils format/validation, map, UI primitives, controls, searchbar (5), product-card (5). Nota RNTL v14: eventos async con `userEvent` (type/press) para focus; `fireEvent` sigue disponible para changeText/submitEditing/press. En este entorno el mock de TextInput de jest-expo NO dispara `onFocus` vía `fireEvent(input,'focus')` ni `user.press` — solo `userEvent.type` enfoca el input.
+
+### 🟡 Prioridad 12 — Calidad del proyecto (gate)
+- [x] TypeScript 6 estricto + ESLint flat (0/0) + Jest + Prettier + Husky (✅ configurados)
+- [ ] Regla fija para cambios grandes: `TypeScript → ESLint → Tests → Build` (husky corre `npm test` ✅)
+
+---
+
+## Fases de ejecución (orden desde HOY)
+
+```
+Fase 1 — Frontend estable     · Fase 2 — Contrato de dominio
+Fase 3 — Backend Supabase     · Fase 4 — Primera fuente (Revolico)
+Fase 5 — Mobile conectado     · Fase 6 — Auth/Guardados/Alertas
+Fase 7 — Otras fuentes        · Maps · Ranking · Analytics · Performance
+```
+
+### Fase 1 — Frontend estable
+> Objetivo: app estable, UI unificada y probada antes de datos nuevos. Sin API ni funcionalidades nuevas.
+- [ ] Auditoría visual en device (Prioridad 0) + fix de hallazgos — pasada física del usuario (checklist arriba)
+- [x] Unificar Design System (Prioridad 1) ✅ 01-sep (auditoría: 0 Tamagui, 1 StyleSheet, sin churn necesario)
+- [ ] Verificar tipografía en device (Prioridad 2) — pasada física del usuario
+- [x] Simplificar Home a la jerarquía reducida (Prioridad 4) ✅ 01-sep
+- [x] Contracto de Search/Results + OfferCard (Prioridad 5) ✅ 01-sep (ya implementado en ProductCard + detail; OfferCard = fila inline, no requiere componente extra)
+- [x] Tests de componentes críticos (Prioridad 11) ✅ 01-sep (Button, Input, SearchBar, ProductCard) — **80 tests en verde**
+
+### Fase 2 — Contrato de dominio
+> Objetivo: los tipos y la lógica pura que determinan el backend. Sin endpoints todavía.
+- [ ] Definir types TS: `Product`, `Offer`, `Source`, `Seller`, `Category`, `Location`, `SearchResult`
+- [ ] Normalización/matching como funciones puras en `src/lib/` (o contracto para Edge Function) con tests
+- [ ] Shapes del contrato de búsqueda (Prioridad 5) tipados
+
+### Fase 3 — Backend Supabase
+> Objetivo: base de datos + endpoints vía Supabase.
+```
+supabase/
+├── migrations/            # Tablas + índices + RLS + pg_trgm
+├── functions/
+│   ├── _shared/           # CORS, auth, admin client
+│   ├── search-products/   # FTS con filtros (RPC)
+│   ├── match-products/    # Agrupación/normalización
+│   └── check-price-alerts/ # Agendada (pg_cron)
+```
+- [ ] Migraciones: products, product_offers, sources, sellers, categories, locations, profiles, favorites, price_alerts, saved_searches
+- [ ] RLS + políticas por tabla
+- [ ] RPC `search_products` (pg_trgm)
+- [ ] Edge Function `search-products` + contrato de respuesta tipado en la app
+- [ ] Edge Functions `match-products` y `check-price-alerts`
+
+### Fase 4 — Primera fuente (Revolico)
+- [ ] `SourceAdapter` contract en Edge Function
+- [ ] Adaptador Revolico (scraper + normalize)
+- [ ] Persistencia a `product_offers` vía `match-products`
+- [ ] Ranking inicial (precio asc, fecha desc)
+
+### Fase 5 — Mobile conectado
+- [ ] `search.service.ts` → RPC `search_products` (ya existe patrón Supabase directo)
+- [ ] Results con el contrato agrupado (N lugares / Desde $)
+- [ ] Product detail con lista de ofertas + URLs externas
+- [ ] Estados loading/error/sin resultados pulidos
+
+### Fase 6 — Auth + Guardados + Alertas
+- [ ] Flujos ya construidos sobre Supabase Auth (verificar contra RLS)
+- [ ] Favorites, SavedSearches y Alerts sobre las tablas RLS
+
+### Fase 7 — Otras fuentes + polish
+- [ ] Fuente 2...n (mismo SourceAdapter)
+- [ ] Maps afinado, ranking avanzado, analytics, performance
+
+---
+
+## Estado Actual (v1.0.0 → canary)
 
 | Capa | Estado |
 |------|--------|
-| Design System (theme, 12 UI components) | ✅ Completo (0 TS errors) |
-| Navegación (5 tabs + auth + alerts + publish + seller) | ✅ Completo |
-| API Client + TanStack Query | ✅ Completo |
-| Zustand Stores (auth, theme, location, toast) | ✅ Completo |
-| TypeScript Types (322+ líneas) | ✅ Completo |
-| Search Components (SearchBar, FilterSheet, SortSelector) | ✅ Completo |
-| ProductCard (React.memo + expo-image) | ✅ Completo |
-| Supabase Backend | ✅ Configurado (schema.sql, Edge Functions) |
-| Services Layer (9 services) | ✅ Completo |
-| Auth screens (login, register, forgot/reset) | ✅ Completo |
-| Product Detail screen | ✅ Completo |
-| Geolocation (Phase 6) | ✅ Completo (incluye mapa interactivo; fallback sin módulo nativo) |
-| Alerts + Push (Phase 7) | ✅ Completo |
-| WebSocket/Real-time (Phase 7.3) | ✅ Completo |
-| Publish Product (Phase 8) | ✅ Completo |
-| Saved (Phase 4) | ✅ Completo |
-| Profile (Phase 5) | ✅ Completo |
-| Testing (Phase 9.1) | ✅ Completo (63 tests en verde) |
-| Performance (Phase 9.2) | ✅ Completo |
-| Accessibility (Phase 9.3) | ⏸️ Parcial (RTL ✅; TalkBack/VoiceOver pendiente de test físico) |
-| Error Handling (Phase 9.4) | ✅ Completo |
-| EAS Build + Submit (Phase 10) | ⏸️ Bloqueado (EAS cloud 403 desde Cuba; APK debug local ✅) |
-| Edge Functions (Phase 10) | ✅ Completo |
-| Monitoring + Analytics (Phase 10) | ✅ Completo (Sentry + proveedor HTTP) |
-| UI/UX Hardening (plan 7 fases) | ✅ Completo (ver detalle abajo) |
-| ESLint cleanup (136 warnings → 0) | ✅ Completo (30-ago-2026) |
+| Design System (theme + 13 UI components) | ✅ Completo |
+| Navegación (5 tabs + auth + alerts + publish + seller + map) | ✅ Completo |
+| API Client + TanStack Query + Zustand | ✅ Completo |
+| Services Layer (9 services, Supabase directo) | ✅ Completo |
+| Auth screens + Supabase Auth | ✅ Completo |
+| Product Detail + listas agrupadas | ✅ Completo |
+| Geolocation + Mapa interactivo (fallback nativo) | ✅ Completo |
+| Alerts + Push + Realtime | ✅ Completo |
+| Publish Product (5 pasos) | ✅ Completo |
+| Accessibility: RTL ✅ | ⏸️ TalkBack/VoiceOver pendiente (device) |
+| Error Handling + Monitoring (Sentry + analytics HTTP) | ✅ Completo |
+| Testing | ✅ 63 tests (falta: componentes críticos) |
+| UI/UX Hardening (7 fases) | ✅ Completo |
+| ESLint cleanup (136→0) | ✅ Completo |
+| EAS Build cloud | ⏸️ 403 desde Cuba (APK debug local ✅) |
 
 ---
 
-## Fase 0 — Infraestructura Base
-> Objetivo: Preparar el proyecto para desarrollo iterativo
+## Historial (fases 0-10, completo)
 
-### 0.1 Configuración de entorno
-- [x] Crear `.env`, `.env.development`, `.env.production` con `API_BASE_URL` y `WS_BASE_URL`
-- [x] Instalar `expo-constants` (ya instalado) y crear `config.ts` que lea variables de entorno
-- [x] Reemplazar URLs hardcodeadas en `src/lib/api-client.tsx` por config de entorno
-
-### 0.2 Utilidades compartidas
-- [x] Crear `src/utils/format.ts` — formateo de precios (USD/CUP/MLC), fechas relativas, teléfonos
-- [x] Crear `src/utils/validation.ts` — validación de email, teléfono, campos requeridos
-- [x] Crear `src/utils/storage.ts` — wrapper de SecureStore con tipado
-- [x] Crear `src/utils/platform.ts` — helpers de plataforma (isWeb, isNative, etc.)
-
-### 0.3 Limpieza de código legacy
-- [x] Eliminar componentes no usados: `themed-view.tsx`, `themed-text.tsx`, `hint-row.tsx`, `web-badge.tsx`, `external-link.tsx`, `collapsible.tsx`, `animated-icon.tsx`, `animated-icon.web.tsx`, `app-tabs.tsx`, `app-tabs.web.tsx`
-- [x] Eliminar `src/constants/theme.ts` (reemplazado por `src/theme/colors.ts`)
-- [x] Corregir imports rotos en `index.tsx` (línea 144: `Colors` → `colors`)
-
-### 0.4 Configuración de testing
-- [x] Instalar Jest + `@testing-library/react-native`
-- [x] Configurar `jest.config.js` con path aliases
-- [x] Crear primer test de integración del ThemeStore
-
-### 0.5 Íconos vectoriales
-- [x] Instalar `@expo/vector-icons`
-- [x] Reemplazar emojis en tabs layout por iconos `MaterialCommunityIcons` o `Ionicons`
-
----
-
-## Fase 1 — Capa de Servicios (API)
-> Objetivo: Conectar la app con el backend
-
-### 1.1 Estructura de servicios
-```
-src/services/
-├── auth.service.ts        — login, register, refresh, logout, me
-├── products.service.ts    — list, detail, trending, nearby, price-history
-├── search.service.ts      — search, suggestions, facets
-├── categories.service.ts  — list, detail, products
-├── favorites.service.ts   — add, remove, list
-├── alerts.service.ts      — create, update, delete, list
-├── locations.service.ts   — provinces, municipalities
-├── sellers.service.ts     — detail, products
-├── profile.service.ts     — update, preferences, history
-└── index.ts               — barrel export
-```
-
-### 1.2 Implementación por servicio
-Cada servicio sigue el patrón:
-```typescript
-import { httpClient, queryKeys } from '@/lib/api-client';
-import type { ... } from '@/types';
-
-export const authService = {
-  login: (email: string, password: string) =>
-    httpClient.post<{ user: User; accessToken: string; refreshToken: string }>('/auth/login', { email, password }),
-  
-  register: (data: RegisterData) =>
-    httpClient.post<{ user: User; accessToken: string; refreshToken: string }>('/auth/register', data),
-  
-  me: () =>
-    httpClient.get<User>('/auth/me'),
-  
-  refresh: (refreshToken: string) =>
-    httpClient.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken }, { skipAuth: true }),
-};
-```
-
-### 1.3 Custom Hooks (TanStack Query)
-```
-src/hooks/
-├── use-auth.ts           — useLogin, useRegister, useLogout, useUser
-├── use-products.ts       — useProductList, useProductDetail, useTrending, useNearby
-├── use-search.ts         — useSearch, useSuggestions, useFacets
-├── use-categories.ts     — useCategories, useCategoryProducts
-├── use-favorites.ts      — useFavorites, useAddFavorite, useRemoveFavorite
-├── use-alerts.ts         — useAlerts, useCreateAlert, useDeleteAlert
-├── use-locations.ts      — useProvinces, useMunicipalities
-├── use-profile.ts        — useProfile, useUpdateProfile, useHistory
-└── use-debounce.ts       — debounce para search suggestions
-```
-
----
-
-## Fase 2 — Autenticación
-> Objetivo: Flujo completo de login/registro
-
-### 2.1 Screens de auth
-```
-src/app/(auth)/
-├── _layout.tsx           — Stack sin tabs
-├── login.tsx             — Email + password, link a registro
-├── register.tsx          — Nombre, email, password, confirmación
-├── forgot-password.tsx   — Envío de email de recuperación
-└── reset-password.tsx    — Nuevo password con token
-```
-
-### 2.2 Lógica de auth
-- [x] Integrar `useAuthStore.hydrate()` en `_layout.tsx` root (ya parcialmente hecho)
-- [x] Implementar `setAuthTokenGetter()` al momento del login
-- [x] Guard de rutas: redirigir a login si no autenticado
-- [x] Persistir tokens en SecureStore (ya implementado en store)
-- [x] Refresh token automático en 401
-
-### 2.3 Componentes de auth
-- [x] `AuthForm` — formulario reutilizable con validación
-- [x] `SocialLogin` — botones de login social (futuro)
-- [x] `PasswordStrength` — indicador de fortaleza de contraseña
-
----
-
-## Fase 3 — Home + Búsqueda Funcional
-> Objetivo: Pantalla de inicio y búsqueda reales
-
-### 3.1 Home Screen refactor
-- [x] Reemplazar datos mock por llamadas API reales
-- [x] Integrar `useTrending()` y `useCategories()` hooks
-- [x] Implementar navegación real en categorías y productos
-- [x] Fix: errores de import y unicode en `index.tsx`
-- [x] Agregar pull-to-refresh
-
-### 3.2 Search Screen refactor
-- [x] Conectar `SearchBar` con `useSuggestions()` hook (debounced)
-- [x] Conectar `FilterSheet` con `useSearch()` hook
-- [x] Implementar paginación con `useInfiniteQuery`
-- [x] Navegación a Product Detail al tocar un resultado
-- [x] Persistir historial de búsquedas en API
-- [x] Fix: `TODO: router.push(/product/${p.id})`
-
-### 3.3 Product Detail Screen
-```
-src/app/product/[id].tsx
-```
-- [x] Crear pantalla con imagen, nombre, precio, ofertas por fuente
-- [x] Lista de ofertas con links a fuente original
-- [x] Botón de favorito
-- [x] Gráfico de historial de precios (futuro)
-- [x] Información del vendedor
-
----
-
-## Fase 4 — Guardados + Favoritos
-> Objetivo: Sistema de guardados funcional
-
-### 4.1 Saved Screen refactor
-- [x] Conectar con `useFavorites()` hook
-- [x] Implementar tabs con datos reales (Productos, Búsquedas, Vendedores)
-- [x] Pull-to-refresh
-
-### 4.2 Funcionalidad de guardado
-- [x] Botón de favorito en ProductCard → `useAddFavorite()` / `useRemoveFavorite()`
-- [x] Guardar búsquedas con notificaciones
-- [x] Guardar vendedores
-
-### 4.3 Saved Search Detail
-```
-src/app/saved/[type]/[id].tsx
-```
-- [x] Ver detalle de búsqueda guardada
-- [x] Activar/desactivar alertas
-- [x] Eliminar guardado
-
----
-
-## Fase 5 — Perfil + Preferencias
-> Objetivo: Gestión completa del perfil
-
-### 5.1 Profile Screen refactor
-- [x] Conectar stats con datos reales de API
-- [x] Implementar navegación a sub-pantallas
-- [x] Fix: `TODO: implementar logout`
-
-### 5.2 Sub-pantallas de perfil
-```
-src/app/(tabs)/profile/
-├── edit.tsx              — Editar nombre, teléfono, avatar
-├── preferences.tsx       — Tema, moneda, ubicación, notificaciones
-└── history.tsx           — Historial de búsquedas
-```
-
-### 5.3 Preferencias de usuario
-- [x] Selector de tema (ya implementado en ThemeStore)
-- [x] Selector de moneda (USD/CUP/MLC)
-- [x] Ubicación por defecto
-- [x] Configuración de notificaciones
-
----
-
-## Fase 6 — Cerca de ti (Geolocalización)
-> Objetivo: Productos cercanos con ubicación real
-
-### 6.1 Infraestructura
-- [x] Instalar `expo-location`
-- [x] Crear `useDeviceLocation` hook con permisos y watchPosition
-- [x] Crear `useLocationStore` para estado global de ubicación
-- [x] Actualizar `src/services/locations.service.ts` con Supabase
-
-### 6.2 Nearby Screen refactor
-- [x] Reemplazar lista hardcodeada por ubicación real del usuario
-- [x] Implementar mapa con `react-native-maps` (fase futura)
-- [x] Lista de productos cercanos con distancia
-- [x] Filtro por radio de búsqueda (5km, 10km, 25km, 50km)
-
-### 6.3 Mapa interactivo
-- [x] Instalar `react-native-maps` (1.27.2, instalado)
-- [x] Marcadores de productos en mapa (coordenadas resueltas desde `locations` vía `byIds`)
-- [x] Cluster para zonas densas (grilla por región; zoom al cluster)
-- [x] Routing a ubicación del vendedor (Google/Apple Maps externo + card "Cómo llegar")
-
-> Estado real: `src/components/map/ProductMap.tsx` integra `MapView` con fallback seguro cuando el módulo nativo no está linkado (rebuild pendiente) o es web. Requiere **rebuild del APK** y Google Play Services en el dispositivo para verse.
-
----
-
-## Fase 7 — Alertas + Notificaciones
-> Objetivo: Sistema de alertas de precio
-
-### 7.1 Alertas
-- [x] Crear pantalla `alerts.tsx` en tabs
-- [x] Crear `alerts/create.tsx` y `alerts/[id].tsx`
-- [x] CRUD completo con `useAlerts` hooks
-- [x] Frecuencia: tiempo real, diaria, semanal
-
-### 7.2 Push Notifications
-- [x] Instalar `expo-notifications`
-- [x] Registrar token de dispositivo
-- [x] Manejar notificaciones en foreground/background
-- [x] Deep linking desde notificación a producto
-
-### 7.3 WebSocket (tiempo real)
-- [x] Crear WebSocket client en `src/lib/ws-client.ts`
-- [x] Suscripción a alertas activas
-- [x] Actualización de precios en tiempo real
-
----
-
-## Fase 8 — Publicar Producto (Vendedores)
-> Objetivo: Flujo de publicación para vendedores
-
-### 8.1 Screens
-```
-src/app/(seller)/
-├── _layout.tsx
-├── publish.tsx           — Formulario de publicación
-├── my-products.tsx       — Mis publicaciones
-└── edit/[id].tsx         — Editar publicación
-```
-
-### 8.2 Funcionalidad
-- [x] Formulario multi-paso: fotos → datos → precio → ubicación → revisión
-- [x] Selector de categoría con subcategorías
-- [x] Upload de imágenes (expo-image-picker)
-- [x] Selección de ubicación en mapa
-- [x] Preview antes de publicar
-- [x] Gestión de publicaciones activas/vendidas/inactivas
-
----
-
-## Fase 9 — Calidad + Polish
-> Objetivo: Producción-ready
-
-### 9.1 Testing
-- [x] Unit tests para utils y hooks
-- [x] Integration tests para stores
-- [x] Component tests para UI components críticos
-- [x] E2E tests con Playwright (web) o Detox (native)
-
-### 9.2 Performance
-- [x] Implementar `React.memo` en ProductCard y lista de resultados
-- [x] Virtualización de listas largas (`FlashList`)
-- [x] Lazy loading de imágenes
-- [x] Optimización de bundle (web)
-
-### 9.3 Accesibilidad
-- [x] Review de `accessibilityLabel` en todos los componentes
-- [x] Soporte RTL — Tooltip usa `I18nManager.isRTL` (resuelto)
-- [ ] Test con TalkBack / VoiceOver (pendiente, requiere dispositivo físico)
-
-### 9.4 Error Handling
-- [x] Error boundary global
-- [x] Toast/notification de errores
-- [x] Offline mode con cache
-- [x] Retry automático en errores de red
-
-### 9.5 Analytics + Monitoring
-- [x] Integrar analytics — `src/lib/analytics.ts` con proveedor real HTTP (batches a `EXPO_PUBLIC_ANALYTICS_ENDPOINT`)
-- [x] Crash reporting — `@sentry/react-native` vía `src/lib/sentry.ts` + `reportError()` (gated por `EXPO_PUBLIC_SENTRY_DSN`)
-- [x] Performance monitoring — `src/lib/monitoring.ts` (console en dev + breadcrumbs a Sentry)
-
----
-
-## Fase 10 — Publicación
-> Objetivo: Lanzar a producción
-
-### 10.1 Build
-- [x] Configurar EAS Build (config en `eas.json`; cloud build bloqueado con 403 desde Cuba)
-- [ ] Signing certificates (iOS/Android) — pendiente (EAS cloud inaccesible)
-- [x] Splash screen y iconos finales
-- [ ] App Store screenshots — pendiente
-
-> **Estado real**: APK debug local **✅ COMPLETADO** (27-ago-2026, `android/app/build/outputs/apk/debug/app-debug.apk`, 92.7MB, arm64-v8a, BUILD SUCCESSFUL 47m51s). **EAS Build cloud falla con 403** (restricción geográfica o permisos de cuenta). Ver `AGENTS.md` → "Build Android — Estado Actual".
-
-### 10.2 Deploy
-- [ ] Configurar EAS Submit — pendiente (bloqueado por EAS cloud 403)
-- [ ] App Store (iOS) listing — pendiente
-- [ ] Google Play Store listing — pendiente
-- [x] Deploy backend API a producción — Supabase cloud configurado (Edge Functions + migraciones depoyadas)
-
-### 10.3 Post-launch
-- [x] Monitoreo de crashes
-- [x] Feedback loop
-- [x] Iteración según métricas de uso
-
----
-
-## Trabajo reciente (post-fases 0-10)
-
-### UI/UX Hardening — plan de 7 fases (28-ago-2026, completo)
-Endurecimiento de la interfaz sin funcionalidades nuevas, sin cambios de servicios/API y sin cambiar la identidad visual:
+> Las fases 0-10 del plan original se completaron el 28-30/ago-2026. Este nuevo plan v2 las reemplaza como roadmap operativo, conservando el historial funcional por si se necesita consulta.
 
 | Fase | Contenido | Estado |
 |------|-----------|--------|
-| 1 — Tipografía | `lineHeight` absoluto con `getLineHeight()`, recálculo al sobreescribir `fontSize` | ✅ |
-| 2 — Design System | dark mode centralizado en UI primitives, tokens, `OpacityTokens` | ✅ |
-| 3 — Navegación | 5 tabs; Mapa queda fuera del tab bar (contexto secundario) | ✅ |
-| 4 — Home | búsqueda protagonista | ✅ |
-| 5 — Search/Results | ProductCard agrupado | ✅ |
-| 6 — Product Detail | comparar ofertas | ✅ |
-| 7 — Calidad | mocks DEV (`FEATURES.useMocks`), `Skeleton`, ESLint flat + Jest | ✅ |
+| 0 — Infraestructura | entorno, utils, limpieza legacy, testing base | ✅ |
+| 1 — Capa de servicios | 9 services + hooks TanStack | ✅ |
+| 2 — Autenticación | screens + lógica Supabase | ✅ |
+| 3 — Home + Búsqueda | home/search/product detail funcionales | ✅ |
+| 4 — Guardados | favorites/búsquedas/vendedores | ✅ |
+| 5 — Perfil | stats + sub-pantallas + preferencias | ✅ |
+| 6 — Cerca de ti | location + nearby + mapa interactivo | ✅ |
+| 7 — Alertas + Push | CRUD alertas + expo-notifications + WS | ✅ |
+| 8 — Publicar | form 5 pasos + upload + gestión | ✅ |
+| 9 — Calidad | testing, performance, accesibilidad (RTL), errores, Sentry+analytics | ✅ |
+| 10 — Publicación | APK debug local ✅; EAS cloud bloqueado (403) | ⏸️ |
 
-Reglas acordadas: dark mode se resuelve **desde el store** en los UI primitives; **Accent = encontrado/disponible**, Success = positivo general; detalle completo en `CHANGELOG.md` bajo `[2.0.0-canary]`.
-
-### ESLint cleanup: 136 warnings → 0 (30-ago-2026, completo)
-Limpió los warnings pre-existentes de `expo lint` por grupos:
-- **A — mecánico**: `no-unused-vars` + `array-type` en ~38 archivos (imports/bindings muertos, `Array<T>` → `T[]`).
-- **B — `no-explicit-any` (44→0)**: casts `router.push(... as any)` eliminados (Href permisivo con `typedRoutes: false`), tipado real en `SavedListItem`, `Favorite[]`, `TabIcon`, `GestureResponderEvent`, normalizers Supabase (`OfferRow`/`ProductRow`).
-- **C — react-hooks (React Compiler, reglas `warn`)**: patrón prev-state en `alerts/[id]`, `useSyncExternalStore` en `use-color-scheme.web`, estado derivado en hooks realtime, deps reales en `use-device-location`/`use-notifications` (fix `immutability`), helper módulo en `CategoryPicker`. Quedan 3 `eslint-disable` justificados.
-
-Verificación: `npm run lint` **0 errores / 0 warnings**, `npx tsc --noEmit` limpio, `npx jest --ci` 54 tests en verde. Commit `595db2f`.
-
----
+### Trabajo reciente (post-fases)
+- **UI/UX Hardening (7 fases, 28-ago)**: tipografía absoluta, DS dark mode, navegación, Home, results agrupados, product detail, calidad (mocks+Skeleton+ESLint+Jest). Detalle en `CHANGELOG.md` `[2.0.0-canary]`.
+- **ESLint 136→0 (30-ago)**: commit `595db2f`. `npm run lint` 0/0, tsc limpio, 54 tests.
+- **Pendientes post-fases (30-ago, 2ª sesión)**: mapa interactivo (`react-native-maps`), Sentry (`@sentry/react-native`), analytics HTTP real, RTL en Tooltip. Commit `50c59bf`. 63 tests en verde.
 
 ## Resumen de Dependencias por Fase
 
-| Fase | Nuevas dependencias |
-|------|---------------------|
-| 0 | `dotenv` o expo env |
-| 1 | — |
-| 2 | — |
-| 3 | — |
-| 4 | — |
-| 5 | — |
+| Fase | Dependencias |
+|------|--------------|
 | 6 | `expo-location`, `react-native-maps` |
 | 7 | `expo-notifications` |
 | 8 | `expo-image-picker` |
 | 9 | `jest`, `jest-expo`, `@testing-library/react-native`, `@shopify/flash-list`, `test-renderer` |
 | 10 | `eas-cli`, `@sentry/react-native` |
 
----
-
-## Orden de Ejecución Recomendado
-
-```
-Fase 0 (1-2 días) → Fase 1 (2-3 días) → Fase 2 (2 días)
-→ Fase 3 (3 días) → Fase 4 (2 días) → Fase 5 (2 días)
-→ Fase 6 (2-3 días) → Fase 7 (2-3 días) → Fase 8 (3-4 días)
-→ Fase 9 (2-3 días) → Fase 10 (1-2 días)
-```
-
-**Estado: ✅ Fases 0-10 terminadas + UI/UX hardening (7 fases), ESLint 136→0, mapa interactivo, Sentry + analytics HTTP y RTL en Tooltip completados. Pendientes: rebuild nativo para ver el mapa (APK con módulos), Google Play Services en el dispositivo, EAS cloud (403 desde Cuba), signing/App Store/Play Store, update de Expo Go en dispositivo y test manual de TalkBack/VoiceOver.**
-
----
-
 ## Convenciones de Código
 
 - **Components**: PascalCase, en `src/components/ui/` o `src/components/{domain}/`
 - **Screens**: kebab-case en `src/app/`
-- **Services**: `{domain}.service.ts` en `src/services/`
+- **Services**: `{domain}.service.ts` en `src/services/` (Supabase directo)
 - **Hooks**: `use-{name}.ts` en `src/hooks/`
 - **Types**: Centralizados en `src/types/index.ts`
-- **Query Keys**: Usar `queryKeys` factory de `api-client.tsx`
-- **Estado**: Zustand para auth/theme, TanStack Query para server state
-- **Estilos**: Design system existente (`src/theme/`), no Tailwind
+- **Query Keys**: `queryKeys` factory de `api-client.tsx`
+- **Estado**: Zustand (auth/theme) + TanStack Query (server state)
+- **Estilos**: DS propio (`src/theme/`), no Tailwind, no Tamagui, no StyleSheet disperso

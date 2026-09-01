@@ -1,11 +1,10 @@
 /**
  * Dónde Hay - Home Screen
- * Pantalla principal con búsqueda, categorías y productos destacados
+ * Jerarquía reducida: ¿Qué estás buscando? → Buscar → Tendencias → Cerca de ti → Últimos descubrimientos
  */
 
 import React, { useState } from 'react';
 import { ScrollView, Pressable, RefreshControl, Image } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from '@/components/ui/Box';
@@ -17,8 +16,8 @@ import { FEATURES } from '@/config';
 import { MOCK_PRODUCTS } from '@/mocks/products';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
-import { useProducts } from '@/hooks/use-products';
-import { useCategories } from '@/hooks/use-categories';
+import { useLocationStore } from '@/store/locationStore';
+import { useProducts, useNearbyProducts } from '@/hooks/use-products';
 import { useFavorites, useAddFavorite, useRemoveFavorite } from '@/hooks/use-favorites';
 import { useTrendingSearches } from '@/hooks/use-search';
 import type { Favorite, ProductWithOffers } from '@/types';
@@ -30,12 +29,16 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { resolvedMode } = useThemeStore();
+  const { userLocation } = useLocationStore();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: productsResponse, isLoading, refetch } = useProducts({});
-  const { data: categories = [] } = useCategories();
   const { data: trendingSearches = [] } = useTrendingSearches(6);
+  const { data: nearbyProducts, isLoading: nearbyLoading } = useNearbyProducts(
+    userLocation?.latitude ?? 0,
+    userLocation?.longitude ?? 0
+  );
   const { data: favoritesData } = useFavorites('product');
   const addFavorite = useAddFavorite();
   const removeFavorite = useRemoveFavorite();
@@ -70,13 +73,6 @@ export default function HomeScreen() {
     });
   };
 
-  const handleCategoryPress = (categoryId: string) => {
-    router.push({
-      pathname: '/results',
-      params: { category: categoryId },
-    });
-  };
-
   const handleProductPress = (product: ProductWithOffers) => {
     router.push({
       pathname: '/product/[id]',
@@ -84,13 +80,11 @@ export default function HomeScreen() {
     });
   };
 
-  const renderSectionHeader = (title: string, icon: string, onSeeAll?: () => void) => (
+  const renderSectionHeader = (title: string, onSeeAll?: () => void) => (
     <Box flexDirection="row" justifyContent="space-between" alignItems="center" mb="sm">
-      <Box flexDirection="row" alignItems="center" gap="xs">
-        <Text variant="titleMedium" color="text">
-          {icon} {title}
-        </Text>
-      </Box>
+      <Text variant="titleMedium" color="text">
+        {title}
+      </Text>
       {onSeeAll && (
         <Pressable
           onPress={onSeeAll}
@@ -107,6 +101,9 @@ export default function HomeScreen() {
 
   const displayProducts =
     productsResponse?.data ?? (FEATURES.useMocks ? MOCK_PRODUCTS : []);
+
+  const latestProducts = displayProducts.slice(0, 5);
+  const nearbyList = nearbyProducts ?? [];
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
@@ -134,114 +131,129 @@ export default function HomeScreen() {
               />
               <Box>
                 <Text variant="titleMedium" color="text">
-                  Hola {user?.name?.split(' ')[0] || 'Usuario'} 👋
+                  Dónde Hay
                 </Text>
                 <Text variant="bodySmall" color="textSecondary">
-                  ¿Qué estás buscando hoy?
+                  {user ? `Hola, ${user.name?.split(' ')[0]}` : '¿Qué estás buscando hoy?'}
                 </Text>
               </Box>
             </Box>
           </Box>
 
-          {/* Search Bar - protagonista */}
-          <Box px="md" mb="sm" mode={resolvedMode}>
+          {/* Search - protagonista */}
+          <Box px="md" mb="lg" mode={resolvedMode}>
             <SearchBar
               value={searchQuery}
               onChangeText={setSearchQuery}
               onSubmit={handleSearch}
-              placeholder="Encuentra lo que buscas hoy..."
+              placeholder="¿Qué quieres encontrar?"
               accessibilityLabel="Buscar productos"
               size="lg"
               autoFocus={false}
             />
           </Box>
 
-          {/* Trending Searches - búsquedas rápidas */}
+          {/* Tendencias */}
           <Box px="md" mb="lg" mode={resolvedMode}>
-            <Box flexDirection="row" alignItems="center" gap="xxs" mb="xs">
-              <Text variant="labelMedium" color="textSecondary" mode={resolvedMode}>
-                🔥 Buscan ahora
+            {renderSectionHeader('Tendencias')}
+            {trendingSearches.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <Box flexDirection="row" gap="xs" pr="md">
+                  {trendingSearches.map((search, index) => (
+                    <Pressable
+                      key={index}
+                      onPress={() => handleSearch(search)}
+                      style={({ pressed }) => ({ opacity: pressed ? OpacityTokens.pressed : 1 })}
+                      accessibilityLabel={`Buscar: ${search}`}
+                      accessibilityRole="button"
+                    >
+                      <Box
+                        px="sm"
+                        py="xs"
+                        borderRadius="full"
+                        borderWidth={1}
+                        borderColor="border"
+                        mode={resolvedMode}
+                      >
+                        <Text variant="bodySmall" color="text" mode={resolvedMode}>
+                          {search}
+                        </Text>
+                      </Box>
+                    </Pressable>
+                  ))}
+                </Box>
+              </ScrollView>
+            ) : (
+              <Text variant="bodySmall" color="textSecondary">
+                Sin tendencias por ahora.
               </Text>
-            </Box>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <Box flexDirection="row" gap="xs" pr="md">
-                {trendingSearches.map((search, index) => (
-                  <Pressable
-                    key={index}
-                    onPress={() => handleSearch(search)}
-                    style={({ pressed }) => ({ opacity: pressed ? OpacityTokens.pressed : 1 })}
-                    accessibilityLabel={`Buscar: ${search}`}
-                    accessibilityRole="button"
-                  >
-                    <Box
-                      px="sm"
-                      py="xs"
-                      borderRadius="full"
-                      borderWidth={1}
-                      borderColor="border"
-                      mode={resolvedMode}
-                    >
-                      <Text variant="bodySmall" color="text" mode={resolvedMode}>
-                        {search}
-                      </Text>
-                    </Box>
-                  </Pressable>
-                ))}
-              </Box>
-            </ScrollView>
-          </Box>
-
-          {/* Categories - chips compactos */}
-          <Box px="md" mb="lg" mode={resolvedMode}>
-            {renderSectionHeader('Categorías', '📂')}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-            >
-              <Box flexDirection="row" gap="xs" pr="md">
-                {categories.map((category) => (
-                  <Pressable
-                    key={category.id}
-                    onPress={() => handleCategoryPress(category.slug)}
-                    style={({ pressed }) => ({ opacity: pressed ? OpacityTokens.pressed : 1 })}
-                    accessibilityLabel={`Categoría ${category.name}`}
-                    accessibilityRole="button"
-                  >
-                    <Box
-                      flexDirection="row"
-                      alignItems="center"
-                      gap="xxs"
-                      px="sm"
-                      py="xs"
-                      bg="surfaceVariant"
-                      borderRadius="full"
-                      mode={resolvedMode}
-                    >
-                      <Text variant="bodyMedium" mode={resolvedMode}>
-                        {category.icon}
-                      </Text>
-                      <Text variant="bodySmall" color="textSecondary" mode={resolvedMode}>
-                        {category.name}
-                      </Text>
-                    </Box>
-                  </Pressable>
-                ))}
-              </Box>
-            </ScrollView>
-          </Box>
-
-          {/* Featured Products */}
-          <Box px="md" mb="lg" mode={resolvedMode}>
-            {renderSectionHeader(
-              'Productos Destacados',
-              '⭐',
-              () => handleSearch('')
             )}
+          </Box>
+
+          {/* Cerca de ti */}
+          <Box px="md" mb="lg" mode={resolvedMode}>
+            {renderSectionHeader('Cerca de ti', () => router.push('/map'))}
+            {!userLocation ? (
+              <Card variant="outlined" padding="md" mode={resolvedMode}>
+                <Pressable
+                  onPress={() => router.push('/map')}
+                  accessibilityLabel="Activar ubicación para ver ofertas cerca"
+                  accessibilityRole="button"
+                >
+                  <Box flexDirection="row" alignItems="center" justifyContent="space-between">
+                    <Box flex={1} mr="sm">
+                      <Text variant="bodyMedium" color="text">
+                        📍 Activa tu ubicación
+                      </Text>
+                      <Text variant="bodySmall" color="textSecondary">
+                        Para ver ofertas cerca de ti.
+                      </Text>
+                    </Box>
+                    <Text variant="bodySmall" color="primary">
+                      Abrir mapa →
+                    </Text>
+                  </Box>
+                </Pressable>
+              </Card>
+            ) : nearbyLoading ? (
+              <Box flexDirection="row" gap="sm" mode={resolvedMode}>
+                {[0, 1, 2].map((i) => (
+                  <Box key={i} width={160}>
+                    <ProductCardSkeleton layout="grid" count={1} testID={`home-nearby-skeleton-${i}`} />
+                  </Box>
+                ))}
+              </Box>
+            ) : nearbyList.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <Box flexDirection="row" gap="sm" pr="md" mode={resolvedMode}>
+                  {nearbyList.slice(0, 6).map((product) => (
+                    <Box key={product.id} width={160}>
+                      <ProductCard
+                        product={product}
+                        onPress={handleProductPress}
+                        onFavoritePress={handleFavoritePress}
+                        isFavorite={favoriteProductIds.has(product.id)}
+                        layout="grid"
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              </ScrollView>
+            ) : (
+              <Text variant="bodySmall" color="textSecondary">
+                Nada cerca todavía — mira los últimos descubrimientos.
+              </Text>
+            )}
+          </Box>
+
+          {/* Últimos descubrimientos */}
+          <Box px="md" mb="xl" mode={resolvedMode}>
+            {renderSectionHeader('Últimos descubrimientos', () => handleSearch(''))}
             {isLoading ? (
-              <ProductCardSkeleton layout="list" count={3} testID="home-featured-skeleton" />
-            ) : displayProducts.length > 0 ? (
+              <ProductCardSkeleton layout="list" count={3} testID="home-latest-skeleton" />
+            ) : latestProducts.length > 0 ? (
               <Box gap="sm">
-                {displayProducts.slice(0, 5).map((product) => (
+                {latestProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -258,83 +270,11 @@ export default function HomeScreen() {
                   <Text variant="headlineMedium">📦</Text>
                   <Box mt="sm">
                     <Text variant="bodyMedium" color="textSecondary">
-                      No hay productos destacados aún
+                      No hay productos aún
                     </Text>
                   </Box>
                 </Box>
               </Card>
-            )}
-          </Box>
-
-          {/* Tech Products */}
-          <Box px="md" mb="lg" mode={resolvedMode}>
-            {renderSectionHeader(
-              'Tecnología',
-              '📱',
-              () => handleCategoryPress('electronics')
-            )}
-            {isLoading ? (
-              <Box flexDirection="row" gap="sm" mode={resolvedMode}>
-                {[0, 1, 2].map((i) => (
-                  <Box key={i} width={160}>
-                    <ProductCardSkeleton layout="grid" count={1} testID={`home-tech-skeleton-${i}`} />
-                  </Box>
-                ))}
-              </Box>
-            ) : (
-              <FlashList
-                data={displayProducts.filter((p: ProductWithOffers) => p.categoryId === 'electronics').slice(0, 6)}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item: ProductWithOffers) => item.id}
-                renderItem={({ item }: { item: ProductWithOffers }) => (
-                  <Box width={160} mr="sm">
-                    <ProductCard
-                      product={item}
-                      onPress={handleProductPress}
-                      onFavoritePress={handleFavoritePress}
-                      isFavorite={favoriteProductIds.has(item.id)}
-                      layout="grid"
-                    />
-                  </Box>
-                )}
-              />
-            )}
-          </Box>
-
-          {/* Vehicle Products */}
-          <Box px="md" mb="xl" mode={resolvedMode}>
-            {renderSectionHeader(
-              'Vehículos',
-              '🚗',
-              () => handleCategoryPress('vehicles')
-            )}
-            {isLoading ? (
-              <Box flexDirection="row" gap="sm" mode={resolvedMode}>
-                {[0, 1, 2].map((i) => (
-                  <Box key={i} width={160}>
-                    <ProductCardSkeleton layout="grid" count={1} testID={`home-vehicles-skeleton-${i}`} />
-                  </Box>
-                ))}
-              </Box>
-            ) : (
-              <FlashList
-                data={displayProducts.filter((p: ProductWithOffers) => p.categoryId === 'vehicles').slice(0, 6)}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item: ProductWithOffers) => item.id}
-                renderItem={({ item }: { item: ProductWithOffers }) => (
-                  <Box width={160} mr="sm">
-                    <ProductCard
-                      product={item}
-                      onPress={handleProductPress}
-                      onFavoritePress={handleFavoritePress}
-                      isFavorite={favoriteProductIds.has(item.id)}
-                      layout="grid"
-                    />
-                  </Box>
-                )}
-              />
             )}
           </Box>
         </ScrollView>

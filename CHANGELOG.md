@@ -4,6 +4,24 @@ Todas las cambios notables de Dónde Hay se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/)
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
+## [2.1.0-canary] - 2026-09-01
+
+> Sesión 30-ago/01-sep: Mapa interactivo + observabilidad + inicio de "Frontend estable" (Fase 1 del plan maestro v2, prioridades 0-12).
+
+### Añadido
+- **Mapa interactivo** (`react-native-maps@1.27.2`): `src/components/map/ProductMap.tsx` con marcadores, clusters por grilla (`src/lib/map.ts`) y routing externo; pantalla `src/app/map.tsx` con toggle Mapa/Lista. **Carga perezosa del módulo nativo con fallback** (APK sin rebuild o web → card "Abrir en Google Maps", nunca crashea). Requiere rebuild del APK + Google Play Services para verse. → requiere rebuild nativo para verse.
+- **Monitoreo**: `@sentry/react-native@~7.11.0` init JS gated por `EXPO_PUBLIC_SENTRY_DSN` (no-op si no hay DSN o módulo nativo); `reportError()` en `src/lib/monitoring.ts` con breadcrumb + capture + analytics.
+- **Analytics real**: `analytics.ts` `flush()` envía batches HTTP a `EXPO_PUBLIC_ANALYTICS_ENDPOINT` (limpia cola solo con éxito); `Platform.OS` + `appRelease` en cada evento.
+- **Plan maestro v2** (`IMPLEMENTATION_PLAN.md`): prioridades 0-12 + fases 1-7 ajustadas al stack real — **sin API intermedia; backend = Supabase directo** (PostgreSQL + Auth + Realtime + pg_trgm RPC; Edge Functions solo para lógica pesada).
+
+### Cambiado — Frontend estable (Fase 1, inicio)
+- **Home reducida** (`src/app/(tabs)/index.tsx`): jerarquía **Dónde Hay → ¿Qué estás buscando? → [Buscar] → Tendencias → Cerca de ti → Últimos descubrimientos**. Eliminados bloques Categorías (fila), Destacados largos, Tecnología y Vehículos. "Cerca de ti" usa `userLocation` persistido de `useLocationStore` (sin prompt de permiso en Home; sin ubicación → CTA Card → `/map`).
+- **Auditoría Design System**: 0 imports de Tamagui en `src/`, 1 único `StyleSheet.create` (primitive Toast), patrón inline dominante = divisor de header con `colors.divider` (resuelto del tema) → sin churn necesario.
+
+### Tests
+- **80 tests en verde** (era 63): nuevos `controls.test.tsx` (Button/Input), `searchbar.test.tsx` (SearchBar, 5 casos) y `product-card.test.tsx` (ProductCard, 5 casos con el contrato agrupado N lugares/Desde $).
+- Nota RNTL v14 en este proyecto: el mock de TextInput de jest-expo NO dispara `onFocus` vía `fireEvent(input,'focus')` ni `user.press`; solo `userEvent.type` enfoca el input (usado para abrir el dropdown de sugerencias); `fireEvent` sigue valid para `changeText`/`submitEditing`/`press`.
+
 ## [2.0.0-canary] - 2026-08-28
 
 > UI/UX Hardening — plan de 7 fases aprobado (tipografía → design system → navegación → home → search/results → product detail → calidad). Se documenta por fases según se van cumpliendo.
