@@ -383,6 +383,12 @@ npx expo start --dev-client
 
 Tipos y lógica pura de matching completados: `Category`, `SearchRequest`, `SearchResponse`, `OfferListItem`, `OfferAggregate` en `src/types/index.ts`; `src/lib/normalize.ts` (normalización títulos + stopwords es-CU + brand/model + productKey con discriminantes variantes+capacidad); `src/lib/matching.ts` (sameProduct, similarityScore, subsetMatch, aggregateOffers, deriveAvailability, mergeByKey, applyAggregate, buildOfferList); refactor `search.service.ts` delegando a la lib pura (eliminadas funciones inline `mergeProducts` y cálculo manual de min/avg/max). 120 tests (40 nuevos). Ver detalle en `IMPLEMENTATION_PLAN.md`.
 
+### Fase 3 — Backend Supabase (completada, 02-sep-2026)
+
+Migración `20260902000000_core_tables.sql` lista para aplicar via SQL Editor del Dashboard. 9 tablas (categories, locations, products, sellers, product_offers, profiles, favorites, price_alerts, saved_searches) + RLS + RPC `search_products` (pg_trgm, filtros, agregación, cursor). Stub `match-products` EF preparado para Fase 4. La migración es idempotent (IF NOT EXISTS en tablas e índices).
+
+**Pendiente**: pegar el SQL de la migración en el Dashboard → SQL Editor → Run. Verificar tablas en Table Editor después.
+
 - **403 pre-existentes**: Archivos legacy no modificados, no afecta nuevo código
 - **ESLint 10.x**: Configuración en parent `eslint.config.mjs` causa conflictos, ignorado
 - **Typed routes**: Requiere regenerar `.expo/types/router.d.ts` al agregar nuevas rutas

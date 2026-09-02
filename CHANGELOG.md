@@ -29,6 +29,12 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - **Refactor `search.service.ts`**: delegación a `applyAggregate` (agregación) y `mergeByKey` (dedupe/match). Eliminadas funciones inline duplicadas `mergeProducts`, cálculo manual de min/avg/max en `mapProductRow` y `scrapedToProductWithOffers`. Servicio queda como frontera snake→camel only.
 - **120 tests en verde** (era 80): 40 tests nuevos de lib pura (normalize: removeAccents, normalizeTitle, tokenize, stripStopwords, extractCapacity, extractBrand, buildCanonicalName, productKey; matching: similarityScore, sameProduct, deriveAvailability, aggregateOffers, mergeByKey, subsetMatch, buildOfferList). Discriminante verificado: iPhone 13 ≠ 13 Pro ≠ 13 Pro Max; 128gb = 128 GB; "iPhone 13" + "128gb" fusionan (subsetMatch), variantes distintas NO. `npx tsc --noEmit` ✅. `npx eslint src/` 0/0.
 
+### Backend Supabase (Fase 3)
+- **Migración core** (`supabase/migrations/20260902000000_core_tables.sql`): 9 tablas — `categories`, `locations`, `products` (canonical_name UNIQUE + pg_trgm index), `sellers` (UNIQUE source_id+source_profile_url), `product_offers` (UNIQUE source_id+source_external_id, cascade delete), `profiles` (PK = auth.users.id), `favorites` (UNIQUE user+type+target), `price_alerts`, `saved_searches`. Índices en foreign keys y filtros frecuentes. Triggers `updated_at` en products y profiles.
+- **RLS**: SELECT público (anon + auth) en products/offers/sellers/categories/locations. Profiles: update/insert propio usuario. Favorites/price_alerts/saved_searches: CRUD propio usuario. Todas protegidas con `IF NOT EXISTS` policy checks.
+- **RPC `search_products`**: `pg_trgm` ILIKE en canonical_name/brand/model/description + filtros (category, location, sources, price range) + agregación por producto (min/max/avg/offerCount/sourceCount) + cursor pagination + sort por precio o fecha. Grant a anon + authenticated.
+- **Edge Function `match-products`** (`supabase/functions/match-products/index.ts`): stub para Fase 4. POST con canonical_name, retorna best match candidate vía ILIKE. Full matching (productKey/subsetMatch) se portará a Deno en Fase 4.
+
 ## [2.0.0-canary] - 2026-08-28
 
 > UI/UX Hardening — plan de 7 fases aprobado (tipografía → design system → navegación → home → search/results → product detail → calidad). Se documenta por fases según se van cumpliendo.

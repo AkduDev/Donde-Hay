@@ -224,14 +224,16 @@ supabase/
 ├── functions/
 │   ├── _shared/           # CORS, auth, admin client
 │   ├── search-products/   # FTS con filtros (RPC)
-│   ├── match-products/    # Agrupación/normalización
+│   ├── match-products/    # Agrupación/normalización (stub Fase 4)
 │   └── check-price-alerts/ # Agendada (pg_cron)
 ```
-- [ ] Migraciones: products, product_offers, sources, sellers, categories, locations, profiles, favorites, price_alerts, saved_searches
-- [ ] RLS + políticas por tabla
-- [ ] RPC `search_products` (pg_trgm)
-- [ ] Edge Function `search-products` + contrato de respuesta tipado en la app
-- [ ] Edge Functions `match-products` y `check-price-alerts`
+- [x] Migraciones: products, product_offers, sellers, categories, locations, profiles, favorites, price_alerts, saved_searches (✅ completado 02-sep: `20260902000000_core_tables.sql`)
+- [x] RLS + políticas por tabla (✅ completado: public read en core tables, CRUD propio en user tables, IF NOT EXISTS idempotent)
+- [x] RPC `search_products` (pg_trgm + ILIKE + filtros + agregación + cursor) (✅ completado: Grant a anon + authenticated)
+- [x] Edge Function `match-products` (stub con ILIKE, full matching pendiente Fase 4) (✅ completado 02-sep)
+- [ ] Edge Function `check-price-alerts` (ya existe, verificar contra schema nuevo)
+
+Estado: completada 02-sep-2026. Aplicar migración via Supabase Dashboard → SQL Editor.
 
 ### Fase 4 — Primera fuente (Revolico)
 - [ ] `SourceAdapter` contract en Edge Function
