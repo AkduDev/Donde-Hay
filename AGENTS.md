@@ -387,11 +387,19 @@ Tipos y lógica pura de matching completados: `Category`, `SearchRequest`, `Sear
 
 Migración `20260902000000_core_tables.sql` aplicada directamente via Supabase Management API (02-sep-2026). 9 tablas (categories, locations, products, sellers, product_offers, profiles, favorites, price_alerts, saved_searches) + 23 índices + 24 políticas RLS + RPC `search_products` (pg_trgm, filtros, agregación, cursor) + extensión `pg_trgm`. Stub `match-products` EF preparado para Fase 4. Proyecto `wtnausykjenjqephbhfw` ACTIVE_HEALTHY.
 
-### Fase 4 — Fuente Revolico (completada, 02-sep-2026)
+### Fase 4 — Fuente Revolico (completada y verificada end-to-end, 02-sep-2026)
 
-Seed de 44 categorías + 16 provincias aplicado (`20260902000001_seed_categories_locations.sql`). Scraper `scrape-revolico` corregido: `category_id`/`location_id` ahora resuelven a UUIDs (antes slug/string → crash FK); `onConflict` de offers usa el índice compuesto. `match-products` EF portado a Deno (productKey/similarityScore/subsetMatch desde `src/lib/`). `search.service.ts` simplificado: eliminado `searchRevolico` (apuntaba a localhost inexistente); `searchMultiSource` lee solo de la DB. 120 tests, tsc 0, eslint 0/0.
+Seed de 44 categorías + 16 provincias aplicado (`20260902000001_seed_categories_locations.sql`). Scraper `scrape-revolico` corregido: `category_id`/`location_id` ahora resuelven a UUIDs (antes slug/string → crash FK); `onConflict` de offers usa el índice compuesto; query GraphQL usa `$category: ID!` (el argumento de `ads()` es `ID`, no `String`). **Solo las categorías raíz (1000/1100/1200/1300/1400) devuelven ads** en el API real (`graphql-api.revolico.app` — introspection deshabilitada); las subcategorías dan vacío. El scraper ahora resuelve cualquier categoryId a su raíz y, por defecto (sin categoryId/search, usado por el cron), scrapea las 5 raíces. `parseTitle`/`buildCanonicalName`/`normalizeCurrency` null-safe (ads sin título/moneda). `match-products` EF portado a Deno (productKey/similarityScore/subsetMatch desde `src/lib/`). `search.service.ts` simplificado: eliminado `searchRevolico` (apuntaba a localhost inexistente); `searchMultiSource` lee solo de la DB. 120 tests, tsc 0, eslint 0/0.
 
-**Pendiente Fase 4**: agendar el scrape (pg_cron o trigger manual) y verificar end-to-end con datos reales de Revolico.
+**Verificación end-to-end (02-sep-2026)**: pasada inicial completa con datos reales → **293 products, 300 offers, 326 sellers** persistidos en `wtnausykjenjqephbhfw` (verificado vía PostgREST con joins). Categorías activas: Tecnología 99, Inmobiliaria 98, Vehículos 96.
+
+**Bugs de schema corregidos en producción** (el `on_conflict` de la EF fallaba con 42P10 porque la BD no tenía los constraints que la migración core del repo sí declara):
+1. `products.canonical_name` necesitaba `UNIQUE` (los 43P10 → `products` no insertaba nada). Agregado `products_canonical_name_key`.
+2. `product_offers(source_id, source_external_id)` necesitaba `UNIQUE`. Agregado `product_offers_source_external_key`.
+3. `product_offers.price` era `NOT NULL` pero Revolico tiene anuncios sin precio → `23502`. Cambiado a **nullable** (también actualizado en `20260902000000_core_tables.sql`).
+4. Fallo 500 `TypeError ... toUpperCase` con título/moneda null → funciones de normalización ahora null-safe.
+
+**Agendado (02-sep-2026)**: `pg_cron` + `pg_net` habilitados. Job `scrape-revolico` (`0 */6 * * *`, cada 6h, activo) invoca la Edge Function con la anon key vía `net.http_post`. Migración: `20260902000002_enable_cron_schedule_revolico_scrape.sql`. La EF mantiene `verify_jwt: true` (la anon key es un JWT válido para autorizar la invocación; la función usa su propio `service_role` del runtime). La respuesta incluye `debugErrors: { products, offers }` para monitoreo del upsert.
 
 - **403 pre-existentes**: Archivos legacy no modificados, no afecta nuevo código
 - **ESLint 10.x**: Configuración en parent `eslint.config.mjs` causa conflictos, ignorado

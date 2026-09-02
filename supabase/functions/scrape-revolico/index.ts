@@ -35,7 +35,7 @@ const GQL_HEADERS: Record<string, string> = {
 };
 
 const ADS_QUERY = `
-  query SearchAds($category: String!, $after: String) {
+  query SearchAds($category: ID!, $after: String) {
     ads(category: $category, after: $after) {
       edges {
         node {
@@ -96,19 +96,18 @@ interface ScrapeRequest {
 }
 
 /** Upsert products, offers, and sellers for a batch of Revolico ads */
-async upsertBatch(
+async function upsertBatch(
   admin: ReturnType<typeof getAdminClient>,
-  ads: RevolicoAd[],
-  categoryId?: string
-): Promise<{ products: number; offers: number; sellers: number }> {
+  ads: Array<{ ad: RevolicoAd; categoryId: string }>
+): Promise<{ products: number; offers: number; sellers: number; productErrors: unknown[]; offerErrors: unknown[] }> {
   let productCount = 0;
   let offerCount = 0;
   let sellerCount = 0;
 
-  if (ads.length === 0) return { products: 0, offers: 0, sellers: 0 };
+  if (ads.length === 0) return { products: 0, offers: 0, sellers: 0, productErrors: [], offerErrors: [] };
 
   // 1. Normalize all ads
-  const normalizedProducts = ads.map((ad) => ({
+  const normalizedProducts = ads.map(({ ad, categoryId }) => ({
     ...revolicoAdToProduct(ad, categoryId),
     _revolicoId: ad.id,
     _ad: ad,
@@ -127,6 +126,7 @@ async upsertBatch(
   // 3. Upsert products in batches
   const productBatches = batch(uniqueProducts, 50);
   const upsertedProducts: Array<{ id: string; canonical_name: string }> = [];
+  const productErrors: unknown[] = [];
 
   for (const pBatch of productBatches) {
     const rows = pBatch.map((p) => ({
@@ -148,7 +148,8 @@ async upsertBatch(
       .select("id, canonical_name");
 
     if (error) {
-      console.error("Product upsert error:", error);
+      console.error("Product upsert error:", JSON.stringify(error), "rows:", JSON.stringify(rows));
+      productErrors.push(error);
       continue;
     }
     upsertedProducts.push(...(data ?? []));
@@ -163,7 +164,7 @@ async upsertBatch(
 
   // 4. Upsert sellers and prepare offers
   const sellerMap = new Map<string, RevolicoAd>();
-  for (const ad of ads) {
+  for (const { ad } of ads) {
     const sellerKey = `revolico:${ad.id}`;
     if (!sellerMap.has(sellerKey)) {
       sellerMap.set(sellerKey, ad);
@@ -199,7 +200,7 @@ async upsertBatch(
 
   // 5. Upsert offers
   const offerRows: Array<ReturnType<typeof revolicoAdToOffer>> = [];
-  for (const ad of ads) {
+  for (const { ad, categoryId } of ads) {
     const canonicalKey = productDedupKey(revolicoAdToProduct(ad, categoryId).canonical_name);
     const productId = nameToId.get(canonicalKey);
     if (!productId) continue;
@@ -212,6 +213,7 @@ async upsertBatch(
   }
 
   const offerBatches = batch(offerRows, 50);
+  const offerErrors: unknown[] = [];
   for (const oBatch of offerBatches) {
     const { data, error } = await admin
       .from("product_offers")
@@ -223,12 +225,13 @@ async upsertBatch(
 
     if (error) {
       console.error("Offer upsert error:", error);
+      offerErrors.push(error);
       continue;
     }
     offerCount += (data ?? []).length;
   }
 
-  return { products: productCount, offers: offerCount, sellers: sellerCount };
+  return { products: productCount, offers: offerCount, sellers: sellerCount, productErrors, offerErrors };
 }
 
 // ============================================
@@ -247,34 +250,50 @@ Deno.serve(async (req: Request) => {
     const body: ScrapeRequest = await req.json();
     const { categoryId, search, limit = 50 } = body;
 
-    if (!categoryId && !search) {
-      return errorResponse("Either categoryId or search is required");
-    }
-
     const admin = getAdminClient();
     const startTime = Date.now();
 
     // Determine category IDs to scrape
+    // NOTE (02-sep-2026): el API de Revolico solo devuelve ads para las categorías
+    // RAÍZ (1000,1100,1200,1300,1400); las subcategorías (p.ej. 1202) devuelven vacío.
+    const ROOT_CATEGORY_IDS = ["1000", "1100", "1200", "1300", "1400"];
+
+    // Resolve a (possibly sub)category id to its root category id
+    function rootOf(catId: string): string {
+      const n = Number(catId);
+      if (ROOT_CATEGORY_IDS.includes(catId)) return catId;
+      if (Number.isFinite(n) && n >= 1000 && n < 1500) {
+        const root = String(Math.floor(n / 100) * 100);
+        if (ROOT_CATEGORY_IDS.includes(root)) return root;
+      }
+      return catId;
+    }
+
     let categoryIds: string[] = [];
 
     if (categoryId) {
-      categoryIds = [categoryId];
+      categoryIds = [rootOf(categoryId)];
     } else if (search) {
       // Map search term to category IDs
       const searchLower = search.toLowerCase();
       for (const [id, slug] of Object.entries(REVOLICO_CATEGORY_MAP)) {
         if (slug.includes(searchLower) || searchLower.includes(slug.split("-")[0] ?? "")) {
-          categoryIds.push(id);
+          categoryIds.push(rootOf(id));
         }
       }
-      // If no categories matched, try the first root category as fallback
+      // Dedupe roots
+      categoryIds = [...new Set(categoryIds)];
+      // If no categories matched, try Tecnología as default
       if (categoryIds.length === 0) {
-        categoryIds = ["1200"]; // Tecnología as default
+        categoryIds = ["1200"];
       }
+    } else {
+      // Default: scrape every root category (used by scheduled cron)
+      categoryIds = ROOT_CATEGORY_IDS;
     }
 
     // Fetch ads from all matched categories
-    const allAds: RevolicoAd[] = [];
+    const allAds: Array<{ ad: RevolicoAd; categoryId: string }> = [];
     let lastCursor: string | null = null;
 
     for (const catId of categoryIds) {
@@ -286,7 +305,7 @@ Deno.serve(async (req: Request) => {
       while (hasNext && pageCount < maxPages && allAds.length < limit) {
         try {
           const data = await gqlFetch(catId, cursor);
-          const ads = data.data.ads.edges.map((e) => e.node);
+          const ads = data.data.ads.edges.map((e) => ({ ad: e.node, categoryId: catId }));
           allAds.push(...ads);
           hasNext = data.data.ads.pageInfo.hasNextPage;
           cursor = data.data.ads.pageInfo.endCursor ?? undefined;
@@ -320,12 +339,13 @@ Deno.serve(async (req: Request) => {
     }
 
     // Upsert into Supabase
-    const stats = await upsertBatch(admin, fetchedAds, categoryIds[0]);
+    const stats = await upsertBatch(admin, fetchedAds);
 
     return jsonResponse(
       {
         message: `Scraped ${fetchedAds.length} ads`,
         stats,
+        debugErrors: { products: stats.productErrors, offers: stats.offerErrors },
         adsCount: fetchedAds.length,
         categoriesScraped: categoryIds,
         hasMore: allAds.length > limit,
@@ -337,6 +357,6 @@ Deno.serve(async (req: Request) => {
     );
   } catch (err) {
     console.error("scrape-revolico error:", err);
-    return errorResponse("Internal server error", 500);
+    return jsonResponse({ error: "Internal server error", detail: String(err) }, 500);
   }
 });

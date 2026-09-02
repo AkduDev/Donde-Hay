@@ -4,6 +4,24 @@ Todas las cambios notables de Dónde Hay se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/)
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
+## [2.2.0-canary] - 2026-09-02
+
+> Sesión 02-sep: **Fase 4 verificada end-to-end**: el scraper de Revolico scrapea datos reales del GraphQL, persiste el catálogo en Supabase y queda agendado con pg_cron cada 6 horas.
+
+### Añadido (Fase 4)
+- **Scrape real de Revolico funcionando end-to-end**: `scrape-revolico` consulta `graphql-api.revolico.app` (GraphQL; argumento `$category: ID!`, introspection deshabilitada). **Solo las categorías raíz (1000/1100/1200/1300/1400) devuelven ads**; las subcategorías dan vacío. El scraper resuelve cualquier `categoryId` a su raíz y, por defecto (sin `categoryId`/`search`, usado por el cron), scrapea las 5 raíces. Normalización null-safe (ads sin título/moneda: ya no da 500 con `toUpperCase` de null).
+- **Catálogo inicial poblado con datos reales**: **293 products, 300 offers, 326 sellers** (verificado vía PostgREST). Categorías activas: Tecnología 99, Inmobiliaria 98, Vehículos 96.
+- **Agendado con pg_cron**: extensiones `pg_cron` + `pg_net` habilitadas; job `scrape-revolico` (`0 */6 * * *`, activo) invoca la Edge Function con la anon key vía `net.http_post`. Migración `20260902000002_enable_cron_schedule_revolico_scrape.sql`. La EF mantiene `verify_jwt: true` (la anon key es JWT válido; la función usa su propio `service_role` del runtime).
+- **Telemetría de upsert**: la respuesta del scraper incluye `debugErrors: { products, offers }` para monitorear fallos de persistencia.
+- **Migraciones de perfiles de schema corregidas a producción** (documentadas en `AGENTS.md`): `products.canonical_name` UNIQUE, `product_offers(source_id, source_external_id)` UNIQUE, `product_offers.price` nullable.
+
+### Corregido
+- **`scrape-revolico` no insertaba nada** en producción: los `on_conflict` de la EF fallaban con `42P10` ("no unique constraint matching the ON CONFLICT specification") porque la BD no tenía los constraints UNIQUE que la migración core del repo sí declara. Agregados en producción.
+- **`products` 0 al scrapear**: resuelto con el cconstraint UNIQUE de `canonical_name` (el `dedup` del scraper asumía esa clave).
+- **`offers` 0 al scrapear**: resuelto con el UNIQUE compuesto `(source_id, source_external_id)` y haciendo `price` nullable (Revolico tiene anuncios sin precio → `23502`).
+- **500 interno en scrape con `limit` amplio**: `parseTitle`/`buildCanonicalName`/`normalizeCurrency` ahora toleran `null`/`undefined`.
+- **Sintaxis inválida del scraper** (`async upsertBatch(` → `async function upsertBatch(`) que impedía el deploy.
+
 ## [2.1.0-canary] - 2026-09-01
 
 > Sesión 30-ago/01-sep: Mapa interactivo + observabilidad + inicio de "Frontend estable" (Fase 1 del plan maestro v2, prioridades 0-12).

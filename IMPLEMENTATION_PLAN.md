@@ -239,9 +239,11 @@ Estado: completada 02-sep-2026. Aplicada via Supabase Management API. 9 tablas, 
 - [x] `SourceAdapter` contract en Edge Function (✅ match-products EF con normalize/matching portado a Deno)
 - [x] Adaptador Revolico (scraper + normalize) (✅ scrape-revolico: GraphQL + categoria/provincia UUID mapping fixes)
 - [x] Persistencia a `product_offers` vía `match-products` (✅ onConflict compuesto corregido + seed categories/locations)
+- [x] Scrape real end-to-end (✅ 02-sep-2026: 293 products, 300 offers, 326 sellers desde el GraphQL real `graphql-api.revolico.app`; verificado en BD)
+- [x] Agendado con pg_cron (✅ 02-sep-2026: `scrape-revolico` cada 6h `0 */6 * * *` → invoca la EF con anon key)
 - [ ] Ranking inicial (precio asc, fecha desc) (parcial: search_products RPC ya ordena por precio/fecha; falta trigger de scrape y destile)
 
-Estado: parcialmente completada (02-sep-2026). Scraper listo: fetch GraphQL + upsert a products/sellers/offers con FKs a UUIDs resueltos. Seed aplicado (44 categorías + 16 provincias). Falta: agendar el scrape (pg_cron / manual trigger) y verificar end-to-end con datos reales.
+Estado: completada y verificada end-to-end (02-sep-2026). Scraper scrapea el GraphQL de Revolico (solo categorías raíz 1000/1100/1200/1300/1400 devuelven ads; las subcategorías dan vacío). Corrección de schema en producción: `products.canonical_name` y `product_offers(source_id,source_external_id)` tienen UNIQUE (el `on_conflict` de la EF los requiere — 42P10), y `product_offers.price` es nullable (Revolico tiene anuncios sin precio). pg_cron + pg_net habilitados, job agendado y activo.
 
 ### Fase 5 — Mobile conectado
 - [ ] `search.service.ts` → RPC `search_products` (ya existe patrón Supabase directo)

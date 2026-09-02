@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS product_offers (
   product_id UUID REFERENCES products(id) ON DELETE CASCADE NOT NULL,
   seller_id UUID REFERENCES sellers(id) ON DELETE SET NULL,
   source_id TEXT NOT NULL,
-  price DECIMAL(10,2) NOT NULL,
+  -- Nullable: fuentes reales (p.ej. Revolico) tienen anuncios sin precio ("consultar precio").
+  price DECIMAL(10,2),
   currency TEXT CHECK (currency IN ('USD', 'CUP', 'MLC')) DEFAULT 'USD',
   location_id UUID REFERENCES locations(id) ON DELETE SET NULL,
   source_url TEXT NOT NULL DEFAULT '',

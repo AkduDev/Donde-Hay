@@ -197,23 +197,24 @@ export function buildPermalinkUrl(permalink: string): string {
 }
 
 /** Normalize currency string to valid enum value */
-function normalizeCurrency(currency: string): "USD" | "CUP" | "MLC" {
-  const upper = currency.toUpperCase();
+function normalizeCurrency(currency: string | null | undefined): "USD" | "CUP" | "MLC" {
+  const upper = (currency ?? "").toUpperCase();
   if (VALID_CURRENCIES.has(upper)) return upper as "USD" | "CUP" | "MLC";
   return "USD";
 }
 
 /** Parse a Revolico title into brand + model hints */
-function parseTitle(title: string): { brand: string; model: string } {
-  const words = title.trim().split(/\s+/);
+function parseTitle(title: string | null | undefined): { brand: string; model: string } {
+  const text = title?.trim() ?? "";
+  const words = text.split(/\s+/);
   const brand = words[0]?.toUpperCase() ?? "";
   const model = words.slice(1, 4).join(" ");
   return { brand, model };
 }
 
 /** Build a canonical product name from a Revolico ad title */
-function buildCanonicalName(title: string): string {
-  return title
+function buildCanonicalName(title: string | null | undefined): string {
+  return (title ?? "")
     .trim()
     .toLowerCase()
     .normalize("NFD")
