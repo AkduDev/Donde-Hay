@@ -3,16 +3,13 @@
  * Multi-source search: Supabase DB products + Revolico scraped products
  */
 
-import { Platform } from 'react-native';
 import { httpClient } from '@/lib/api-client';
 import { supabase } from '@/lib/supabase';
-import { API_CONFIG } from '@/config';
-import { mergeByKey, applyAggregate } from '@/lib/matching';
+import { applyAggregate } from '@/lib/matching';
 import type {
   SearchResult,
   SearchQuery,
   FilterOption,
-  ScrapedProduct,
   MultiSourceSearchResult,
   ProductWithOffers,
   ProductOffer,
@@ -45,46 +42,6 @@ export interface SearchFacets {
 // ============================================
 // HELPERS
 // ============================================
-
-function scrapedToProductWithOffers(scraped: ScrapedProduct): ProductWithOffers {
-  const base: ProductWithOffers = {
-    id: scraped.id,
-    canonicalName: scraped.canonicalName,
-    brand: scraped.brand ?? '',
-    model: scraped.model ?? '',
-    categoryId: '',
-    description: scraped.description,
-    imageUrls: scraped.imageUrls,
-    createdAt: scraped.postedAt,
-    updatedAt: scraped.postedAt,
-    offers: [
-      {
-        id: scraped.sourceExternalId,
-        productId: scraped.id,
-        sellerId: '',
-        sourceId: scraped.sourceId,
-        price: scraped.price,
-        currency: scraped.currency,
-        locationId: scraped.provinceId ?? '',
-        sourceUrl: scraped.sourceUrl,
-        sourceExternalId: scraped.sourceExternalId,
-        postedAt: scraped.postedAt,
-        status: 'active' as const,
-        rawData: {
-          sellerName: scraped.sellerName,
-          sellerPhone: scraped.sellerPhone,
-          sellerWhatsapp: scraped.sellerWhatsapp,
-          viewCount: scraped.viewCount,
-          provinceId: scraped.provinceId,
-          municipalityId: scraped.municipalityId,
-        },
-      },
-    ],
-    offerCount: 1,
-    availability: { available: true, lastSeen: scraped.postedAt, status: 'recent' as const },
-  };
-  return applyAggregate(base);
-}
 
 function buildSourceCounts(products: ProductWithOffers[]): Record<string, number> {
   const counts: Record<string, number> = {};
@@ -172,9 +129,6 @@ function mapProductRow(row: ProductRow): ProductWithOffers {
   return applyAggregate(product);
 }
 
-const hasLocalBackend =
-  API_CONFIG.baseUrl.includes('localhost') || API_CONFIG.baseUrl.includes('127.0.0.1');
-
 // ============================================
 // SERVICE
 // ============================================
@@ -261,84 +215,26 @@ export const searchService = {
   },
 
   /**
-   * Search Revolico via Edge Function
-   */
-  searchRevolico: async (
-    query: string,
-    options?: { provinceId?: string; categoryId?: string; limit?: number }
-  ): Promise<ScrapedProduct[]> => {
-    // Sin backend scraping configurado en el device (apunta a localhost del PC),
-    // devolvemos [] sin disparar un fetch que fallaría con ConnectException.
-    if (hasLocalBackend && Platform.OS !== 'web') {
-      return [];
-    }
-    try {
-      const response = await fetch(
-        `${API_CONFIG.baseUrl}/search-revolico`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query, ...options }),
-        }
-      );
-
-      if (!response.ok) {
-        console.warn('Revolico search failed:', response.status);
-        return [];
-      }
-
-      const data = await response.json();
-      return (data.products ?? []) as ScrapedProduct[];
-    } catch (error) {
-      console.warn('Revolico search error:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Multi-source search: combines DB products + Revolico scraped products.
-   * Gracefully handles Revolico failures — returns DB results on error.
+   * Multi-source search: searches DB products (which include data from
+   * all scraped sources). The scraper (scraperService) runs separately
+   * and populates the DB; search just reads from it.
    */
   searchMultiSource: async (
     params: SearchParams
   ): Promise<MultiSourceSearchResult> => {
-    const sourceFilter = params.sourceFilter ?? 'all';
     const errors: { source: string; message: string }[] = [];
-
     let dbProducts: ProductWithOffers[] = [];
     let dbTotal = 0;
-    let scrapedRaw: ScrapedProduct[] = [];
 
-    // 1. Search DB (always, unless sourceFilter is specifically 'revolico' only)
-    if (sourceFilter !== 'revolico') {
-      try {
-        const dbResult = await searchService.searchDB(params);
-        dbProducts = dbResult.products;
-        dbTotal = dbResult.total;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'DB search failed';
-        errors.push({ source: 'database', message });
-      }
+    try {
+      const dbResult = await searchService.searchDB(params);
+      dbProducts = dbResult.products;
+      dbTotal = dbResult.total;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'DB search failed';
+      errors.push({ source: 'database', message });
     }
-
-    // 2. Search Revolico (always, unless sourceFilter is specifically 'comunidad' only)
-    if (sourceFilter !== 'comunidad') {
-      try {
-        scrapedRaw = await searchService.searchRevolico(params.query, {
-          limit: params.limit ?? 20,
-        });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Revolico search failed';
-        errors.push({ source: 'revolico', message });
-      }
-    }
-
-    // 3. Convert scraped products to ProductWithOffers format
-    const scrapedProducts = scrapedRaw.map(scrapedToProductWithOffers);
-
-    // 4. Merge and deduplicate (librería pura de matching)
-    const combinedProducts = mergeByKey(dbProducts, scrapedProducts);
-    const sourceCounts = buildSourceCounts(combinedProducts);
+    const sourceCounts = buildSourceCounts(dbProducts);
 
     return {
       dbResults: {
@@ -353,9 +249,9 @@ export const searchService = {
         processingTimeMs: 0,
         sources: [],
       },
-      scrapedProducts: scrapedRaw,
-      combinedProducts,
-      total: combinedProducts.length,
+      scrapedProducts: [],
+      combinedProducts: dbProducts,
+      total: dbProducts.length,
       sourceCounts,
       errors,
     };

@@ -216,7 +216,7 @@ async upsertBatch(
     const { data, error } = await admin
       .from("product_offers")
       .upsert(oBatch, {
-        onConflict: "source_external_id",
+        onConflict: "source_id,source_external_id",
         ignoreDuplicates: false,
       })
       .select("id");

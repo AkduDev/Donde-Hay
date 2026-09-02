@@ -236,10 +236,12 @@ supabase/
 Estado: completada 02-sep-2026. Aplicada via Supabase Management API. 9 tablas, 23 índices, 24 RLS policies, RPC funcional, pg_trgm habilitado.
 
 ### Fase 4 — Primera fuente (Revolico)
-- [ ] `SourceAdapter` contract en Edge Function
-- [ ] Adaptador Revolico (scraper + normalize)
-- [ ] Persistencia a `product_offers` vía `match-products`
-- [ ] Ranking inicial (precio asc, fecha desc)
+- [x] `SourceAdapter` contract en Edge Function (✅ match-products EF con normalize/matching portado a Deno)
+- [x] Adaptador Revolico (scraper + normalize) (✅ scrape-revolico: GraphQL + categoria/provincia UUID mapping fixes)
+- [x] Persistencia a `product_offers` vía `match-products` (✅ onConflict compuesto corregido + seed categories/locations)
+- [ ] Ranking inicial (precio asc, fecha desc) (parcial: search_products RPC ya ordena por precio/fecha; falta trigger de scrape y destile)
+
+Estado: parcialmente completada (02-sep-2026). Scraper listo: fetch GraphQL + upsert a products/sellers/offers con FKs a UUIDs resueltos. Seed aplicado (44 categorías + 16 provincias). Falta: agendar el scrape (pg_cron / manual trigger) y verificar end-to-end con datos reales.
 
 ### Fase 5 — Mobile conectado
 - [ ] `search.service.ts` → RPC `search_products` (ya existe patrón Supabase directo)

@@ -387,6 +387,12 @@ Tipos y lógica pura de matching completados: `Category`, `SearchRequest`, `Sear
 
 Migración `20260902000000_core_tables.sql` aplicada directamente via Supabase Management API (02-sep-2026). 9 tablas (categories, locations, products, sellers, product_offers, profiles, favorites, price_alerts, saved_searches) + 23 índices + 24 políticas RLS + RPC `search_products` (pg_trgm, filtros, agregación, cursor) + extensión `pg_trgm`. Stub `match-products` EF preparado para Fase 4. Proyecto `wtnausykjenjqephbhfw` ACTIVE_HEALTHY.
 
+### Fase 4 — Fuente Revolico (completada, 02-sep-2026)
+
+Seed de 44 categorías + 16 provincias aplicado (`20260902000001_seed_categories_locations.sql`). Scraper `scrape-revolico` corregido: `category_id`/`location_id` ahora resuelven a UUIDs (antes slug/string → crash FK); `onConflict` de offers usa el índice compuesto. `match-products` EF portado a Deno (productKey/similarityScore/subsetMatch desde `src/lib/`). `search.service.ts` simplificado: eliminado `searchRevolico` (apuntaba a localhost inexistente); `searchMultiSource` lee solo de la DB. 120 tests, tsc 0, eslint 0/0.
+
+**Pendiente Fase 4**: agendar el scrape (pg_cron o trigger manual) y verificar end-to-end con datos reales de Revolico.
+
 - **403 pre-existentes**: Archivos legacy no modificados, no afecta nuevo código
 - **ESLint 10.x**: Configuración en parent `eslint.config.mjs` causa conflictos, ignorado
 - **Typed routes**: Requiere regenerar `.expo/types/router.d.ts` al agregar nuevas rutas

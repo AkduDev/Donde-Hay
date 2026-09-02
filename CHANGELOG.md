@@ -35,6 +35,16 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - **RPC `search_products`**: `pg_trgm` ILIKE en canonical_name/brand/model/description + filtros (category, location, sources, price range) + agregación por producto (min/max/avg/offerCount/sourceCount) + cursor pagination + sort por precio o fecha. Grant a anon + authenticated.
 - **Edge Function `match-products`** (`supabase/functions/match-products/index.ts`): stub para Fase 4. POST con canonical_name, retorna best match candidate vía ILIKE. Full matching (productKey/subsetMatch) se portará a Deno en Fase 4.
 
+> Aplicada via Supabase Management API (proyecto reactivado de INACTIVE, solo había 1 migración previa `notifications`+`scrape_jobs`). 9 tablas + 23 índices + 24 políticas verificados. Proyecto `wtnausykjenjqephbhfw` ACTIVE_HEALTHY.
+
+### Fuente Revolico (Fase 4)
+- **Seed data** (`supabase/migrations/20260902000001_seed_categories_locations.sql`): 44 categorías (5 roots + 39 subcategorías con UUIDs fijos `a0000xxx-...`) + 16 provincias (`b0001xxx-...` con lat/lon). Aplicada via Management API. Helpers `get_category_id(slug)` y `get_location_id(name)`.
+- **Scraper fix** (`_shared/revolico.ts`): mapeos `REVOLICO_CATEGORY_UUID_MAP` (ID Revolico → UUID categoría) y `REVOLICO_LOCATION_UUID_MAP` (ID provincia → UUID location). `revolicoAdToProduct`/`revolicoAdToOffer`/`revolicoAdToSeller` ahora resuelven `category_id` y `location_id` a UUID (antes escribían slug string / provincia string / ID string → crash FK).
+- **Scraper fix** (`scrape-revolico/index.ts`): `onConflict` de offers corregido a `"source_id,source_external_id"` para coincidir con el índice compuesto (antes `"source_external_id"`).
+- **`match-products` EF portado a Deno**: `normalize.ts` + `matching.ts` (productKey, similarityScore, subsetMatch, findVariant, findCapacity) portados desde `src/lib/`. Ahora matchea por productKey exacto (confianza 1.0), subsetMatch (variante dura + capacidad blanda) o similitud ≥0.7, con fallback de candidatos ILIKE.
+- **`search.service.ts` simplificado**: eliminado `searchRevolico` (apuntaba a endpoint local inexistente en device → siempre `[]`). `searchMultiSource` ahora lee solo de la DB (los datos de todas las fuentes están ahí tras scrapear). Eliminados `scrapedToProductWithOffers`, `hasLocalBackend`, imports muertos.
+- **120 tests en verde** (sin cambios de lógica en client), `npx tsc --noEmit` 0, `npx eslint src/` 0/0.
+
 ## [2.0.0-canary] - 2026-08-28
 
 > UI/UX Hardening — plan de 7 fases aprobado (tipografía → design system → navegación → home → search/results → product detail → calidad). Se documenta por fases según se van cumpliendo.

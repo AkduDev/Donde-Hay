@@ -110,6 +110,74 @@ export const REVOLICO_PROVINCE_MAP: Record<string, string> = {
   "16": "Isla de la Juventud",
 };
 
+/** Revolico category ID → our seeded category UUID */
+export const REVOLICO_CATEGORY_UUID_MAP: Record<string, string> = {
+  "1000": "a0000001-0000-0000-0000-000000000001",
+  "1100": "a0000001-0000-0000-0000-000000000002",
+  "1200": "a0000001-0000-0000-0000-000000000003",
+  "1300": "a0000001-0000-0000-0000-000000000004",
+  "1400": "a0000001-0000-0000-0000-000000000005",
+  "1001": "a0000002-0000-0000-0000-000000000001",
+  "1002": "a0000002-0000-0000-0000-000000000002",
+  "1003": "a0000002-0000-0000-0000-000000000003",
+  "1004": "a0000002-0000-0000-0000-000000000004",
+  "1005": "a0000002-0000-0000-0000-000000000005",
+  "1006": "a0000002-0000-0000-0000-000000000006",
+  "1007": "a0000002-0000-0000-0000-000000000007",
+  "1008": "a0000002-0000-0000-0000-000000000008",
+  "1101": "a0000003-0000-0000-0000-000000000001",
+  "1102": "a0000003-0000-0000-0000-000000000002",
+  "1103": "a0000003-0000-0000-0000-000000000003",
+  "1104": "a0000003-0000-0000-0000-000000000004",
+  "1105": "a0000003-0000-0000-0000-000000000005",
+  "1106": "a0000003-0000-0000-0000-000000000006",
+  "1201": "a0000004-0000-0000-0000-000000000001",
+  "1202": "a0000004-0000-0000-0000-000000000002",
+  "1203": "a0000004-0000-0000-0000-000000000003",
+  "1204": "a0000004-0000-0000-0000-000000000004",
+  "1205": "a0000004-0000-0000-0000-000000000005",
+  "1206": "a0000004-0000-0000-0000-000000000006",
+  "1207": "a0000004-0000-0000-0000-000000000007",
+  "1208": "a0000004-0000-0000-0000-000000000008",
+  "1209": "a0000004-0000-0000-0000-000000000009",
+  "1210": "a0000004-0000-0000-0000-000000000010",
+  "1301": "a0000005-0000-0000-0000-000000000001",
+  "1302": "a0000005-0000-0000-0000-000000000002",
+  "1303": "a0000005-0000-0000-0000-000000000003",
+  "1304": "a0000005-0000-0000-0000-000000000004",
+  "1305": "a0000005-0000-0000-0000-000000000005",
+  "1306": "a0000005-0000-0000-0000-000000000006",
+  "1307": "a0000005-0000-0000-0000-000000000007",
+  "1401": "a0000006-0000-0000-0000-000000000001",
+  "1402": "a0000006-0000-0000-0000-000000000002",
+  "1403": "a0000006-0000-0000-0000-000000000003",
+  "1404": "a0000006-0000-0000-0000-000000000004",
+  "1405": "a0000006-0000-0000-0000-000000000005",
+  "1406": "a0000006-0000-0000-0000-000000000006",
+  "1407": "a0000006-0000-0000-0000-000000000007",
+  "1408": "a0000006-0000-0000-0000-000000000008",
+};
+
+/** Revolico province ID → our seeded location UUID */
+export const REVOLICO_LOCATION_UUID_MAP: Record<string, string> = {
+  "1":  "b0000001-0000-0000-0000-000000000001",
+  "2":  "b0000001-0000-0000-0000-000000000002",
+  "3":  "b0000001-0000-0000-0000-000000000003",
+  "4":  "b0000001-0000-0000-0000-000000000004",
+  "5":  "b0000001-0000-0000-0000-000000000005",
+  "6":  "b0000001-0000-0000-0000-000000000006",
+  "7":  "b0000001-0000-0000-0000-000000000007",
+  "8":  "b0000001-0000-0000-0000-000000000008",
+  "9":  "b0000001-0000-0000-0000-000000000009",
+  "10": "b0000001-0000-0000-0000-000000000010",
+  "11": "b0000001-0000-0000-0000-000000000011",
+  "12": "b0000001-0000-0000-0000-000000000012",
+  "13": "b0000001-0000-0000-0000-000000000013",
+  "14": "b0000001-0000-0000-0000-000000000014",
+  "15": "b0000001-0000-0000-0000-000000000015",
+  "16": "b0000001-0000-0000-0000-000000000016",
+};
+
 const VALID_CURRENCIES = new Set(["USD", "CUP", "MLC"]);
 
 // ============================================
@@ -181,7 +249,7 @@ export function revolicoAdToProduct(
   specifications: Record<string, unknown>;
 } {
   const { brand, model } = parseTitle(ad.title);
-  const categorySlug = REVOLICO_CATEGORY_MAP[categoryId ?? ""] ?? null;
+  const categoryUuid = (categoryId && REVOLICO_CATEGORY_UUID_MAP[categoryId]) ?? null;
 
   const imageUrls: string[] = [];
   if (ad.mainImage?.gcsKey) {
@@ -192,7 +260,7 @@ export function revolicoAdToProduct(
     canonical_name: buildCanonicalName(ad.title),
     brand,
     model: model || ad.title,
-    category_id: categorySlug,
+    category_id: categoryUuid,
     description: ad.title,
     image_urls: imageUrls,
     specifications: {
@@ -216,7 +284,7 @@ export function revolicoAdToOffer(
   source_id: string;
   price: number;
   currency: "USD" | "CUP" | "MLC";
-  location_id: string;
+  location_id: string | null;
   source_url: string;
   source_external_id: string;
   posted_at: string;
@@ -229,7 +297,7 @@ export function revolicoAdToOffer(
     source_id: "revolico",
     price: ad.price,
     currency: normalizeCurrency(ad.currency),
-    location_id: ad.provinceId,
+    location_id: REVOLICO_LOCATION_UUID_MAP[ad.provinceId] ?? null,
     source_url: buildPermalinkUrl(ad.permalink),
     source_external_id: offerExternalId(ad.id, "revolico"),
     posted_at: ad.updatedOnToOrder || new Date().toISOString(),
@@ -256,7 +324,7 @@ export function revolicoAdToSeller(
   whatsapp: string | null;
   source_id: string;
   source_profile_url: string | null;
-  location_id: string;
+  location_id: string | null;
   verification_status: "none";
 } {
   const phone1 = ad.phoneInfo?.firstPhone;
@@ -283,7 +351,7 @@ export function revolicoAdToSeller(
     }
   }
 
-  const provinceName = REVOLICO_PROVINCE_MAP[ad.provinceId] ?? "";
+  const locationUuid = REVOLICO_LOCATION_UUID_MAP[ad.provinceId] ?? null;
 
   return {
     name: `Revolico Seller ${ad.id}`,
@@ -291,7 +359,7 @@ export function revolicoAdToSeller(
     whatsapp,
     source_id: "revolico",
     source_profile_url: `${REVOLICO_SITE_BASE}${ad.permalink}`,
-    location_id: provinceName,
+    location_id: locationUuid,
     verification_status: "none",
   };
 }
