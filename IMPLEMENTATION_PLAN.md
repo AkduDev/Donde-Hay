@@ -233,7 +233,7 @@ supabase/
 - [x] Edge Function `match-products` (stub con ILIKE, full matching pendiente Fase 4) (✅ completado 02-sep)
 - [ ] Edge Function `check-price-alerts` (ya existe, verificar contra schema nuevo)
 
-Estado: completada 02-sep-2026. Aplicar migración via Supabase Dashboard → SQL Editor.
+Estado: completada 02-sep-2026. Aplicada via Supabase Management API. 9 tablas, 23 índices, 24 RLS policies, RPC funcional, pg_trgm habilitado.
 
 ### Fase 4 — Primera fuente (Revolico)
 - [ ] `SourceAdapter` contract en Edge Function

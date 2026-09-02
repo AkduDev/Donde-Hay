@@ -385,9 +385,7 @@ Tipos y lógica pura de matching completados: `Category`, `SearchRequest`, `Sear
 
 ### Fase 3 — Backend Supabase (completada, 02-sep-2026)
 
-Migración `20260902000000_core_tables.sql` lista para aplicar via SQL Editor del Dashboard. 9 tablas (categories, locations, products, sellers, product_offers, profiles, favorites, price_alerts, saved_searches) + RLS + RPC `search_products` (pg_trgm, filtros, agregación, cursor). Stub `match-products` EF preparado para Fase 4. La migración es idempotent (IF NOT EXISTS en tablas e índices).
-
-**Pendiente**: pegar el SQL de la migración en el Dashboard → SQL Editor → Run. Verificar tablas en Table Editor después.
+Migración `20260902000000_core_tables.sql` aplicada directamente via Supabase Management API (02-sep-2026). 9 tablas (categories, locations, products, sellers, product_offers, profiles, favorites, price_alerts, saved_searches) + 23 índices + 24 políticas RLS + RPC `search_products` (pg_trgm, filtros, agregación, cursor) + extensión `pg_trgm`. Stub `match-products` EF preparado para Fase 4. Proyecto `wtnausykjenjqephbhfw` ACTIVE_HEALTHY.
 
 - **403 pre-existentes**: Archivos legacy no modificados, no afecta nuevo código
 - **ESLint 10.x**: Configuración en parent `eslint.config.mjs` causa conflictos, ignorado
