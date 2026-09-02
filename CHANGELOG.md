@@ -22,6 +22,13 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - **80 tests en verde** (era 63): nuevos `controls.test.tsx` (Button/Input), `searchbar.test.tsx` (SearchBar, 5 casos) y `product-card.test.tsx` (ProductCard, 5 casos con el contrato agrupado N lugares/Desde $).
 - Nota RNTL v14 en este proyecto: el mock de TextInput de jest-expo NO dispara `onFocus` vía `fireEvent(input,'focus')` ni `user.press`; solo `userEvent.type` enfoca el input (usado para abrir el dropdown de sugerencias); `fireEvent` sigue valid para `changeText`/`submitEditing`/`press`.
 
+### Contrato de dominio (Fase 2)
+- **Types** (`src/types/index.ts`): añadidos `Category`, `SearchRequest` (input RPC/EF), `SearchResponse` (output RPC/EF), `OfferListItem` (contrato Prioridad 5, detail), `OfferAggregate` (resultado de agregación pura).
+- **`src/lib/normalize.ts`** (NUEVO, puro): `normalizeTitle` (unicode fold, stopword es-CU vendo/nuevo/usado/se vende/…), `extractBrand` (diccionario), `extractCapacity`, `buildCanonicalName`, `productKey` (tokens discriminantes: variantes pro/max/plus/lite/se + capacidad 128gb sin duplicar el 128 suelto).
+- **`src/lib/matching.ts`** (NUEVO, puro): `productKey`, `sameProduct`, `similarityScore` (Jaccard), `subsetMatch` (variante dura, capacidad debe coincidir si ambas declaran, resto subconjunto — fusiona "iPhone 13" con "iPhone 13 128gb" pero NO con "iPhone 13 Pro" ni "256gb"), `aggregateOffers` (min/max/avg/offerCount/sourceCount/availability), `deriveAvailability` (recent 7d), `mergeByKey` (merge por subsetMatch), `applyAggregate`, `buildOfferList` (detail: por precio asc con source/seller names).
+- **Refactor `search.service.ts`**: delegación a `applyAggregate` (agregación) y `mergeByKey` (dedupe/match). Eliminadas funciones inline duplicadas `mergeProducts`, cálculo manual de min/avg/max en `mapProductRow` y `scrapedToProductWithOffers`. Servicio queda como frontera snake→camel only.
+- **120 tests en verde** (era 80): 40 tests nuevos de lib pura (normalize: removeAccents, normalizeTitle, tokenize, stripStopwords, extractCapacity, extractBrand, buildCanonicalName, productKey; matching: similarityScore, sameProduct, deriveAvailability, aggregateOffers, mergeByKey, subsetMatch, buildOfferList). Discriminante verificado: iPhone 13 ≠ 13 Pro ≠ 13 Pro Max; 128gb = 128 GB; "iPhone 13" + "128gb" fusionan (subsetMatch), variantes distintas NO. `npx tsc --noEmit` ✅. `npx eslint src/` 0/0.
+
 ## [2.0.0-canary] - 2026-08-28
 
 > UI/UX Hardening — plan de 7 fases aprobado (tipografía → design system → navegación → home → search/results → product detail → calidad). Se documenta por fases según se van cumpliendo.

@@ -7,6 +7,7 @@ import { Platform } from 'react-native';
 import { httpClient } from '@/lib/api-client';
 import { supabase } from '@/lib/supabase';
 import { API_CONFIG } from '@/config';
+import { mergeByKey, applyAggregate } from '@/lib/matching';
 import type {
   SearchResult,
   SearchQuery,
@@ -46,7 +47,7 @@ export interface SearchFacets {
 // ============================================
 
 function scrapedToProductWithOffers(scraped: ScrapedProduct): ProductWithOffers {
-  return {
+  const base: ProductWithOffers = {
     id: scraped.id,
     canonicalName: scraped.canonicalName,
     brand: scraped.brand ?? '',
@@ -79,61 +80,10 @@ function scrapedToProductWithOffers(scraped: ScrapedProduct): ProductWithOffers 
         },
       },
     ],
-    averagePrice: scraped.price,
-    minPrice: scraped.price,
-    maxPrice: scraped.price,
     offerCount: 1,
-    availability: {
-      available: true,
-      lastSeen: scraped.postedAt,
-      status: 'recent' as const,
-    },
+    availability: { available: true, lastSeen: scraped.postedAt, status: 'recent' as const },
   };
-}
-
-function mergeProducts(
-  dbProducts: ProductWithOffers[],
-  scrapedProducts: ProductWithOffers[]
-): ProductWithOffers[] {
-  const merged: ProductWithOffers[] = dbProducts.map((p) => ({
-    ...p,
-    offers: [...p.offers],
-  }));
-
-  for (const scraped of scrapedProducts) {
-    const existingIndex = merged.findIndex(
-      (p) => p.canonicalName.toLowerCase() === scraped.canonicalName.toLowerCase()
-    );
-
-    if (existingIndex >= 0 && merged[existingIndex]) {
-      const existing = merged[existingIndex];
-      const allOffers = [...existing.offers, ...scraped.offers];
-      const prices = allOffers.map((o) => o.price).filter((p) => p != null);
-      const mergedProduct: ProductWithOffers = {
-        id: existing.id,
-        canonicalName: existing.canonicalName,
-        brand: existing.brand,
-        model: existing.model,
-        categoryId: existing.categoryId,
-        description: existing.description,
-        imageUrls: existing.imageUrls,
-        createdAt: existing.createdAt,
-        updatedAt: existing.updatedAt,
-        offers: allOffers,
-        averagePrice: existing.averagePrice,
-        minPrice: prices.length > 0 ? Math.min(...prices) : existing.minPrice,
-        maxPrice: prices.length > 0 ? Math.max(...prices) : existing.maxPrice,
-        offerCount: allOffers.length,
-        availability: existing.availability,
-        isFavorite: existing.isFavorite,
-      };
-      merged[existingIndex] = mergedProduct;
-    } else {
-      merged.push(scraped);
-    }
-  }
-
-  return merged;
+  return applyAggregate(base);
 }
 
 function buildSourceCounts(products: ProductWithOffers[]): Record<string, number> {
@@ -198,11 +148,7 @@ function mapOfferRow(offer: OfferRow): ProductOffer {
 
 function mapProductRow(row: ProductRow): ProductWithOffers {
   const offers = (row.offers ?? []).map((o) => mapOfferRow(o));
-  const prices = offers.map((o) => o.price).filter((p) => p != null);
-  const lastSeen = offers.length
-    ? new Date(Math.max(...offers.map((o) => new Date(o.postedAt).getTime()))).toISOString()
-    : row.created_at;
-  return {
+  const product: ProductWithOffers = {
     id: row.id,
     canonicalName: row.canonical_name,
     brand: row.brand ?? '',
@@ -214,19 +160,16 @@ function mapProductRow(row: ProductRow): ProductWithOffers {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     offers,
-    averagePrice: prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : undefined,
-    minPrice: prices.length ? Math.min(...prices) : undefined,
-    maxPrice: prices.length ? Math.max(...prices) : undefined,
     offerCount: offers.length,
     availability: {
       available: offers.some((o) => o.status === 'active'),
-      lastSeen,
-      status:
-        lastSeen && Date.now() - new Date(lastSeen).getTime() < 7 * 24 * 60 * 60 * 1000
-          ? 'recent'
-          : 'old',
+      lastSeen: row.created_at,
+      status: 'unknown',
     },
   };
+  // La agregación (min/avg/max/offerCount/availability/lastSeen) la calcula la
+  // librería pura de matching, no el servicio (frontera snake->camel only).
+  return applyAggregate(product);
 }
 
 const hasLocalBackend =
@@ -393,8 +336,8 @@ export const searchService = {
     // 3. Convert scraped products to ProductWithOffers format
     const scrapedProducts = scrapedRaw.map(scrapedToProductWithOffers);
 
-    // 4. Merge and deduplicate
-    const combinedProducts = mergeProducts(dbProducts, scrapedProducts);
+    // 4. Merge and deduplicate (librería pura de matching)
+    const combinedProducts = mergeByKey(dbProducts, scrapedProducts);
     const sourceCounts = buildSourceCounts(combinedProducts);
 
     return {

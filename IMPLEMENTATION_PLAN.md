@@ -186,11 +186,13 @@ Fase 7 — Otras fuentes        · Maps · Ranking · Analytics · Performance
 
 ### Fase 2 — Contrato de dominio
 > Objetivo: los tipos y la lógica pura que determinan el backend. Sin endpoints todavía.
-- [ ] Definir types TS: `Product`, `Offer`, `Source`, `Seller`, `Category`, `Location`, `SearchResult`
-- [ ] Normalización/matching como funciones puras en `src/lib/` (o contracto para Edge Function) con tests
-- [ ] Shapes del contrato de búsqueda (Prioridad 5) tipados
+- [x] Definir types TS: `Product`, `Offer`, `Source`, `Seller`, `Category`, `Location`, `SearchResult` (✅ completado 02-sep: añadidos `Category`, `SearchRequest`, `SearchResponse`, `OfferListItem`, `OfferAggregate`)
+- [x] Normalización/matching como funciones puras en `src/lib/` con tests (✅ completado 02-sep: `src/lib/normalize.ts` + `matching.ts`, 40 tests)
+- [x] Shapes del contrato de búsqueda (Prioridad 5) tipados (✅ completado 02-sep: `SearchRequest`, `SearchResponse`, `OfferListItem`)
 
-**Estado / dónde nos quedamos (01-sep-2026)**: exploración completada, implementación pendiente. Ver "Fase 2 — Exploración" más abajo.
+Estado: completada 02-sep-2026. `npx tsc --noEmit` ✅. `npx eslint src/` 0/0. `npx jest --ci` 120 tests (80 previos + 40 nuevos de lib pura). La lógica de `normalize.ts`/`matching.ts` se reutilizará en la Edge Function `match-products` (Fase 3).
+
+> El `<details>` de abajo documenta la exploración y plan original (ya ejecutado).
 
 <details>
 <summary>Fase 2 — Exploración y plan de implementación (01-sep-2026)</summary>

@@ -49,6 +49,17 @@ export interface Seller {
   updatedAt: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string;
+  parentId?: string;
+  sortOrder: number;
+  productCount?: number;
+  createdAt: string;
+}
+
 export interface Source {
   id: string;
   name: string;
@@ -90,6 +101,59 @@ export interface SearchResult {
   query: string;
   processingTimeMs: number;
   sources: SourceSummary[];
+}
+
+/**
+ * Contrato de entrada (Prioridad 5) para el RPC `search_products` / Edge Function
+ * `search-products`. Es el input tipado que consume la app y que la backend debe
+ * aceptar (PostgREST params o body JSON de la Edge Function).
+ */
+export interface SearchRequest {
+  query: string;
+  categoryId?: string;
+  locationId?: string;
+  sourceIds?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  currency?: 'USD' | 'CUP' | 'MLC';
+  condition?: 'new' | 'used' | 'any';
+  sortBy?: 'recent' | 'price-asc' | 'price-desc' | 'distance';
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Contrato de salida (Prioridad 5) del RPC `search_products` / Edge Function
+ * `search-products`. Alineado con `SearchResult` (productos agrupados por producto,
+ * cada uno con su lista de ofertas y agregados) + metadatos de fuentes.
+ */
+export interface SearchResponse {
+  products: ProductWithOffers[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+  query: string;
+  processingTimeMs: number;
+  sources: SourceSummary[];
+}
+
+/**
+ * Fila de la lista de ofertas de un producto en el DETAIL (Prioridad 5).
+ * "Comparar precios (N)": una entrada por oferta, ordenada por precio asc.
+ */
+export interface OfferListItem {
+  offerId: string;
+  price: number;
+  currency: 'USD' | 'CUP' | 'MLC';
+  sourceId: string;
+  sourceName: string;
+  sourceUrl: string;
+  sellerName?: string;
+  postedAt: string;
+  status: 'active' | 'inactive' | 'sold';
 }
 
 export interface SourceSummary {
@@ -141,6 +205,25 @@ export interface ProductWithOffers extends Product {
     status: 'recent' | 'old' | 'unknown';
   };
   isFavorite?: boolean;
+}
+
+/**
+ * Agregados de un grupo de ofertas del MISMO producto (matching). Es lo que
+ * produce la librería pura de matching y lo que se usa para rellenar
+ * minPrice/averagePrice/maxPrice/offerCount/availability en `ProductWithOffers`.
+ */
+export interface OfferAggregate {
+  offerCount: number;
+  minPrice?: number;
+  maxPrice?: number;
+  averagePrice?: number;
+  sourceCount: number;
+  sources: string[];
+  availability: {
+    available: boolean;
+    lastSeen: string;
+    status: 'recent' | 'old' | 'unknown';
+  };
 }
 
 // ============================================
