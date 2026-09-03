@@ -426,6 +426,43 @@ Limpieza: `use-revolico-search.ts` sin helpers inline legacy (normalize/similari
 - EF `scrape-revolico` (v8, deployada con `supabase functions deploy --use-api`) escribe `last_seen_at=NOW()` en el upsert y llama al destile al final del ciclo. Autorreversible: una oferta que reaparece se re-activa. Ventana 7 días por la muestra parcial del cron.
 - Verificado: destile `ran:true`, `deactivated:0` con datos frescos; `last_seen_at` se actualiza por scrape.
 
+## Desplegar Edge Functions en producción (desde esta máquina / Cuba)
+
+**Problema**: el `supabase functions deploy` normal intenta descargar la imagen Docker `supabase/edge-runtime` para "bundling" y se cuelga por la red en Cuba. Además `npx supabase` a secas tarda muchísimo.
+
+**Solución correcta (03-sep-2026)**:
+1. Instalar el CLI como npm pkg local (el binario viene embebido, no baja el binario Go externo):
+   ```bash
+   mkdir -p /tmp/supabase_cli_test && cd /tmp/supabase_cli_test
+   npm install supabase@latest --no-save --no-audit --no-fund   # ~5 min, funciona
+   ```
+2. Login con el PAT de Supabase (leer de `~/.config/opencode/opencode.jsonc`, campo `--access-token` del MCP server):
+   ```bash
+   TOKEN=$(python3 -c "import re; print(re.findall(r'sbp_[A-Za-z0-9_]+', open('/home/Akdulay/.config/opencode/opencode.jsonc').read())[0])")
+   ./node_modules/.bin/supabase login --token "$TOKEN"
+   ```
+3. Enlazar al proyecto (desde la raíz del repo):
+   ```bash
+   ./node_modules/.bin/supabase link --project-ref wtnausykjenjqephbhfw --workdir "/media/Akdulay/27B09181315B1AF22/Donde Hay/donde-hay"
+   ```
+4. **Deploy con `--use-api`** (sube los assets y Supabase hace el bundling server-side, SIN Docker):
+   ```bash
+   ./node_modules/.bin/supabase functions deploy <nombre-fn> \
+     --project-ref wtnausykjenjqephbhfw \
+     --use-api \
+     --workdir "/media/Akdulay/27B09181315B1AF22/Donde Hay/donde-hay"
+   ```
+
+**Verificar versión desplegada** (Management API):
+```bash
+TOKEN=$(python3 -c "import re; print(re.findall(r'sbp_[A-Za-z0-9_]+', open('/home/Akdulay/.config/opencode/opencode.jsonc').read())[0])")
+curl -s "https://api.supabase.com/v1/projects/wtnausykjenjqephbhfw/functions/<slug>" -H "Authorization: Bearer $TOKEN"
+```
+
+**Persistencia del CLI**: el CLI está instalado SOLO en `/tmp/supabase_cli_test` (tmpfs — se pierde al reiniciar). Para retomar, reinstalar con el paso 1. El login/link hay que repetirlos tras reinstalar.
+
+**Nota**: también funciona la Management API directamente para SQL (`POST /v1/projects/{ref}/database/query` con `{"query": "..."}`) — como se usó para aplicar migraciones sin el CLI en Fases 3-4.
+
 ## Errores Resueltos (sesión 28-ago-2026)
 
 - **Hermes sin `Intl.RelativeTimeFormat`**: El uso a nivel de módulo crasheaba todo el bundle (errores en cascada: "missing default export", "ErrorBoundary undefined"). Solucionado en `src/utils/format.ts` con detección `typeof Intl.RelativeTimeFormat === 'function'`, inicialización perezosa y fallback manual en español (`hace X min / en X horas`)

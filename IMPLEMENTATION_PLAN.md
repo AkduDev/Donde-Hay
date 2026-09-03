@@ -284,10 +284,38 @@ Estado: completada 03-sep-2026. ProductCard muestra `sourceCount` (fuentes disti
 | Publish Product (5 pasos) | ✅ Completo |
 | Accessibility: RTL ✅ | ⏸️ TalkBack/VoiceOver pendiente (device) |
 | Error Handling + Monitoring (Sentry + analytics HTTP) | ✅ Completo |
-| Testing | ✅ 63 tests (falta: componentes críticos) |
+| Testing | ✅ 120 tests (9 suites) |
 | UI/UX Hardening (7 fases) | ✅ Completo |
 | ESLint cleanup (136→0) | ✅ Completo |
 | EAS Build cloud | ⏸️ 403 desde Cuba (APK debug local ✅) |
+
+---
+
+## Estado de Retomada (handoff — 03-sep-2026)
+
+> Punto de control para continuar el trabajo en una próxima sesión. Árbol limpio y todo commiteado (`master`, último commit `48ffc45`).
+
+### Fases del plan v2 (roadmap operativo actual)
+| Fase | Contenido | Estado |
+|------|-----------|--------|
+| 2 | Contrato de dominio (normalize + matching, 120 tests) | ✅ Completo |
+| 3 | Backend Supabase (schema + RLS + RPC search_products) | ✅ 1 ítem abierto |
+| 4 | Fuente Revolico (scraper + cron + destile ranking) | ✅ Completo |
+| 5 | Mobile conectado (ProductCard "N lugares", buildOfferList, error UI) | ✅ Completo |
+| 6 | Auth + Guardados + Alertas sobre tablas RLS | ⬜ Pendiente |
+| 7 | Otras fuentes + polish | ⬜ Pendiente |
+
+### Ítems abiertos por fase
+- **Fase 3**: `check-price-alerts` EF existe, falta verificar contra el schema nuevo (`IMPLEMENTATION_PLAN.md:234`).
+- **Fase 6** (siguiente): flujos Auth verificados contra RLS; Favorites, SavedSearches y Alerts sobre las tablas RLS (`IMPLEMENTATION_PLAN.md:256-258`).
+- **Fase 7**: Fuente 2...n (mismo SourceAdapter), maps afinado, ranking avanzado, analytics, performance.
+- **Cubierto por decisión (03-sep)**: el ítem "elegir oferta canónica" de Fase 4 quedó **fuera de alcance** (solo se implementó el destile).
+
+### Operaciones críticas para retomar
+- **Proyecto Supabase**: `wtnausykjenjqephbhfw` (Donde-Hay, región us-west-2). PAT en `~/.config/opencode/opencode.jsonc` (MCP `supabase`).
+- **Aplicar migraciones SQL**: Management API `POST /v1/projects/{ref}/database/query` con `{"query": "..."}` (no requiere CLI).
+- **Deploy de Edge Functions**: usar el CLI local en `/tmp/supabase_cli_test` (se pierde al reiniciar — reinstalar) + **`--use-api`** para evitar Docker. Ver procedimiento completo en `AGENTS.md` → "Desplegar Edge Functions en producción".
+- **Base en producción**: 500 offers de Revolico, todas `status='active'` y con `last_seen_at` poblado (backfill).
 
 ---
 
