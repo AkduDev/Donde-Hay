@@ -419,8 +419,12 @@ Flujo de búsqueda completo conectado al RPC `search_products`. Los 4 ítems cer
 
 Limpieza: `use-revolico-search.ts` sin helpers inline legacy (normalize/similarity/mergeProducts duplicados) — usa `mergeByKey()` de `matching.ts`. **120 tests** en verde, `npx tsc --noEmit` 0, `npx eslint src/` 0/0.
 
-### Pendiente Fase 4 — Ranking inicial
-- `search_products` RPC ya ordena por precio/fecha. Falta trigger de scrape y "destile" del ranking (marcar offers antagónicas como `sold`/`inactive` y elegir la oferta canónica por producto).
+### Destile del ranking — Fase 4 completada (03-sep-2026)
+
+`search_products` RPC ya ordena por precio/fecha. **Destile implementado** (el ítem "elegir oferta canónica" queda fuera de alcance por decisión del 03-sep):
+- Migración `20260903000000_add_offer_last_seen.sql`: columna `product_offers.last_seen_at` + backfill + índice parcial + RPC `destile_stale_offers(p_source_id, p_age_days=7)` (marca `inactive` ofertas activas con `last_seen_at` más antiguo que la ventana).
+- EF `scrape-revolico` (v8, deployada con `supabase functions deploy --use-api`) escribe `last_seen_at=NOW()` en el upsert y llama al destile al final del ciclo. Autorreversible: una oferta que reaparece se re-activa. Ventana 7 días por la muestra parcial del cron.
+- Verificado: destile `ran:true`, `deactivated:0` con datos frescos; `last_seen_at` se actualiza por scrape.
 
 ## Errores Resueltos (sesión 28-ago-2026)
 

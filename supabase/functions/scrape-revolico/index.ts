@@ -199,7 +199,8 @@ async function upsertBatch(
   }
 
   // 5. Upsert offers
-  const offerRows: Array<ReturnType<typeof revolicoAdToOffer>> = [];
+  const nowIso = new Date().toISOString();
+  const offerRows: Array<ReturnType<typeof revolicoAdToOffer> & { last_seen_at: string }> = [];
   for (const { ad, categoryId } of ads) {
     const canonicalKey = productDedupKey(revolicoAdToProduct(ad, categoryId).canonical_name);
     const productId = nameToId.get(canonicalKey);
@@ -209,7 +210,7 @@ async function upsertBatch(
     const sellerId = sellerUrlToId.get(sellerUrl) ?? "";
 
     const offer = revolicoAdToOffer(ad, productId, sellerId || "unknown");
-    offerRows.push(offer);
+    offerRows.push({ ...offer, last_seen_at: nowIso });
   }
 
   const offerBatches = batch(offerRows, 50);
@@ -232,6 +233,33 @@ async function upsertBatch(
   }
 
   return { products: productCount, offers: offerCount, sellers: sellerCount, productErrors, offerErrors };
+}
+
+/**
+ * Destile del ranking: marca como `inactive` las ofertas activas de Revolico
+ * que llevan más de `destileAgeDays` sin aparecer en un scrape. El cron scrapea
+ * solo una muestra, así que usamos una ventana amplia (por defecto 7 días =
+ * ~28 ciclos del cron cada 6h). Las ofertas que reaparezcan se re-activan en el
+ * upsert (status='active'), haciendo el mecanismo autorreversible.
+ */
+async function destileOffers(
+  admin: ReturnType<typeof getAdminClient>,
+  destileAgeDays = 7
+): Promise<{ deactivated: number; ran: boolean; error?: unknown }> {
+  try {
+    const { data, error } = await admin.rpc("destile_stale_offers", {
+      p_source_id: "revolico",
+      p_age_days: destileAgeDays,
+    });
+    if (error) {
+      console.error("Destile error:", JSON.stringify(error));
+      return { deactivated: 0, ran: false, error };
+    }
+    return { deactivated: Number(data ?? 0), ran: true };
+  } catch (err) {
+    console.error("Destile exception:", err);
+    return { deactivated: 0, ran: false, error: err };
+  }
 }
 
 // ============================================
@@ -341,11 +369,16 @@ Deno.serve(async (req: Request) => {
     // Upsert into Supabase
     const stats = await upsertBatch(admin, fetchedAds);
 
+    // Destile del ranking: marcar 'inactive' ofertas de Revolico que llevan
+    // mucho tiempo sin reaparecer en un scrape (ver destileOffers).
+    const destile = await destileOffers(admin);
+
     return jsonResponse(
       {
         message: `Scraped ${fetchedAds.length} ads`,
         stats,
         debugErrors: { products: stats.productErrors, offers: stats.offerErrors },
+        destile,
         adsCount: fetchedAds.length,
         categoriesScraped: categoryIds,
         hasMore: allAds.length > limit,

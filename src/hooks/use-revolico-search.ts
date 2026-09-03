@@ -8,7 +8,6 @@ import { scraperService, type ScrapeResult } from '@/services/scraper.service';
 import { productsService } from '@/services/products.service';
 import { queryKeys } from '@/lib/api-client';
 import { mergeByKey } from '@/lib/matching';
-import type { ProductWithOffers } from '@/types';
 
 // ============================================
 // HOOKS

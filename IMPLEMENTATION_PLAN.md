@@ -241,9 +241,15 @@ Estado: completada 02-sep-2026. Aplicada via Supabase Management API. 9 tablas, 
 - [x] Persistencia a `product_offers` vía `match-products` (✅ onConflict compuesto corregido + seed categories/locations)
 - [x] Scrape real end-to-end (✅ 02-sep-2026: 293 products, 300 offers, 326 sellers desde el GraphQL real `graphql-api.revolico.app`; verificado en BD)
 - [x] Agendado con pg_cron (✅ 02-sep-2026: `scrape-revolico` cada 6h `0 */6 * * *` → invoca la EF con anon key)
-- [ ] Ranking inicial (precio asc, fecha desc) (parcial: search_products RPC ya ordena por precio/fecha; falta trigger de scrape y destile)
+- [x] Ranking inicial (precio asc, fecha desc) (✅ 03-sep-2026: search_products RPC ya ordena por precio/fecha; **destile** implementado vía `last_seen_at` + RPC `destile_stale_offers` + llamado desde la EF scrape-revolico)
 
 Estado: completada y verificada end-to-end (02-sep-2026). Scraper scrapea el GraphQL de Revolico (solo categorías raíz 1000/1100/1200/1300/1400 devuelven ads; las subcategorías dan vacío). Corrección de schema en producción: `products.canonical_name` y `product_offers(source_id,source_external_id)` tienen UNIQUE (el `on_conflict` de la EF los requiere — 42P10), y `product_offers.price` es nullable (Revolico tiene anuncios sin precio). pg_cron + pg_net habilitados, job agendado y activo.
+
+**Destile del ranking (03-sep-2026, completa Fase 4)**:
+- Migración `20260903000000_add_offer_last_seen.sql`: columna `product_offers.last_seen_at` + backfill `NOW()` de ofertas activas + índice parcial + RPC `destile_stale_offers(p_source_id, p_age_days=7)` (marca `inactive` ofertas activas cuyo `last_seen_at` es más antiguo que la ventana).
+- La EF `scrape-revolico` (v8, deployada con `--use-api`) escribe `last_seen_at=NOW()` en el upsert de offers y llama al destile al final del ciclo.
+- Mecanismo autorreversible: una oferta que reaparece se re-activa (`status='active'`) en el upsert. Ventana por defecto **7 días** (~28 ciclos del cron cada 6h) para tolerar que el cron vea solo una muestra del catálogo.
+- Verificado end-to-end: destile `ran:true`, `deactivated:0` con datos frescos; `last_seen_at` se actualiza en cada scrape.
 
 ### Fase 5 — Mobile conectado
 - [x] `search.service.ts` → RPC `search_products` (✅ ya usa `supabase.rpc('search_products')`; normalizadores `mapRpcOffer`/`mapSearchProductRow` + `applyAggregate`)

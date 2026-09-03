@@ -6,7 +6,13 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [2.3.0-canary] - 2026-09-03
 
-> Sesión 03-sep: **Fase 5 completada** — Mobile conectado al contrato agrupado del RPC `search_products`.
+> Sesión 03-sep: **Fase 5 completada** — Mobile conectado al contrato agrupado del RPC `search_products`. **Fase 4 completada** — destile del ranking agregado.
+
+### Añadido (Fase 4 — destile del ranking)
+- **Columna `product_offers.last_seen_at`**: rastrea el último scrape en que se vio cada oferta. Migración `20260903000000_add_offer_last_seen.sql` (aplicada a producción) + backfill `NOW()` de ofertas activas + índice parcial + RPC `destile_stale_offers(p_source_id, p_age_days=7)`.
+- **EF `scrape-revolico` (v8, deployada con `--use-api`)** escribe `last_seen_at=NOW()` en el upsert de offers y, al final del ciclo, marca `inactive` las ofertas activas de Revolico con +7 días sin reaparecer.
+- **Mecanismo autorreversible**: una oferta que reaparece se re-activa (`status='active'`) en el upsert. Ventana de 7 días (~28 ciclos del cron cada 6h) para tolerar que el cron vea solo una muestra.
+- Verificado end-to-end: destile `ran:true`/`deactivated:0` con datos frescos; `last_seen_at` se actualiza en cada scrape.
 
 ### Cambiado (Fase 5)
 - **`ProductCard` muestra "N lugares"** (fuentes distintas): antes mostraba "N ofertas" (total de listings). Ahora usa `sourceCount` derivado de `getSourceCounts()`. Layout `list`: "en N lugares"; layout `grid`: "N lugares".
@@ -16,7 +22,7 @@ y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 - `search.service.ts` ya consumía el RPC `search_products` (migración previa pendiente de commit).
 
 ### Verificación
-- `npx tsc --noEmit` ✅, `npx eslint src/` 0/0 ✅, `npx jest` **120 tests en verde** (9 suites) ✅.
+- `npx tsc --noEmit` ✅, `npx eslint src/` 0/0 ✅ (incluye limpieza del import `ProductWithOffers` sin usar), `npx jest` **120 tests en verde** (9 suites) ✅.
 
 ## [2.2.0-canary] - 2026-09-02
 
