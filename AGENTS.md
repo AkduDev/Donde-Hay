@@ -409,6 +409,19 @@ Seed de 44 categorías + 16 provincias aplicado (`20260902000001_seed_categories
 - **EAS Build 403**: Subida a Expo cloud falla con 403 Forbidden. Posible restricción geográfica o problema de permisos de cuenta
 - **Expo Go incompatible**: Versión de Expo Go instalada incompatible con SDK 57. Necesita development build o APK nativa
 
+### Fase 5 — Mobile conectado (completada, 03-sep-2026)
+
+Flujo de búsqueda completo conectado al RPC `search_products`. Los 4 ítems cerrados:
+1. `search.service.ts` → `supabase.rpc('search_products')` (normalizadores `mapRpcOffer`/`mapSearchProductRow` + `applyAggregate` del dominio).
+2. `ProductCard` muestra **"N lugares"** (`sourceCount` = fuentes distintas) en vez de "N ofertas" + min-precio + chips de fuentes.
+3. `product/[id].tsx` usa **`buildOfferList()`** de `matching.ts` (contrato `OfferListItem`, mismo que la EF `match-products`), eliminado el sort manual. `getRevolicoSellerInfo` resuelve `rawData` del `ProductOffer` original vía `offerId`.
+4. `results.tsx` con estados loading (skeletons) / **error (UI con reintento)** / sin resultados (empty).
+
+Limpieza: `use-revolico-search.ts` sin helpers inline legacy (normalize/similarity/mergeProducts duplicados) — usa `mergeByKey()` de `matching.ts`. **120 tests** en verde, `npx tsc --noEmit` 0, `npx eslint src/` 0/0.
+
+### Pendiente Fase 4 — Ranking inicial
+- `search_products` RPC ya ordena por precio/fecha. Falta trigger de scrape y "destile" del ranking (marcar offers antagónicas como `sold`/`inactive` y elegir la oferta canónica por producto).
+
 ## Errores Resueltos (sesión 28-ago-2026)
 
 - **Hermes sin `Intl.RelativeTimeFormat`**: El uso a nivel de módulo crasheaba todo el bundle (errores en cascada: "missing default export", "ErrorBoundary undefined"). Solucionado en `src/utils/format.ts` con detección `typeof Intl.RelativeTimeFormat === 'function'`, inicialización perezosa y fallback manual en español (`hace X min / en X horas`)

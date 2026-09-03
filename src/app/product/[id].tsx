@@ -20,7 +20,8 @@ import { useProduct } from '@/hooks/use-products';
 import { useAddFavorite, useRemoveFavorite } from '@/hooks/use-favorites';
 import { formatPrice, getSourceIcon } from '@/utils/format';
 import { getColors } from '@/theme/colors';
-import type { ProductOffer } from '@/types';
+import { buildOfferList } from '@/lib/matching';
+import type { OfferListItem } from '@/types';
 
 function getSourceName(sourceId: string): string {
   const sources: Record<string, string> = {
@@ -33,22 +34,6 @@ function getSourceName(sourceId: string): string {
     comunidad: 'Comunidad',
   };
   return sources[sourceId] || sourceId;
-}
-
-function getRevolicoSellerInfo(offer: ProductOffer): {
-  phone?: string;
-  whatsapp?: boolean;
-  viewCount?: number;
-  provinceId?: string;
-} | null {
-  if (offer.sourceId !== 'revolico' || !offer.rawData) return null;
-  const raw = offer.rawData as Record<string, unknown>;
-  return {
-    phone: raw['sellerPhone'] as string | undefined,
-    whatsapp: raw['sellerWhatsapp'] as boolean | undefined,
-    viewCount: raw['viewCount'] as number | undefined,
-    provinceId: raw['provinceId'] as string | undefined,
-  };
 }
 
 export default function ProductDetailScreen() {
@@ -106,7 +91,17 @@ export default function ProductDetailScreen() {
     );
   }
 
-  const sortedOffers = [...(product.offers || [])].sort((a, b) => a.price - b.price);
+  const SOURCE_NAMES: Record<string, string> = {
+    revolico: 'Revolico',
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    telegram: 'Telegram',
+    '1cuba': '1Cuba',
+    choleslibres: 'CholesLibres',
+    comunidad: 'Comunidad',
+  };
+
+  const sortedOffers = buildOfferList(product, { sources: SOURCE_NAMES });
   const bestOffer = sortedOffers[0];
   const worstOffer = sortedOffers[sortedOffers.length - 1];
 
@@ -131,7 +126,7 @@ export default function ProductDetailScreen() {
     Linking.openURL(`https://wa.me/${cleaned}`);
   };
 
-  const getAvailabilityStatus = (offer: ProductOffer) => {
+  const getAvailabilityStatus = (offer: { postedAt: string }) => {
     const hoursSincePosted =
       (mountedAt - new Date(offer.postedAt).getTime()) / (1000 * 60 * 60);
 
@@ -142,6 +137,24 @@ export default function ProductDetailScreen() {
     } else {
       return { label: 'Antiguo', variant: 'default' as const, icon: '⚪' };
     }
+  };
+
+  const getRevolicoSellerInfo = (offer: OfferListItem): {
+    phone?: string;
+    whatsapp?: boolean;
+    viewCount?: number;
+    provinceId?: string;
+  } | null => {
+    if (offer.sourceId !== 'revolico') return null;
+    const originalOffer = product.offers?.find((o) => o.id === offer.offerId);
+    if (!originalOffer?.rawData) return null;
+    const raw = originalOffer.rawData as Record<string, unknown>;
+    return {
+      phone: raw['sellerPhone'] as string | undefined,
+      whatsapp: raw['sellerWhatsapp'] as boolean | undefined,
+      viewCount: raw['viewCount'] as number | undefined,
+      provinceId: raw['provinceId'] as string | undefined,
+    };
   };
 
   const getSourceCounts = (): Record<string, number> => {
@@ -329,7 +342,7 @@ export default function ProductDetailScreen() {
                   const status = getAvailabilityStatus(offer);
                   const revolicoSeller = getRevolicoSellerInfo(offer);
                   return (
-                    <Box key={offer.id} mb="sm">
+                    <Box key={offer.offerId} mb="sm">
                       <Card
                         variant={index === 0 ? 'elevated' : 'outlined'}
                         padding="md"

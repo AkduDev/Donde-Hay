@@ -130,6 +130,7 @@ const ProductCard = React.memo(({
     : null;
   const offerCount = validOffers.length;
   const sourceCounts = getSourceCounts(product);
+  const sourceCount = Object.keys(sourceCounts).length;
   const revolicoContact = getRevolicoContactInfo(product);
 
   const handlePress = () => onPress?.(product);
@@ -313,9 +314,9 @@ const ProductCard = React.memo(({
               <Badge variant={availability.variant} size="xs">
                 {availability.icon} {availability.label}
               </Badge>
-              {offerCount > 1 && (
+              {sourceCount > 1 && (
                 <Text variant="labelSmall" color="textSecondary">
-                  {offerCount} ofertas
+                  {sourceCount} lugares
                 </Text>
               )}
             </Box>
@@ -352,9 +353,9 @@ const ProductCard = React.memo(({
                   <Text variant="titleLarge" color="success" fontWeight="bold">
                     {formatPrice(minPriceOffer.price, minPriceOffer.currency)}
                   </Text>
-                  {offerCount > 1 && (
+                  {sourceCount > 1 && (
                     <Text variant="labelSmall" color="textSecondary">
-                      en {offerCount} ofertas
+                      en {sourceCount} lugares
                     </Text>
                   )}
                 </Box>

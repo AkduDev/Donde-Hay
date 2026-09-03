@@ -14,6 +14,7 @@ import type {
   ProductWithOffers,
   ProductOffer,
   SourceFilter,
+  SourceSummary,
 } from '@/types';
 
 // ============================================
@@ -54,57 +55,81 @@ function buildSourceCounts(products: ProductWithOffers[]): Record<string, number
 }
 
 // ============================================
-// SUPABASE ROW NORMALIZERS (snake_case → camelCase)
+// RPC search_products RESULT TYPES
 // ============================================
 
-interface OfferRow {
+/**
+ * Oferta tal y como la devuelve el RPC `search_products` dentro del array JSONB
+ * `offers` (camelCase, ya serializado en SQL).
+ */
+interface RpcOffer {
   id: string;
-  product_id: string;
-  seller_id?: string | null;
-  source_id: string;
-  price: number | string;
+  productId: string;
+  sellerId?: string | null;
+  sourceId: string;
+  price: number | null;
   currency: string;
-  location_id?: string | null;
-  source_url?: string | null;
-  source_external_id?: string | null;
-  posted_at: string;
+  locationId?: string | null;
+  sourceUrl?: string | null;
+  sourceExternalId?: string | null;
+  postedAt: string;
   status: string;
-  raw_data?: Record<string, unknown> | null;
+  sellerName?: string | null;
+  rawData?: Record<string, unknown> | null;
 }
 
-interface ProductRow {
+/**
+ * Fila del RETURNS TABLE del RPC `search_products`: producto snake_case +
+ * `offers` JSONB (array camelCase) + agregados calculados en el servidor.
+ */
+interface SearchProductRow {
   id: string;
   canonical_name: string;
   brand?: string | null;
   model?: string | null;
-  category_id?: string | null;
   description?: string | null;
-  specifications?: Record<string, string> | null;
   image_urls?: string[] | null;
+  category_id?: string | null;
+  specifications?: Record<string, string> | null;
   created_at: string;
   updated_at: string;
-  offers?: OfferRow[] | null;
+  offers: RpcOffer[] | null;
+  min_price?: number | string | null;
+  max_price?: number | string | null;
+  average_price?: number | string | null;
+  offer_count?: number | string | null;
+  source_count?: number | string | null;
 }
 
-function mapOfferRow(offer: OfferRow): ProductOffer {
+// ============================================
+// RPC ROW NORMALIZERS (RPC result → camelCase domain)
+// ============================================
+
+function mapRpcOffer(offer: RpcOffer): ProductOffer {
   return {
     id: offer.id,
-    productId: offer.product_id,
-    sellerId: offer.seller_id ?? '',
-    sourceId: offer.source_id,
-    price: Number(offer.price),
+    productId: offer.productId,
+    sellerId: offer.sellerId ?? '',
+    sourceId: offer.sourceId,
+    price: offer.price == null ? NaN : Number(offer.price),
     currency: offer.currency as ProductOffer['currency'],
-    locationId: offer.location_id ?? '',
-    sourceUrl: offer.source_url ?? '',
-    sourceExternalId: offer.source_external_id ?? undefined,
-    postedAt: offer.posted_at,
-    status: offer.status as ProductOffer['status'],
-    rawData: offer.raw_data ?? undefined,
+    locationId: offer.locationId ?? '',
+    sourceUrl: offer.sourceUrl ?? '',
+    sourceExternalId: offer.sourceExternalId ?? undefined,
+    postedAt: offer.postedAt,
+    status: (offer.status ?? 'active') as ProductOffer['status'],
+    rawData: offer.rawData ?? undefined,
   };
 }
 
-function mapProductRow(row: ProductRow): ProductWithOffers {
-  const offers = (row.offers ?? []).map((o) => mapOfferRow(o));
+function toNumber(value?: number | string | null): number | undefined {
+  if (value == null) return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function mapSearchProductRow(row: SearchProductRow): ProductWithOffers {
+  const offers = (row.offers ?? []).map((o) => mapRpcOffer(o));
   const product: ProductWithOffers = {
     id: row.id,
     canonicalName: row.canonical_name,
@@ -117,15 +142,19 @@ function mapProductRow(row: ProductRow): ProductWithOffers {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     offers,
-    offerCount: offers.length,
+    offerCount: Number(row.offer_count ?? offers.length),
     availability: {
       available: offers.some((o) => o.status === 'active'),
       lastSeen: row.created_at,
       status: 'unknown',
     },
   };
-  // La agregación (min/avg/max/offerCount/availability/lastSeen) la calcula la
-  // librería pura de matching, no el servicio (frontera snake->camel only).
+  // Se conservan los agregados calculados en el servidor (min/max/avg) y se
+  // recalculan min/avg/max/offerCount/availability con la librería pura de
+  // matching (los precios pueden traer valores null de ofertas sin precio).
+  product.minPrice = toNumber(row.min_price);
+  product.maxPrice = toNumber(row.max_price);
+  product.averagePrice = toNumber(row.average_price);
   return applyAggregate(product);
 }
 
@@ -140,65 +169,37 @@ export const searchService = {
   search: (params: SearchParams) => searchService.searchDB(params),
 
   /**
-   * Search Supabase DB for products
+   * Search Supabase DB for products via the `search_products` RPC.
+   * The RPC runs server-side: ILIKE full-text + filters + aggregation
+   * (min/max/avg price, offer_count, source_count) and cursor-based paging.
    */
   searchDB: async (params: SearchParams): Promise<SearchResult> => {
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
     const term = (params.query ?? '').trim().replace(/%/g, '').replace(/,/g, ' ').slice(0, 120);
 
-    let query = supabase
-      .from('products')
-      .select('*, offers:product_offers(*, seller:sellers(*))', {
-        count: 'exact',
-      });
-
-    if (term) {
-      query = query.or(
-        [
-          `canonical_name.ilike.%${term}%`,
-          `brand.ilike.%${term}%`,
-          `model.ilike.%${term}%`,
-          `description.ilike.%${term}%`,
-        ].join(',')
-      );
-    }
-    if (params.categoryId) {
-      query = query.eq('category_id', params.categoryId);
-    }
-    if (params.locationId) {
-      query = query.eq('product_offers.location_id', params.locationId);
-    }
-    if (params.minPrice) {
-      query = query.gte('product_offers.price', params.minPrice);
-    }
-    if (params.maxPrice) {
-      query = query.lte('product_offers.price', params.maxPrice);
-    }
-    if (params.sourceIds && params.sourceIds.length > 0) {
-      query = query.in('product_offers.source_id', params.sourceIds);
-    }
-
-    switch (params.sortBy) {
-      case 'price-asc':
-        query = query.order('product_offers(price)', { ascending: true });
-        break;
-      case 'price-desc':
-        query = query.order('product_offers(price)', { ascending: false });
-        break;
-      case 'recent':
-      default:
-        query = query.order('created_at', { ascending: false });
-    }
-
-    const { data, error, count } = await query.range(from, to);
+    const { data, error } = await supabase.rpc('search_products', {
+      search_query: term,
+      p_category_id: params.categoryId ?? null,
+      p_location_id: params.locationId ?? null,
+      p_source_ids: params.sourceIds && params.sourceIds.length > 0 ? params.sourceIds : null,
+      p_min_price: params.minPrice ?? null,
+      p_max_price: params.maxPrice ?? null,
+      p_sort_by: (params.sortBy === 'distance' ? 'recent' : params.sortBy) ?? 'recent',
+      p_cursor: null,
+      p_limit: limit,
+    });
 
     if (error) throw error;
 
-    const products = (data ?? []).map(mapProductRow);
-    const total = count ?? 0;
+    const products = ((data ?? []) as unknown as SearchProductRow[]).map(
+      mapSearchProductRow
+    );
+    const total = products.length;
+    const counts = buildSourceCounts(products);
+    const sources: SourceSummary[] = Object.entries(counts).map(
+      ([sourceId, count]) => ({ sourceId, count })
+    );
 
     return {
       products,
@@ -206,11 +207,13 @@ export const searchService = {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
-      hasNext: from + products.length < total,
+      // El RPC es cursor-based (sin offset): la marca "hay más" se infiere de
+      // haber traído una página completa.
+      hasNext: products.length >= limit,
       hasPrev: page > 1,
       query: term,
       processingTimeMs: 0,
-      sources: [],
+      sources,
     };
   },
 

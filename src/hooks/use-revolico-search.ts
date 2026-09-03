@@ -7,82 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { scraperService, type ScrapeResult } from '@/services/scraper.service';
 import { productsService } from '@/services/products.service';
 import { queryKeys } from '@/lib/api-client';
+import { mergeByKey } from '@/lib/matching';
 import type { ProductWithOffers } from '@/types';
-
-// ============================================
-// DEDUP HELPERS
-// ============================================
-
-/** Normalize a canonical name for dedup comparison */
-function normalize(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-/** Compute a simple similarity ratio (0-1) between two strings */
-function similarity(a: string, b: string): number {
-  const na = normalize(a);
-  const nb = normalize(b);
-  if (na === nb) return 1;
-
-  // Check if one contains the other
-  if (na.includes(nb) || nb.includes(na)) return 0.85;
-
-  // Token overlap
-  const tokensA = new Set(na.split(' '));
-  const tokensB = new Set(nb.split(' '));
-  let intersection = 0;
-  for (const t of tokensA) {
-    if (tokensB.has(t)) intersection++;
-  }
-  const union = new Set([...tokensA, ...tokensB]).size;
-  return union > 0 ? intersection / union : 0;
-}
-
-/** Merge two product lists, deduplicating by name similarity */
-function mergeProducts(
-  dbProducts: ProductWithOffers[],
-  scrapedProducts: ProductWithOffers[]
-): ProductWithOffers[] {
-  const merged: ProductWithOffers[] = [...dbProducts];
-  const dbNames = new Set(dbProducts.map((p) => normalize(p.canonicalName)));
-
-  for (const scraped of scrapedProducts) {
-    const sn = normalize(scraped.canonicalName);
-
-    // Check exact match
-    if (dbNames.has(sn)) continue;
-
-    // Check similarity against existing
-    let isDupe = false;
-    for (const existing of merged) {
-      if (similarity(scraped.canonicalName, existing.canonicalName) > 0.75) {
-        // Merge offers from scraped into existing
-        existing.offers = [...existing.offers, ...scraped.offers];
-        existing.offerCount = existing.offers.length;
-        const prices = existing.offers.map((o) => o.price).filter(Boolean);
-        if (prices.length > 0) {
-          existing.minPrice = Math.min(...prices);
-          existing.maxPrice = Math.max(...prices);
-          existing.averagePrice = prices.reduce((a, b) => a + b, 0) / prices.length;
-        }
-        isDupe = true;
-        break;
-      }
-    }
-
-    if (!isDupe) {
-      merged.push(scraped);
-    }
-  }
-
-  return merged;
-}
 
 // ============================================
 // HOOKS
@@ -153,12 +79,12 @@ export function useRevolicoSearch(options: UseRevolicoSearchOptions = {}) {
     },
   });
 
-  // 3. Merge results
+  // 3. Merge results using the pure matching function
   const scrapedProducts = scrapeMutation.data?.stats
     ? [] // Would need to re-fetch from DB after scrape
     : [];
 
-  const merged = mergeProducts(dbQuery.data ?? [], scrapedProducts);
+  const merged = mergeByKey(dbQuery.data ?? [], scrapedProducts);
 
   // Sort merged results
   const sorted = [...merged].sort((a, b) => {

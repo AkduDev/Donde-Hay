@@ -246,10 +246,12 @@ Estado: completada 02-sep-2026. Aplicada via Supabase Management API. 9 tablas, 
 Estado: completada y verificada end-to-end (02-sep-2026). Scraper scrapea el GraphQL de Revolico (solo categorías raíz 1000/1100/1200/1300/1400 devuelven ads; las subcategorías dan vacío). Corrección de schema en producción: `products.canonical_name` y `product_offers(source_id,source_external_id)` tienen UNIQUE (el `on_conflict` de la EF los requiere — 42P10), y `product_offers.price` es nullable (Revolico tiene anuncios sin precio). pg_cron + pg_net habilitados, job agendado y activo.
 
 ### Fase 5 — Mobile conectado
-- [ ] `search.service.ts` → RPC `search_products` (ya existe patrón Supabase directo)
-- [ ] Results con el contrato agrupado (N lugares / Desde $)
-- [ ] Product detail con lista de ofertas + URLs externas
-- [ ] Estados loading/error/sin resultados pulidos
+- [x] `search.service.ts` → RPC `search_products` (✅ ya usa `supabase.rpc('search_products')`; normalizadores `mapRpcOffer`/`mapSearchProductRow` + `applyAggregate`)
+- [x] Results con el contrato agrupado (N lugares / Desde $) (✅ 03-sep-2026: ProductCard muestra "N lugares" = fuentes distintas vía `sourceCount` + min-precio + chips de fuentes)
+- [x] Product detail con lista de ofertas + URLs externas (✅ 03-sep-2026: usa `buildOfferList()` de `matching.ts` en vez de sort manual)
+- [x] Estados loading/error/sin resultados pulidos (✅ 03-sep-2026: skeletons + renderError con reintento + renderEmpty)
+
+Estado: completada 03-sep-2026. ProductCard muestra `sourceCount` (fuentes distintas) como "N lugares" en vez de "N ofertas". `product/[id].tsx` delega a `buildOfferList()` del dominio (mismo contrato que la EF). `results.tsx` tiene UI de error con botón "Reintentar". `use-revolico-search.ts` limpio: eliminado `normalize`/`similarity`/`mergeProducts` inline, ahora usa `mergeByKey` de `matching.ts`. `npx tsc --noEmit` ✅, `npx eslint src/` 0/0 ✅, `npx jest` 120 tests en verde ✅.
 
 ### Fase 6 — Auth + Guardados + Alertas
 - [ ] Flujos ya construidos sobre Supabase Auth (verificar contra RLS)

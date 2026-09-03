@@ -4,6 +4,20 @@ Todas las cambios notables de Dónde Hay se documentan en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/)
 y este proyecto usa [Versionado Semántico](https://semver.org/lang/es/).
 
+## [2.3.0-canary] - 2026-09-03
+
+> Sesión 03-sep: **Fase 5 completada** — Mobile conectado al contrato agrupado del RPC `search_products`.
+
+### Cambiado (Fase 5)
+- **`ProductCard` muestra "N lugares"** (fuentes distintas): antes mostraba "N ofertas" (total de listings). Ahora usa `sourceCount` derivado de `getSourceCounts()`. Layout `list`: "en N lugares"; layout `grid`: "N lugares".
+- **`product/[id].tsx` delega a `buildOfferList()`** de `src/lib/matching.ts` (mismo contrato que la EF `match-products`), eliminando el `sort` manual. `getAvailabilityStatus`/`getRevolicoSellerInfo` adaptados a `OfferListItem` (resolución del `rawData` del `ProductOffer` original vía `offerId`).
+- **Error handling en `results.tsx`**: se extraen `isError`/`error` de `useSearch`, nueva UI de error con mensaje y botón "Reintentar" (`refetch()`).
+- **Limpieza de `use-revolico-search.ts`**: eliminadas las funciones inline legacy `normalize()`, `similarity()` y `mergeProducts()` que duplicaban `normalize.ts`/`matching.ts`. Ahora usa `mergeByKey()` de la lib pura.
+- `search.service.ts` ya consumía el RPC `search_products` (migración previa pendiente de commit).
+
+### Verificación
+- `npx tsc --noEmit` ✅, `npx eslint src/` 0/0 ✅, `npx jest` **120 tests en verde** (9 suites) ✅.
+
 ## [2.2.0-canary] - 2026-09-02
 
 > Sesión 02-sep: **Fase 4 verificada end-to-end**: el scraper de Revolico scrapea datos reales del GraphQL, persiste el catálogo en Supabase y queda agendado con pg_cron cada 6 horas.

@@ -43,7 +43,7 @@ export default function SearchResultsScreen() {
   const [sortBy, setSortBy] = useState<SearchQuery['sortBy']>('recent');
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: results, isLoading, refetch } = useSearch({
+  const { data: results, isLoading, isError, error, refetch } = useSearch({
     query: searchQuery,
     sourceIds: selectedSource === 'all' ? undefined : [selectedSource],
     sortBy,
@@ -218,6 +218,31 @@ export default function SearchResultsScreen() {
     </Box>
   );
 
+  const renderError = () => (
+    <Box flex={1} alignItems="center" justifyContent="center" p="xl">
+      <Text variant="headlineMedium">⚠️</Text>
+      <Box mt="md">
+        <Text variant="titleMedium" color="text">
+          Error al buscar productos
+        </Text>
+      </Box>
+      <Box mt="xs">
+        <Text variant="bodyMedium" color="textSecondary">
+          {error?.message || 'Ocurrió un error inesperado'}
+        </Text>
+      </Box>
+      <Box mt="md">
+        <Button
+          variant="primary"
+          size="md"
+          onPress={() => refetch()}
+        >
+          Reintentar
+        </Button>
+      </Box>
+    </Box>
+  );
+
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <Box flex={1} bg="background" mode={resolvedMode}>
@@ -248,6 +273,8 @@ export default function SearchResultsScreen() {
           <Box flex={1} p="md" mode={resolvedMode}>
             <ProductCardSkeleton layout="list" count={6} testID="results-skeleton" />
           </Box>
+        ) : isError ? (
+          renderError()
         ) : (
           <FlashList
             data={results?.products || []}

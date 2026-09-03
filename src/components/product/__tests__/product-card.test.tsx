@@ -1,6 +1,6 @@
 /**
  * Dónde Hay - ProductCard Component Tests
- * Contrato agrupado: precio mínimo + "en N ofertas" + chips de fuentes
+ * Contrato agrupado: precio mínimo + "en N lugares" + chips de fuentes
  */
 
 import React from 'react';
@@ -54,7 +54,7 @@ describe('ProductCard', () => {
     await render(<ProductCard product={product()} testID="pc" />);
     expect(screen.getByText('iPhone 13 128GB')).toBeTruthy();
     expect(screen.getByText('$420')).toBeTruthy();
-    expect(screen.getByText('en 2 ofertas')).toBeTruthy();
+    expect(screen.getByText('en 2 lugares')).toBeTruthy();
   });
 
   it('renders source chips per source', async () => {
@@ -82,6 +82,6 @@ describe('ProductCard', () => {
   it('renders grid layout variant', async () => {
     await render(<ProductCard product={product()} layout="grid" testID="pc" />);
     expect(screen.getByText('iPhone 13 128GB')).toBeTruthy();
-    expect(screen.getByText('2 ofertas')).toBeTruthy();
+    expect(screen.getByText('2 lugares')).toBeTruthy();
   });
 });
